@@ -390,6 +390,257 @@ CRITICAL: suggestedActions must be:
   return insights;
 }
 
+/**
+ * This part of the code analyzes real margin risks using actual brand and cost data
+ * Calculates risk factors based on brand performance, SKU complexity, and cost pressures
+ */
+interface MarginRiskAlert {
+  brandName: string;
+  currentMargin: number;
+  riskLevel: "High" | "Medium" | "Low";
+  riskScore: number;
+  primaryDrivers: string[];
+  financialImpact: number;
+  skuCount: number;
+  avgUnitCost: number;
+  inactivePercentage: number;
+}
+
+function calculateMarginRisks(products: ProductData[], shipments: ShipmentData[]): MarginRiskAlert[] {
+  // This part of the code groups products by brand for real margin analysis
+  const brandGroups = new Map<string, {
+    products: ProductData[];
+    shipments: ShipmentData[];
+    totalValue: number;
+    avgCost: number;
+  }>();
+
+  // Group products by brand with real data
+  products.forEach(product => {
+    const brandName = product.brand_name || 'Unknown Brand';
+    if (!brandGroups.has(brandName)) {
+      brandGroups.set(brandName, {
+        products: [],
+        shipments: [],
+        totalValue: 0,
+        avgCost: 0
+      });
+    }
+    brandGroups.get(brandName)!.products.push(product);
+  });
+
+  // Associate shipments with brands
+  shipments.forEach(shipment => {
+    const brandName = shipment.brand_name || 'Unknown Brand';
+    if (brandGroups.has(brandName)) {
+      brandGroups.get(brandName)!.shipments.push(shipment);
+    }
+  });
+
+  // This part of the code calculates real risk factors for each brand
+  const marginRisks: MarginRiskAlert[] = [];
+  
+  brandGroups.forEach((data, brandName) => {
+    if (data.products.length === 0) return;
+
+    const avgUnitCost = data.products
+      .filter(p => p.unit_cost !== null)
+      .reduce((sum, p) => sum + (p.unit_cost || 0), 0) / data.products.filter(p => p.unit_cost !== null).length;
+    
+    const skuCount = data.products.length;
+    const inactiveCount = data.products.filter(p => !p.active).length;
+    const inactivePercentage = (inactiveCount / skuCount) * 100;
+    
+    // Calculate real financial impact from brand shipments
+    const brandShipmentImpact = data.shipments
+      .filter(s => s.expected_quantity !== s.received_quantity && s.unit_cost)
+      .reduce((sum, s) => {
+        const diff = Math.abs(s.expected_quantity - s.received_quantity);
+        return sum + (diff * (s.unit_cost || 0));
+      }, 0);
+
+    // This part of the code calculates risk score based on real operational factors
+    let riskScore = 0;
+    const riskFactors: string[] = [];
+
+    // SKU complexity pressure (more SKUs = higher operational risk)
+    if (skuCount > 50) {
+      riskScore += 25;
+      riskFactors.push("High SKU complexity");
+    } else if (skuCount > 20) {
+      riskScore += 15;
+      riskFactors.push("Moderate SKU complexity");
+    }
+
+    // Cost pressure analysis (higher costs = margin pressure)
+    if (avgUnitCost > 50) {
+      riskScore += 30;
+      riskFactors.push("High unit costs");
+    } else if (avgUnitCost > 20) {
+      riskScore += 15;
+      riskFactors.push("Elevated unit costs");
+    }
+
+    // Inactive inventory pressure
+    if (inactivePercentage > 30) {
+      riskScore += 25;
+      riskFactors.push("High inactive inventory");
+    } else if (inactivePercentage > 15) {
+      riskScore += 10;
+      riskFactors.push("Growing inactive inventory");
+    }
+
+    // Shipment performance pressure
+    if (brandShipmentImpact > 5000) {
+      riskScore += 20;
+      riskFactors.push("Shipment discrepancies");
+    }
+
+    // Only include brands with meaningful risk
+    if (riskScore > 0 && data.products.length > 5) {
+      const currentMargin = Math.max(0, 100 - (avgUnitCost / 100 * 100)); // Simplified margin calculation
+      
+      marginRisks.push({
+        brandName,
+        currentMargin: Math.round(currentMargin),
+        riskLevel: riskScore >= 60 ? "High" : riskScore >= 30 ? "Medium" : "Low",
+        riskScore,
+        primaryDrivers: riskFactors,
+        financialImpact: Math.round(brandShipmentImpact + (inactiveCount * avgUnitCost * 12)), // Annual impact estimate
+        skuCount,
+        avgUnitCost: Math.round(avgUnitCost),
+        inactivePercentage: Math.round(inactivePercentage)
+      });
+    }
+  });
+
+  // Return top risk brands, sorted by risk score
+  return marginRisks
+    .sort((a, b) => b.riskScore - a.riskScore)
+    .slice(0, 5); // Limit to top 5 risk brands
+}
+
+/**
+ * This part of the code detects real cost variances in shipment data
+ * Analyzes unit costs across suppliers and warehouses to identify anomalies
+ */
+interface CostVarianceAnomaly {
+  type: "Cost Spike" | "Quantity Discrepancy" | "Supplier Variance";
+  title: string;
+  description: string;
+  severity: "High" | "Medium";
+  warehouseId: string | null;
+  supplier: string | null;
+  currentValue: number;
+  expectedValue: number;
+  variance: number;
+  riskFactors: string[];
+  financialImpact: number;
+}
+
+function detectCostVariances(products: ProductData[], shipments: ShipmentData[]): CostVarianceAnomaly[] {
+  const anomalies: CostVarianceAnomaly[] = [];
+
+  // This part of the code calculates baseline costs for variance detection
+  const supplierBaselines = new Map<string, { avgCost: number; shipmentCount: number }>();
+  
+  // Calculate supplier cost baselines from real data
+  shipments.forEach(shipment => {
+    if (!shipment.unit_cost || !shipment.supplier) return;
+    
+    const supplier = shipment.supplier;
+    if (!supplierBaselines.has(supplier)) {
+      supplierBaselines.set(supplier, { avgCost: 0, shipmentCount: 0 });
+    }
+    
+    const baseline = supplierBaselines.get(supplier)!;
+    baseline.avgCost = (baseline.avgCost * baseline.shipmentCount + shipment.unit_cost) / (baseline.shipmentCount + 1);
+    baseline.shipmentCount += 1;
+  });
+
+  // This part of the code detects cost spikes based on supplier baselines
+  shipments.forEach(shipment => {
+    if (!shipment.unit_cost || !shipment.supplier) return;
+    
+    const baseline = supplierBaselines.get(shipment.supplier);
+    if (!baseline || baseline.shipmentCount < 3) return; // Need sufficient baseline data
+    
+    const variance = Math.abs(shipment.unit_cost - baseline.avgCost) / baseline.avgCost;
+    
+    if (variance > 0.4) { // 40% variance threshold
+      const financialImpact = Math.abs(shipment.unit_cost - baseline.avgCost) * shipment.received_quantity;
+      
+      if (financialImpact > 1000) { // Only flag significant financial impact
+        anomalies.push({
+          type: "Cost Spike",
+          title: `${shipment.supplier} Cost Anomaly`,
+          description: `Unit cost of $${shipment.unit_cost} is ${Math.round(variance * 100)}% above expected $${Math.round(baseline.avgCost)} baseline`,
+          severity: variance > 0.8 ? "High" : "Medium",
+          warehouseId: shipment.warehouse_id,
+          supplier: shipment.supplier,
+          currentValue: shipment.unit_cost,
+          expectedValue: Math.round(baseline.avgCost),
+          variance: Math.round(variance * 100),
+          riskFactors: [
+            variance > 0.8 ? "Extreme cost deviation" : "Significant cost increase",
+            financialImpact > 5000 ? "High financial impact" : "Material financial impact"
+          ],
+          financialImpact: Math.round(financialImpact)
+        });
+      }
+    }
+  });
+
+  // This part of the code detects quantity discrepancy patterns
+  const warehouseDiscrepancies = new Map<string, { discrepancies: number; totalShipments: number; impact: number }>();
+  
+  shipments.forEach(shipment => {
+    if (!shipment.warehouse_id) return;
+    
+    if (!warehouseDiscrepancies.has(shipment.warehouse_id)) {
+      warehouseDiscrepancies.set(shipment.warehouse_id, { discrepancies: 0, totalShipments: 0, impact: 0 });
+    }
+    
+    const data = warehouseDiscrepancies.get(shipment.warehouse_id)!;
+    data.totalShipments += 1;
+    
+    if (shipment.expected_quantity !== shipment.received_quantity) {
+      data.discrepancies += 1;
+      const diff = Math.abs(shipment.expected_quantity - shipment.received_quantity);
+      data.impact += diff * (shipment.unit_cost || 0);
+    }
+  });
+
+  // Flag warehouses with high discrepancy rates
+  warehouseDiscrepancies.forEach((data, warehouseId) => {
+    const discrepancyRate = data.discrepancies / data.totalShipments;
+    
+    if (discrepancyRate > 0.3 && data.impact > 2000 && data.totalShipments > 5) { // 30% discrepancy rate threshold
+      anomalies.push({
+        type: "Quantity Discrepancy",
+        title: `Warehouse ${warehouseId} Processing Issues`,
+        description: `${Math.round(discrepancyRate * 100)}% of shipments have quantity discrepancies with $${Math.round(data.impact)} financial impact`,
+        severity: discrepancyRate > 0.5 ? "High" : "Medium",
+        warehouseId,
+        supplier: null,
+        currentValue: Math.round(discrepancyRate * 100),
+        expectedValue: 5, // 5% expected discrepancy rate
+        variance: Math.round((discrepancyRate - 0.05) * 100),
+        riskFactors: [
+          discrepancyRate > 0.5 ? "Critical processing accuracy" : "Poor processing accuracy",
+          data.impact > 10000 ? "High financial impact" : "Material financial impact"
+        ],
+        financialImpact: Math.round(data.impact)
+      });
+    }
+  });
+
+  // Return anomalies sorted by financial impact
+  return anomalies
+    .sort((a, b) => b.financialImpact - a.financialImpact)
+    .slice(0, 8); // Limit to top 8 most impactful anomalies
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "GET") {
     return res.status(405).json({ error: "Method not allowed" });
@@ -406,6 +657,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     ]);
 
     const insights = await generateInsights(products, shipments);
+
+    // This part of the code calculates new real-data analysis features
+    const marginRisks = calculateMarginRisks(products, shipments);
+    const costVariances = detectCostVariances(products, shipments);
 
     // This part of the code calculates KPIs using standardized logic matching server implementation
     const today = new Date().toISOString().split("T")[0];
@@ -555,6 +810,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             ]
           : []),
       ],
+      marginRisks, // This part of the code adds real margin risk analysis data
+      costVariances, // This part of the code adds real cost variance detection data
       lastUpdated: new Date().toISOString(),
     };
 

@@ -115,6 +115,34 @@ export interface Anomaly {
   createdAt: string;
 }
 
+// Smart Margin Risk Analysis
+export interface MarginRiskAlert {
+  brandName: string;
+  currentMargin: number;
+  riskLevel: "High" | "Medium" | "Low";
+  riskScore: number;
+  primaryDrivers: string[];
+  financialImpact: number;
+  skuCount: number;
+  avgUnitCost: number;
+  inactivePercentage: number;
+}
+
+// Shipment Cost Variance Detection
+export interface CostVarianceAnomaly {
+  type: "Cost Spike" | "Quantity Discrepancy" | "Supplier Variance";
+  title: string;
+  description: string;
+  severity: "High" | "Medium";
+  warehouseId: string | null;
+  supplier: string | null;
+  currentValue: number;
+  expectedValue: number;
+  variance: number;
+  riskFactors: string[];
+  financialImpact: number;
+}
+
 // Dashboard Data (combined)
 export interface DashboardData {
   products: ProductData[];
@@ -124,6 +152,8 @@ export interface DashboardData {
   warehouseInventory: WarehouseInventory[];
   insights: AIInsight[];
   anomalies: Anomaly[];
+  marginRisks: MarginRiskAlert[]; // This part of the code adds smart margin risk analysis data
+  costVariances: CostVarianceAnomaly[]; // This part of the code adds cost variance detection data
   lastUpdated: string;
 }
 

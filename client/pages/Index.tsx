@@ -9,6 +9,8 @@ import { InsightsSection } from "@/components/dashboard/InsightsSection";
 import { QuickOverviewSection } from "@/components/dashboard/QuickOverviewSection";
 import { WarehouseInventorySection } from "@/components/dashboard/WarehouseInventorySection";
 import { AnomalyDetectorSection } from "@/components/dashboard/AnomalyDetectorSection";
+import { SmartMarginRiskSection } from "@/components/dashboard/SmartMarginRiskSection";
+import { ShipmentCostVarianceSection } from "@/components/dashboard/ShipmentCostVarianceSection";
 
 
 export default function Index() {
@@ -54,6 +56,18 @@ export default function Index() {
             {/* Anomaly Detector Section */}
             <AnomalyDetectorSection
               anomalies={data.anomalies}
+              isLoading={isLoading}
+            />
+
+            {/* Smart Margin Risk Analysis Section */}
+            <SmartMarginRiskSection
+              marginRisks={data.marginRisks}
+              isLoading={isLoading}
+            />
+
+            {/* Shipment Cost Variance Detection Section */}
+            <ShipmentCostVarianceSection
+              costVariances={data.costVariances}
               isLoading={isLoading}
             />
           </>

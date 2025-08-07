@@ -23,6 +23,8 @@ export const useDashboardData = () => {
         shipments: dashboardData.shipments?.length || 0,
         insights: dashboardData.insights?.length || 0,
         anomalies: dashboardData.anomalies?.length || 0,
+        marginRisks: dashboardData.marginRisks?.length || 0,
+        costVariances: dashboardData.costVariances?.length || 0,
       });
 
       return dashboardData;
