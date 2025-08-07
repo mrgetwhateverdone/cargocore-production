@@ -94,9 +94,9 @@ export function InsightOverlay({ isOpen, onClose, insight, agentName = "Dashboar
     ];
   };
 
-  // This part of the code handles workflow creation from suggested actions with loading states
+  // This part of the code handles action button clicks for workflow creation (your exact pattern)
   const handleActionClick = async (action: string, index: number) => {
-    setProcessingActionId(index);
+    setProcessingActionId(index); // ← Button shows "Creating Workflow..." spinner
     
     // This part of the code validates insight and action data before workflow creation
     if (!insight || !insight.title || !action) {
@@ -106,15 +106,18 @@ export function InsightOverlay({ isOpen, onClose, insight, agentName = "Dashboar
     }
     
     try {
-      await createWorkflow({
-        id: insight.id,
-        title: insight.title,
-        description: insight.description,
-        severity: insight.severity,
-        suggestedActions: insight.suggestedActions || [],
-        dollarImpact: insight.dollarImpact,
-        source: insight.source
-      });
+      // Transform insight data into workflow format (your exact pattern)
+      const suggestedAction = {
+        label: action,           // ← "Process inventory items"
+        type: 'create_workflow' as const,            // ← "create_workflow" 
+        target: 'insight_management',        // ← "inventory_management"
+        values: insight.suggestedActions || [],        // ← ["SKU123", "SKU456"]
+        priority: insight.severity === 'critical' ? 'critical' as const :
+                 insight.severity === 'warning' ? 'high' as const : 'medium' as const
+      };
+
+      // THIS IS THE KEY LINE - Creates the workflow (your exact pattern)
+      await createWorkflow(suggestedAction, 'ai_insight', insight.id, insight.title);
       
       setShowSuccess(true);
       setTimeout(() => {
@@ -127,7 +130,7 @@ export function InsightOverlay({ isOpen, onClose, insight, agentName = "Dashboar
       // This part of the code shows user-friendly error without crashing the app
       alert('Failed to create workflow. Please try again.');
     } finally {
-      setProcessingActionId(null);
+      setProcessingActionId(null); // ← Remove spinner
     }
   };
 

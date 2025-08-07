@@ -13,7 +13,7 @@ export function InsightsSection({ insights, isLoading }: InsightsSectionProps) {
   const [selectedInsight, setSelectedInsight] = useState<AIInsight | null>(null);
   const { createWorkflow, creating } = useWorkflowCreation();
 
-  // This part of the code handles quick workflow creation from the + button without opening overlay
+  // This part of the code handles quick workflow creation from the + button without opening overlay (your exact pattern)
   const handleQuickAdd = async (e: React.MouseEvent, insight: AIInsight) => {
     e.stopPropagation(); // Prevent card click
     
@@ -24,15 +24,19 @@ export function InsightsSection({ insights, isLoading }: InsightsSectionProps) {
     }
 
     try {
-      await createWorkflow({
-        id: insight.id,
-        title: insight.title,
-        description: insight.description,
-        severity: insight.severity,
-        suggestedActions: insight.suggestedActions || [],
-        dollarImpact: insight.dollarImpact,
-        source: insight.source
-      });
+      // Transform insight data into action format (your exact pattern)
+      const suggestedAction = {
+        label: insight.title,
+        type: 'create_workflow' as const,
+        target: 'insight_management',
+        values: insight.suggestedActions || [],
+        priority: insight.severity === 'critical' ? 'critical' as const :
+                 insight.severity === 'warning' ? 'high' as const : 'medium' as const
+      };
+
+      // THIS IS THE KEY LINE - Creates the workflow (your exact pattern)
+      await createWorkflow(suggestedAction, 'ai_insight', insight.id, insight.title);
+      
     } catch (error) {
       console.error('Failed to create workflow:', error);
       // This part of the code shows user-friendly error without crashing the app

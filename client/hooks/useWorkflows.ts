@@ -27,6 +27,11 @@ export const useWorkflows = () => {
   useEffect(() => {
     loadWorkflows(); // Initial load
 
+    // This part of the code listens for workflow creation events (your exact pattern)
+    const handleWorkflowCreated = () => {
+      loadWorkflows(); // ← THIS UPDATES THE WORKFLOWS LIST
+    };
+
     // Listen for localStorage changes from other tabs
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'cargocore_workflows') {
@@ -39,10 +44,14 @@ export const useWorkflows = () => {
       loadWorkflows();
     };
 
+    // Listen for the custom workflow creation event
+    window.addEventListener('workflowCreated', handleWorkflowCreated);
     window.addEventListener('storage', handleStorageChange);
     window.addEventListener('focus', handleWindowFocus);
 
     return () => {
+      // Clean up listeners when component unmounts
+      window.removeEventListener('workflowCreated', handleWorkflowCreated);
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('focus', handleWindowFocus);
     };
@@ -93,46 +102,40 @@ export const useWorkflows = () => {
   };
 };
 
-// This part of the code provides a simple hook for workflow creation using the service
+// This part of the code provides workflow creation with custom event dispatch system (your exact pattern)
 export const useWorkflowCreation = () => {
-  const [creating, setCreating] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const createWorkflow = useCallback(async (insightData: {
-    id?: string;
-    title?: string;
-    description?: string;
-    severity?: 'critical' | 'warning' | 'info';
-    suggestedActions?: string[];
-    dollarImpact?: number;
-    source?: string;
-  }) => {
-    setCreating(true);
+  const createWorkflow = useCallback(async (action: {
+    label: string;
+    type: 'create_workflow';
+    target?: string;
+    values?: string[];
+    priority: 'low' | 'medium' | 'high' | 'critical';
+  }, source: string, sourceId: string, insightTitle: string) => {
+    setLoading(true);
     setError(null);
 
     try {
-      // This part of the code creates a suggested action from insight data
-      const priority = insightData.severity === 'critical' ? 'critical' : 
-                      insightData.severity === 'warning' ? 'high' : 'medium';
-      
-      const suggestedAction = {
-        label: insightData.title || 'AI Generated Action',
-        type: 'create_workflow' as const,
-        context: insightData.description,
-        priority: priority as 'low' | 'medium' | 'high' | 'critical'
-      };
-
+      // THIS IS THE KEY LINE - Creates the workflow using the service
       const workflow = workflowCreationService.createWorkflowFromAction(
-        suggestedAction,
-        'ai_insight',
-        insightData.id || `insight_${Date.now()}`,
-        insightData.title
+        action,     // ← The button action data
+        source,     // ← "ai_insight" 
+        sourceId,   // ← insight.id
+        insightTitle // ← insight.title
       );
 
-      // Dispatch custom event for toast notification
-      window.dispatchEvent(new CustomEvent('workflowCreated', { 
-        detail: { workflow, insightTitle: insightData.title || 'Workflow' } 
-      }));
+      // Store success message
+      const successMessage = `Workflow "${workflow.title}" has been created`;
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('workflow_success_message', successMessage);
+        
+        // CRITICAL: Dispatch custom event to notify other components
+        window.dispatchEvent(new CustomEvent('workflowCreated', { 
+          detail: { workflow, message: successMessage }
+        }));
+      }
 
       return workflow;
     } catch (err) {
@@ -141,13 +144,13 @@ export const useWorkflowCreation = () => {
       console.error('Failed to create workflow:', err);
       throw new Error(`Unable to create workflow: ${errorMessage}`);
     } finally {
-      setCreating(false);
+      setLoading(false);
     }
   }, []);
 
   return {
     createWorkflow,
-    creating,
+    creating: loading,
     error
   };
 };
