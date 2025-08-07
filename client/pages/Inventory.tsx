@@ -4,7 +4,7 @@ export default function Inventory() {
   return (
     <PlaceholderPage
       title="Inventory"
-      description="SKU-level inventory tracking, stock monitoring, movement history, reorder management, and ABC analysis for optimal inventory control."
+      description="Comprehensive inventory management dashboard with performance monitoring, capacity utilization, SLA tracking, and operational efficiency metrics."
     />
   )
 }
