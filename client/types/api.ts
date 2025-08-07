@@ -406,6 +406,35 @@ export interface WarehousesData {
   lastUpdated: string;
 }
 
+// Inventory Data Types (Simple structure following Orders pattern)
+export interface InventoryItem {
+  sku: string;
+  product_name: string;
+  brand_name: string;
+  on_hand: number;
+  committed: number;
+  available: number; // calculated: on_hand - committed
+  status: 'In Stock' | 'Low Stock' | 'Out of Stock' | 'Overstocked';
+  warehouse_id?: string | null;
+  supplier?: string | null;
+  last_updated?: string | null;
+}
+
+export interface InventoryKPIs {
+  totalSKUs: number;
+  inStockCount: number;
+  unfulfillableCount: number;
+  overstockedCount: number;
+  avgDaysOnHand: number | null;
+}
+
+export interface InventoryData {
+  kpis: InventoryKPIs;
+  insights: AIInsight[]; // Reuse existing type but from "inventory_agent"
+  inventory: InventoryItem[];
+  lastUpdated: string;
+}
+
 // API Error Types
 export interface APIError {
   message: string;

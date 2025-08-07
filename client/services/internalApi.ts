@@ -14,6 +14,7 @@ import type {
   AnalyticsData,
   OrdersData,
   OrderSuggestion,
+  InventoryData,
 } from "@/types/api";
 
 interface APIResponse<T> {
@@ -250,6 +251,38 @@ class InternalApiService {
       console.error("❌ Client: Orders API call failed:", error);
       throw new Error(
         `Unable to load orders data: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
+    }
+  }
+
+  /**
+   * Fetch complete inventory data from secure server endpoint
+   * NO external API keys - server handles TinyBird + OpenAI calls
+   */
+  async getInventoryData(): Promise<InventoryData> {
+    try {
+      console.log("🔒 Client: Fetching inventory data from secure server...");
+
+      const response = await fetch(`${this.baseUrl}/api/inventory-data`);
+
+      if (!response.ok) {
+        throw new Error(
+          `Internal API Error: ${response.status} ${response.statusText}`,
+        );
+      }
+
+      const result: APIResponse<InventoryData> = await response.json();
+
+      if (!result.success || !result.data) {
+        throw new Error(result.message || "Failed to fetch inventory data");
+      }
+
+      console.log("✅ Client: Inventory data received securely from server");
+      return result.data;
+    } catch (error) {
+      console.error("❌ Client: Inventory API call failed:", error);
+      throw new Error(
+        `Unable to load inventory data: ${error instanceof Error ? error.message : "Unknown error"}`,
       );
     }
   }
