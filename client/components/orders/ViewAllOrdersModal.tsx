@@ -292,7 +292,7 @@ export function ViewAllOrdersModal({ isOpen, onClose, orders, totalCount, onView
                           {getSortIcon('expected_quantity')}
                         </div>
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Actions
                       </th>
                     </tr>
@@ -357,11 +357,11 @@ export function ViewAllOrdersModal({ isOpen, onClose, orders, totalCount, onView
                         </td>
                         
                         {/* Actions */}
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
                           {onViewOrder && (
                             <button
                               onClick={() => onViewOrder(order)}
-                              className="inline-flex items-center justify-center w-8 h-8 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                              className="inline-flex items-center justify-center w-8 h-8 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors mx-auto"
                               title="View order details and AI analysis"
                             >
                               <Eye className="h-4 w-4" />

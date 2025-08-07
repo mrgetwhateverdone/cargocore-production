@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { X, Loader2, Brain, AlertCircle } from "lucide-react";
 import type { OrderData } from "@/types/api";
-import { useOrderSuggestion } from "@/hooks/useOrdersData";
+import { useOrderSuggestionSilent } from "@/hooks/useOrdersData";
 
 interface OrderAIExplanationModalProps {
   isOpen: boolean;
@@ -11,7 +11,7 @@ interface OrderAIExplanationModalProps {
 
 export function OrderAIExplanationModal({ isOpen, onClose, order }: OrderAIExplanationModalProps) {
   const [explanation, setExplanation] = useState<string>("");
-  const orderSuggestionMutation = useOrderSuggestion();
+  const orderSuggestionMutation = useOrderSuggestionSilent();
 
   // This part of the code generates AI explanation when modal opens with an order
   useEffect(() => {

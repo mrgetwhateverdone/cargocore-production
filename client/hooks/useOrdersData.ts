@@ -82,6 +82,29 @@ export const useOrderSuggestion = () => {
 };
 
 /**
+ * AI order suggestion hook for modal overlays (no toast notifications)
+ * 🔒 SECURE: Uses internal API - NO OpenAI keys exposed
+ */
+export const useOrderSuggestionSilent = () => {
+  return useMutation({
+    mutationFn: async (orderData: any): Promise<OrderSuggestion> => {
+      console.log(
+        "🔒 Client: Requesting AI suggestion for order (silent):",
+        orderData.order_id,
+      );
+
+      // This part of the code calls the server to generate AI suggestion securely
+      const suggestion = await internalApi.generateOrderSuggestion(orderData);
+
+      console.log("✅ Client: AI suggestion received for order (silent):", orderData.order_id);
+      return suggestion;
+    },
+    retry: 1, // Only retry once for AI suggestions
+    retryDelay: 2000, // 2 second delay before retry
+  });
+};
+
+/**
  * Manual refresh function for all orders data
  */
 export const useRefreshOrders = () => {
