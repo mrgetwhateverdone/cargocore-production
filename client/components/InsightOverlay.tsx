@@ -98,6 +98,13 @@ export function InsightOverlay({ isOpen, onClose, insight, agentName = "Dashboar
   const handleActionClick = async (action: string, index: number) => {
     setProcessingActionId(index);
     
+    // This part of the code validates insight and action data before workflow creation
+    if (!insight || !insight.title || !action) {
+      console.warn('Invalid insight or action data for workflow creation');
+      setProcessingActionId(null);
+      return;
+    }
+    
     try {
       await createWorkflow({
         id: insight.id,
@@ -117,6 +124,7 @@ export function InsightOverlay({ isOpen, onClose, insight, agentName = "Dashboar
       
     } catch (error) {
       console.error('Failed to create workflow:', error);
+      // This part of the code shows user-friendly error without crashing the app
       alert('Failed to create workflow. Please try again.');
     } finally {
       setProcessingActionId(null);

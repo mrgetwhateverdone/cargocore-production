@@ -1,26 +1,19 @@
-// This part of the code provides React hooks for workflow state management with automatic refresh capabilities
-// It handles localStorage persistence, cross-tab synchronization, and real-time updates for Vercel deployment
+// This part of the code provides simplified React hooks that use the WorkflowCreationService
+// It provides a clean interface between React components and the workflow service layer
 
 import { useState, useEffect, useCallback } from 'react';
-import { 
-  CreatedWorkflow, 
-  getWorkflows, 
-  saveWorkflow, 
-  updateWorkflow, 
-  deleteWorkflow,
-  calculateWorkflowStats,
-  createWorkflowFromInsight
-} from '../utils/workflowStorage';
+import { workflowCreationService } from '../services/workflowCreationService';
+import { CreatedWorkflow } from '../utils/workflowStorage';
 
 // This part of the code manages all workflow state and provides automatic refresh on navigation and focus changes
 export const useWorkflows = () => {
   const [workflows, setWorkflows] = useState<CreatedWorkflow[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // This part of the code loads workflows from localStorage with error handling
+  // This part of the code loads workflows from the service with error handling
   const loadWorkflows = useCallback(() => {
     try {
-      const storedWorkflows = getWorkflows();
+      const storedWorkflows = workflowCreationService.getWorkflows();
       setWorkflows(storedWorkflows);
     } catch (error) {
       console.error('Failed to load workflows:', error);
@@ -55,41 +48,32 @@ export const useWorkflows = () => {
     };
   }, [loadWorkflows]);
 
-  // This part of the code creates a new workflow and immediately updates the local state
-  const addWorkflow = useCallback((workflow: CreatedWorkflow) => {
-    saveWorkflow(workflow);
-    setWorkflows(prev => [workflow, ...prev]);
-  }, []);
-
-  // This part of the code updates an existing workflow and refreshes the state
+  // This part of the code updates workflow status using the service
   const updateWorkflowStatus = useCallback((workflowId: string, updates: Partial<CreatedWorkflow>) => {
-    updateWorkflow(workflowId, updates);
-    setWorkflows(prev => prev.map(w => w.id === workflowId ? { ...w, ...updates } : w));
-  }, []);
+    try {
+      const success = workflowCreationService.updateWorkflow(workflowId, updates);
+      if (success) {
+        loadWorkflows(); // Refresh from service
+      }
+    } catch (error) {
+      console.error('Failed to update workflow:', error);
+    }
+  }, [loadWorkflows]);
 
-  // This part of the code removes a workflow and updates the state immediately
+  // This part of the code removes a workflow using the service
   const removeWorkflow = useCallback((workflowId: string) => {
-    deleteWorkflow(workflowId);
-    setWorkflows(prev => prev.filter(w => w.id !== workflowId));
-  }, []);
+    try {
+      const success = workflowCreationService.deleteWorkflow(workflowId);
+      if (success) {
+        loadWorkflows(); // Refresh from service
+      }
+    } catch (error) {
+      console.error('Failed to remove workflow:', error);
+    }
+  }, [loadWorkflows]);
 
-  // This part of the code creates a workflow from an insight and adds it to the state
-  const createFromInsight = useCallback((insight: {
-    id: string;
-    title: string;
-    description: string;
-    severity: 'critical' | 'warning' | 'info';
-    suggestedActions: string[];
-    dollarImpact?: number;
-    source: string;
-  }) => {
-    const workflow = createWorkflowFromInsight(insight);
-    addWorkflow(workflow);
-    return workflow;
-  }, [addWorkflow]);
-
-  // This part of the code calculates real-time statistics from current workflows
-  const stats = calculateWorkflowStats(workflows);
+  // This part of the code calculates real-time statistics using the service
+  const stats = workflowCreationService.getWorkflowStats();
 
   // This part of the code filters workflows by status for tab display
   const workflowsByStatus = {
@@ -103,46 +87,67 @@ export const useWorkflows = () => {
     loading,
     stats,
     workflowsByStatus,
-    addWorkflow,
     updateWorkflowStatus,
     removeWorkflow,
-    createFromInsight,
     refreshWorkflows: loadWorkflows
   };
 };
 
-// This part of the code provides a simple hook for workflow creation with toast notifications
+// This part of the code provides a simple hook for workflow creation using the service
 export const useWorkflowCreation = () => {
-  const { createFromInsight } = useWorkflows();
   const [creating, setCreating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const createWorkflow = useCallback(async (insight: Parameters<typeof createFromInsight>[0]) => {
+  const createWorkflow = useCallback(async (insightData: {
+    id?: string;
+    title?: string;
+    description?: string;
+    severity?: 'critical' | 'warning' | 'info';
+    suggestedActions?: string[];
+    dollarImpact?: number;
+    source?: string;
+  }) => {
     setCreating(true);
+    setError(null);
+
     try {
-      // This part of the code validates insight data before creating workflow
-      if (!insight || typeof insight !== 'object') {
-        throw new Error('Invalid insight data provided');
-      }
+      // This part of the code creates a suggested action from insight data
+      const priority = insightData.severity === 'critical' ? 'critical' : 
+                      insightData.severity === 'warning' ? 'high' : 'medium';
       
-      const workflow = createFromInsight(insight);
-      
+      const suggestedAction = {
+        label: insightData.title || 'AI Generated Action',
+        type: 'create_workflow' as const,
+        context: insightData.description,
+        priority: priority as 'low' | 'medium' | 'high' | 'critical'
+      };
+
+      const workflow = workflowCreationService.createWorkflowFromAction(
+        suggestedAction,
+        'ai_insight',
+        insightData.id || `insight_${Date.now()}`,
+        insightData.title
+      );
+
       // Dispatch custom event for toast notification
       window.dispatchEvent(new CustomEvent('workflowCreated', { 
-        detail: { workflow, insightTitle: insight.title || 'Workflow' } 
+        detail: { workflow, insightTitle: insightData.title || 'Workflow' } 
       }));
-      
+
       return workflow;
-    } catch (error) {
-      console.error('Failed to create workflow:', error);
-      // Re-throw with more user-friendly message
-      throw new Error(`Unable to create workflow: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+      setError(errorMessage);
+      console.error('Failed to create workflow:', err);
+      throw new Error(`Unable to create workflow: ${errorMessage}`);
     } finally {
       setCreating(false);
     }
-  }, [createFromInsight]);
+  }, []);
 
   return {
     createWorkflow,
-    creating
+    creating,
+    error
   };
 };

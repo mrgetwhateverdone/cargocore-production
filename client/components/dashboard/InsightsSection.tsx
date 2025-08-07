@@ -16,6 +16,13 @@ export function InsightsSection({ insights, isLoading }: InsightsSectionProps) {
   // This part of the code handles quick workflow creation from the + button without opening overlay
   const handleQuickAdd = async (e: React.MouseEvent, insight: AIInsight) => {
     e.stopPropagation(); // Prevent card click
+    
+    // This part of the code validates insight data before attempting workflow creation
+    if (!insight || !insight.title) {
+      console.warn('Invalid insight data for workflow creation');
+      return;
+    }
+
     try {
       await createWorkflow({
         id: insight.id,
@@ -28,6 +35,7 @@ export function InsightsSection({ insights, isLoading }: InsightsSectionProps) {
       });
     } catch (error) {
       console.error('Failed to create workflow:', error);
+      // This part of the code shows user-friendly error without crashing the app
       alert('Failed to create workflow. Please try again.');
     }
   };
