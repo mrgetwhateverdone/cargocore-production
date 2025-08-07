@@ -359,7 +359,7 @@ async function generateAnalyticsInsights(
         title: "Low Fulfillment Efficiency",
         description: `Fulfillment efficiency at ${kpis.fulfillmentEfficiency.toFixed(1)}% is below optimal levels. Focus on process improvements to reach 90%+ efficiency.`,
         severity: "critical",
-        dollarImpact: 10000,
+        dollarImpact: 0, // No mock values - real impact calculation not available
       });
     }
     
@@ -369,7 +369,7 @@ async function generateAnalyticsInsights(
         title: "Brand Portfolio Diversification",
         description: `Portfolio includes ${brandPerformance.totalBrands} brands with ${brandPerformance.topBrand.name} leading with ${brandPerformance.topBrand.skuCount} SKUs. Consider brand consolidation strategies.`,
         severity: "info",
-        dollarImpact: 2500,
+        dollarImpact: 0, // No mock values - real impact calculation not available
       });
     }
     
