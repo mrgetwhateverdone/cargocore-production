@@ -296,17 +296,14 @@ EFFICIENCY & OPTIMIZATION OPPORTUNITIES:
 - Processing Efficiency: ${quantityAccuracy.toFixed(1)}% accuracy rate
 - Portfolio Optimization: ${((inactiveProducts / products.length) * 100).toFixed(1)}% inactive SKUs
 
-PROVIDE STRATEGIC ANALYSIS (3-4 insights):
-1. HIGH-IMPACT RISKS: What operational issues could cost >$50K in 90 days?
-2. IMMEDIATE OPTIMIZATIONS: Which process improvements offer fastest ROI?
-3. SUPPLIER STRATEGY: How to reduce concentration risk while maintaining efficiency?
-4. FINANCIAL PRIORITIES: Where should operations invest to maximize margin improvement?
+PROVIDE STRATEGIC ANALYSIS (2-4 insights based on data significance):
+Focus on the most critical operational issues with >$50K impact potential.
 
 Each insight must include:
 - Specific dollar impact (calculated from real data)
 - Timeline for implementation (30/60/90 days)
 - Success metrics to track progress
-- Resource requirements
+- Actionable next steps (1-4 actions based on complexity)
 
 FORMAT AS ACTIONABLE JSON:
 [
@@ -316,9 +313,16 @@ FORMAT AS ACTIONABLE JSON:
     "description": "Detailed analysis with financial impact, timeline, and specific recommendations for operational improvement",
     "severity": "critical|warning|info",
     "dollarImpact": actual_calculated_dollar_amount,
-    "suggestedActions": ["Specific Action 1", "Specific Action 2", "Specific Action 3"]
+    "suggestedActions": ["Review supplier contracts with XYZ Corp", "Implement inventory cycle counting for inactive SKUs", "Schedule leadership review of geographic risk exposure"]
   }
-]`,
+]
+
+CRITICAL: suggestedActions must be:
+- Specific, actionable tasks (not generic placeholders)
+- Ordered by priority (most important first, least important last)
+- Relevant to the actual data analyzed
+- Between 1-4 actions based on insight complexity
+- Include specific company names, SKU categories, or process names when available`,
           },
         ],
         max_tokens: 800,

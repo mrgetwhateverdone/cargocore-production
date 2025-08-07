@@ -348,13 +348,10 @@ RISK & RESILIENCE ASSESSMENT:
 - Financial Exposure: $${inboundIntelligence.valueAtRisk.toLocaleString()} at risk
 - Recovery Capacity: ${Math.max(1, 10 - (inboundIntelligence.delayedShipments.percentage || 0) / 10).toFixed(1)}/10
 
-PROVIDE OPERATIONAL STRATEGY (3-4 actionable insights):
-1. FLOW OPTIMIZATION: How to reduce cycle time by 15% without quality loss?
-2. SUPPLIER PORTFOLIO: Which supplier relationships need immediate attention?
-3. DEMAND INTELLIGENCE: How to leverage patterns for proactive planning?
-4. RESILIENCE BUILDING: What investments improve supply chain robustness?
+PROVIDE OPERATIONAL STRATEGY (2-4 insights based on operational impact):
+Focus on flow optimization and supplier performance issues with measurable ROI.
 
-Focus on implementable changes with 30-90 day impact timelines and specific ROI calculations.
+Each insight should address implementable changes with 30-90 day impact timelines.
 
 FORMAT AS OPERATIONS PLAYBOOK JSON:
 [
@@ -364,9 +361,16 @@ FORMAT AS OPERATIONS PLAYBOOK JSON:
     "description": "Operational analysis with flow optimization, supplier intelligence, and resilience recommendations with specific implementation steps",
     "severity": "critical|warning|info",
     "dollarImpact": calculated_financial_impact,
-    "suggestedActions": ["Flow Action 1", "Supplier Action 2", "Resilience Action 3"]
+    "suggestedActions": ["Audit delayed shipments from high-risk suppliers", "Implement SLA tracking dashboard for critical orders", "Negotiate backup suppliers for geographic risk countries"]
   }
-]`,
+]
+
+CRITICAL: suggestedActions must be:
+- Specific operational tasks (not generic placeholders)
+- Address real issues identified in the data analysis
+- Ordered by urgency (most critical first, preventive measures last)
+- Include specific supplier names, countries, or order types when relevant
+- Between 1-4 actions based on the complexity of the operational issue`,
           },
         ],
         max_tokens: 700,
@@ -395,6 +399,11 @@ FORMAT AS OPERATIONS PLAYBOOK JSON:
       description: `${kpis.atRiskOrders} orders are currently at risk due to delays or SLA breaches. Immediate attention required to prevent customer impact.`,
       severity: kpis.atRiskOrders > 10 ? "critical" : "warning",
       dollarImpact: inboundIntelligence.valueAtRisk,
+      suggestedActions: [
+        "Review all at-risk orders for expedited processing",
+        "Contact customers proactively about potential delays",
+        "Implement daily status tracking for critical orders"
+      ]
     });
   }
   
@@ -405,6 +414,11 @@ FORMAT AS OPERATIONS PLAYBOOK JSON:
       description: `${inboundIntelligence.delayedShipments.percentage.toFixed(1)}% of shipments are delayed with an average delay of ${inboundIntelligence.avgDelayDays} days. Review supplier performance and logistics routing.`,
       severity: "critical",
       dollarImpact: Math.round(inboundIntelligence.valueAtRisk * 0.8),
+      suggestedActions: [
+        "Audit top 3 suppliers causing delays",
+        "Implement alternative routing for critical shipments",
+        "Negotiate stricter SLAs with underperforming suppliers"
+      ]
     });
   }
   
@@ -415,6 +429,11 @@ FORMAT AS OPERATIONS PLAYBOOK JSON:
       description: `${inboundIntelligence.geopoliticalRisks.affectedShipments} shipments from risk-prone regions (${inboundIntelligence.geopoliticalRisks.riskCountries.join(', ')}). Consider supply chain diversification.`,
       severity: "info",
       dollarImpact: 0,
+      suggestedActions: [
+        `Identify backup suppliers outside ${inboundIntelligence.geopoliticalRisks.riskCountries.join(', ')}`,
+        "Create contingency plans for affected shipments",
+        "Review insurance coverage for geopolitical risks"
+      ]
     });
   }
   

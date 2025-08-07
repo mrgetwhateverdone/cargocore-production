@@ -33,10 +33,14 @@ export function InsightsSection({ insights, isLoading }: InsightsSectionProps) {
     });
 
     try {
-      // THIS IS THE KEY LINE - Creates the workflow (ChatGPT's recommended scalable pattern)
+      // This part of the code creates workflow from the FIRST (most important) suggested action only
+      const primaryAction = insight.suggestedActions && insight.suggestedActions.length > 0 
+        ? insight.suggestedActions[0] 
+        : insight.title || 'Review insight';
+      
       await createWorkflow({
         action: {
-          label: insight.title || 'Untitled Workflow',
+          label: primaryAction,
           type: 'create_workflow',
           target: 'insight_management',
           values: insight.suggestedActions || [],

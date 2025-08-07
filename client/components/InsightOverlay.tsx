@@ -113,13 +113,13 @@ export function InsightOverlay({ isOpen, onClose, insight, agentName = "Dashboar
     });
     
     try {
-      // THIS IS THE KEY LINE - Creates the workflow (ChatGPT's recommended scalable pattern)
+      // This part of the code creates workflow from the SPECIFIC action clicked (AI-ordered by priority)
       await createWorkflow({
         action: {
-          label: action || 'Default Action',           // ← "Process inventory items"
-          type: 'create_workflow',            // ← "create_workflow" 
-          target: 'insight_management',        // ← "inventory_management"
-          values: insight.suggestedActions || [],        // ← ["SKU123", "SKU456"]
+          label: action || 'Default Action',           
+          type: 'create_workflow',            
+          target: 'insight_management',        
+          values: [action], // Use only the specific action clicked
           priority: (insight.severity === 'critical' ? 'critical' :
                     insight.severity === 'warning' ? 'high' : 'medium') as 'low' | 'medium' | 'high' | 'critical',
         },
@@ -238,30 +238,47 @@ export function InsightOverlay({ isOpen, onClose, insight, agentName = "Dashboar
             </div>
           </div>
 
-          {/* This part of the code renders suggested actions with workflow creation buttons */}
+          {/* This part of the code renders AI-prioritized suggested actions (most important first) */}
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <h3 className="font-semibold text-blue-900 mb-4">Suggested Actions</h3>
+            <h3 className="font-semibold text-blue-900 mb-2">Suggested Actions</h3>
+            <p className="text-xs text-blue-700 mb-4">Ordered by priority (most important first)</p>
             <div className="space-y-3">
-              {insight.suggestedActions.map((action, index) => (
-                <button
-                  key={index}
-                  onClick={() => handleActionClick(action, index)}
-                  disabled={creating || processingActionId !== null}
-                  className="w-full text-left p-3 bg-white border border-blue-200 rounded-md hover:bg-blue-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-blue-900">{action}</span>
-                    {processingActionId === index ? (
-                      <div className="flex items-center text-blue-600">
-                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                        <span className="text-xs">Creating Workflow...</span>
+              {insight.suggestedActions.map((action, index) => {
+                const priorityLabel = index === 0 ? 'HIGH PRIORITY' : 
+                                    index === insight.suggestedActions.length - 1 ? 'SUPPORTING' : 
+                                    'MEDIUM PRIORITY';
+                const priorityColor = index === 0 ? 'text-red-600 bg-red-50 border-red-200' : 
+                                     index === insight.suggestedActions.length - 1 ? 'text-gray-600 bg-gray-50 border-gray-200' : 
+                                     'text-orange-600 bg-orange-50 border-orange-200';
+                
+                return (
+                  <button
+                    key={index}
+                    onClick={() => handleActionClick(action, index)}
+                    disabled={creating || processingActionId !== null}
+                    className="w-full text-left p-3 bg-white border border-blue-200 rounded-md hover:bg-blue-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className={`text-xs px-2 py-1 rounded-full border font-medium ${priorityColor}`}>
+                            {priorityLabel}
+                          </span>
+                        </div>
+                        <span className="text-sm font-medium text-blue-900">{action}</span>
                       </div>
-                    ) : (
-                      <span className="text-xs text-blue-600 font-medium">+ Add to Workflows</span>
-                    )}
-                  </div>
-                </button>
-              ))}
+                      {processingActionId === index ? (
+                        <div className="flex items-center text-blue-600 ml-3">
+                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                          <span className="text-xs">Creating Workflow...</span>
+                        </div>
+                      ) : (
+                        <span className="text-xs text-blue-600 font-medium ml-3">+ Add to Workflows</span>
+                      )}
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           </div>
 

@@ -426,11 +426,8 @@ PERFORMANCE CORRELATIONS:
 - Growth vs Health: ${(kpis.orderVolumeGrowth || 0) > 0 && (kpis.inventoryHealthScore || 0) > 80 ? 'Positive correlation' : 'Risk area'}
 - Brand Diversity Impact: ${brandPerformance.brandRankings.length} brands driving ${brandPerformance.topBrand.skuCount} total SKUs
 
-PROVIDE ANALYTICAL INSIGHTS (3-4 recommendations):
-1. STATISTICAL SIGNIFICANCE: Which trends are actionable and reliable?
-2. PREDICTIVE INDICATORS: What patterns predict operational issues?
-3. PERFORMANCE BENCHMARKS: How do current metrics compare to optimal levels?
-4. OPTIMIZATION OPPORTUNITIES: What mathematical models could improve operations?
+PROVIDE ANALYTICAL INSIGHTS (2-4 insights based on statistical significance):
+Focus on trends with >80% confidence and actionable optimization opportunities.
 
 Include correlation analysis, trend projections, and statistical confidence levels.
 
@@ -442,9 +439,16 @@ FORMAT AS STATISTICAL ANALYSIS JSON:
     "description": "Statistical analysis with trend data, correlations, and predictive indicators for operational optimization",
     "severity": "critical|warning|info",
     "dollarImpact": calculated_dollar_impact,
-    "suggestedActions": ["Statistical Action 1", "Trend Action 2", "Optimization Action 3"]
+    "suggestedActions": ["Investigate brand concentration risk with top 3 performers", "Implement demand forecasting for high-variance SKUs", "Schedule quarterly trend review with operations team"]
   }
-]`,
+]
+
+CRITICAL: suggestedActions must be:
+- Specific analytical tasks (not placeholder actions)
+- Based on actual statistical findings in the data
+- Ordered by impact (highest value first, supporting actions last)
+- Include specific brand names, metrics, or timeframes
+- Between 1-4 actions depending on insight complexity`,
           },
         ],
         max_tokens: 700,
@@ -473,6 +477,11 @@ FORMAT AS STATISTICAL ANALYSIS JSON:
       description: `Order volume has decreased by ${Math.abs(kpis.orderVolumeGrowth).toFixed(1)}% compared to previous period. This trend requires immediate attention to maintain business growth.`,
       severity: "warning",
       dollarImpact: 5000,
+      suggestedActions: [
+        "Analyze customer churn patterns for top brands",
+        "Review pricing strategy against market conditions",
+        "Implement customer retention campaigns"
+      ]
     });
   }
   
@@ -483,6 +492,11 @@ FORMAT AS STATISTICAL ANALYSIS JSON:
       description: `Fulfillment efficiency at ${kpis.fulfillmentEfficiency.toFixed(1)}% is below optimal levels. Focus on process improvements to reach 90%+ efficiency.`,
       severity: "critical",
       dollarImpact: 10000,
+      suggestedActions: [
+        "Audit warehouse processes for bottlenecks",
+        "Implement staff training on efficiency best practices",
+        "Review technology systems for automation opportunities"
+      ]
     });
   }
   
@@ -493,6 +507,11 @@ FORMAT AS STATISTICAL ANALYSIS JSON:
       description: `Portfolio includes ${brandPerformance.totalBrands} brands with ${brandPerformance.topBrand.name} leading with ${brandPerformance.topBrand.skuCount} SKUs. Consider brand consolidation strategies.`,
       severity: "info",
       dollarImpact: 2500,
+      suggestedActions: [
+        `Monitor ${brandPerformance.topBrand.name} performance for concentration risk`,
+        "Analyze profitability by brand to identify consolidation opportunities",
+        "Schedule quarterly brand portfolio review"
+      ]
     });
   }
   
