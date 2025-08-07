@@ -1,0 +1,235 @@
+/**
+ * Secure Internal API Service
+ *
+ * All API calls go to internal server endpoints
+ * NO external URLs or API keys exposed to client
+ * Server handles all external API communication securely
+ */
+
+import type {
+  DashboardData,
+  ProductData,
+  ShipmentData,
+  AIInsight,
+} from "@/types/api";
+
+interface APIResponse<T> {
+  success: boolean;
+  data?: T;
+  error?: string;
+  message?: string;
+  timestamp: string;
+}
+
+class InternalApiService {
+  private readonly baseUrl = ""; // Relative URLs to same domain
+
+  /**
+   * Fetch complete dashboard data from secure server endpoint
+   * NO external API keys - server handles TinyBird + OpenAI calls
+   */
+  async getDashboardData(): Promise<DashboardData> {
+    try {
+      console.log("🔒 Client: Fetching dashboard data from secure server...");
+
+      const response = await fetch(`${this.baseUrl}/api/dashboard-data`);
+
+      if (!response.ok) {
+        throw new Error(
+          `Internal API Error: ${response.status} ${response.statusText}`,
+        );
+      }
+
+      const result: APIResponse<DashboardData> = await response.json();
+
+      if (!result.success || !result.data) {
+        throw new Error(result.message || "Failed to fetch dashboard data");
+      }
+
+      console.log("✅ Client: Dashboard data received securely from server");
+      return result.data;
+    } catch (error) {
+      console.error("❌ Client: Internal API call failed:", error);
+      throw new Error(
+        `Unable to load dashboard data: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
+    }
+  }
+
+  /**
+   * Fetch products data only from secure server endpoint
+   */
+  async getProductsData(): Promise<ProductData[]> {
+    try {
+      console.log("🔒 Client: Fetching products data from secure server...");
+
+      const response = await fetch(`${this.baseUrl}/api/products`);
+
+      if (!response.ok) {
+        throw new Error(
+          `Internal API Error: ${response.status} ${response.statusText}`,
+        );
+      }
+
+      const result: APIResponse<ProductData[]> = await response.json();
+
+      if (!result.success || !result.data) {
+        throw new Error(result.message || "Failed to fetch products data");
+      }
+
+      console.log(
+        "✅ Client: Products data received securely:",
+        result.data.length,
+        "records",
+      );
+      return result.data;
+    } catch (error) {
+      console.error("❌ Client: Products API call failed:", error);
+      throw new Error(
+        `Unable to load products data: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
+    }
+  }
+
+  /**
+   * Fetch shipments data only from secure server endpoint
+   */
+  async getShipmentsData(): Promise<ShipmentData[]> {
+    try {
+      console.log("🔒 Client: Fetching shipments data from secure server...");
+
+      const response = await fetch(`${this.baseUrl}/api/shipments`);
+
+      if (!response.ok) {
+        throw new Error(
+          `Internal API Error: ${response.status} ${response.statusText}`,
+        );
+      }
+
+      const result: APIResponse<ShipmentData[]> = await response.json();
+
+      if (!result.success || !result.data) {
+        throw new Error(result.message || "Failed to fetch shipments data");
+      }
+
+      console.log(
+        "✅ Client: Shipments data received securely:",
+        result.data.length,
+        "records",
+      );
+      return result.data;
+    } catch (error) {
+      console.error("❌ Client: Shipments API call failed:", error);
+      throw new Error(
+        `Unable to load shipments data: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
+    }
+  }
+
+  /**
+   * Generate AI insights from secure server endpoint
+   */
+  async generateInsights(analysisData: any): Promise<AIInsight[]> {
+    try {
+      console.log("🔒 Client: Requesting AI insights from secure server...");
+
+      const response = await fetch(`${this.baseUrl}/api/insights`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ analysisData }),
+      });
+
+      if (!response.ok) {
+        throw new Error(
+          `Internal API Error: ${response.status} ${response.statusText}`,
+        );
+      }
+
+      const result: APIResponse<AIInsight[]> = await response.json();
+
+      if (!result.success) {
+        throw new Error(result.message || "Failed to generate AI insights");
+      }
+
+      console.log(
+        "✅ Client: AI insights received securely:",
+        result.insights?.length || 0,
+        "insights",
+      );
+      return result.insights || [];
+    } catch (error) {
+      console.error("❌ Client: AI insights API call failed:", error);
+      throw new Error(
+        `Unable to generate AI insights: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
+    }
+  }
+
+  /**
+   * Check server status and connection
+   */
+  async getServerStatus() {
+    try {
+      const response = await fetch(`${this.baseUrl}/api/status`);
+
+      if (!response.ok) {
+        throw new Error(`Server status check failed: ${response.status}`);
+      }
+
+      const result = await response.json();
+      return result;
+    } catch (error) {
+      console.error("❌ Client: Server status check failed:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Health check - verify server is responding
+   */
+  async healthCheck(): Promise<boolean> {
+    try {
+      const response = await fetch(`${this.baseUrl}/api/ping`);
+      return response.ok;
+    } catch (error) {
+      return false;
+    }
+  }
+}
+
+// Export singleton instance
+export const internalApi = new InternalApiService();
+
+/**
+ * Error handling utility for API responses
+ */
+export function handleApiError(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  return "An unexpected error occurred";
+}
+
+/**
+ * Connection status utility
+ */
+export async function checkConnectionStatus(): Promise<{
+  isConnected: boolean;
+  serverStatus?: any;
+  error?: string;
+}> {
+  try {
+    const serverStatus = await internalApi.getServerStatus();
+    return {
+      isConnected: true,
+      serverStatus,
+    };
+  } catch (error) {
+    return {
+      isConnected: false,
+      error: handleApiError(error),
+    };
+  }
+}
