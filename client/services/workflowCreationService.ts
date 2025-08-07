@@ -15,13 +15,32 @@ export interface SuggestedAction {
 
 export type WorkflowSource = 'ai_insight' | 'anomaly_detection' | 'brand_analysis' | 'order_analysis' | 'manual';
 
+// This part of the code defines the public interface for the workflow service
+export interface IWorkflowCreationService {
+  createWorkflowFromAction(action: any, source: string, sourceId: string, insightTitle?: string): CreatedWorkflow;
+  getWorkflows(): CreatedWorkflow[];
+  updateWorkflow(workflowId: string, updates: Partial<CreatedWorkflow>): boolean;
+  deleteWorkflow(workflowId: string): boolean;
+  getWorkflowStats(): { active: number; completedThisWeek: number; overdue: number; totalSaved: number };
+}
+
 // This part of the code implements the main workflow creation service with comprehensive error handling
-class WorkflowCreationService {
+class WorkflowCreationService implements IWorkflowCreationService {
   private workflows: CreatedWorkflow[] = [];
   private readonly STORAGE_KEY = 'cargocore_workflows';
+  private initialized = false;
 
   constructor() {
-    this.loadWorkflows();
+    // This part of the code defers initialization to prevent import-time crashes
+    // Initialization happens on first use instead of construction
+  }
+
+  // This part of the code ensures safe initialization on first access
+  private ensureInitialized(): void {
+    if (!this.initialized) {
+      this.loadWorkflows();
+      this.initialized = true;
+    }
   }
 
   // This part of the code safely loads workflows from localStorage with proper environment checks
@@ -219,6 +238,8 @@ class WorkflowCreationService {
     sourceId: string,
     insightTitle?: string
   ): CreatedWorkflow {
+    this.ensureInitialized(); // Ensure service is initialized before use
+    
     try {
       // Validate all inputs
       const validatedAction = this.validateSuggestedAction(action);
@@ -258,11 +279,14 @@ class WorkflowCreationService {
 
   // This part of the code provides safe access to all workflows
   public getWorkflows(): CreatedWorkflow[] {
+    this.ensureInitialized(); // Ensure service is initialized before use
     return [...this.workflows]; // Return copy to prevent mutation
   }
 
   // This part of the code updates workflow status safely
   public updateWorkflow(workflowId: string, updates: Partial<CreatedWorkflow>): boolean {
+    this.ensureInitialized(); // Ensure service is initialized before use
+    
     try {
       const index = this.workflows.findIndex(w => w.id === workflowId);
       if (index === -1) {
@@ -281,6 +305,8 @@ class WorkflowCreationService {
 
   // This part of the code removes workflows safely
   public deleteWorkflow(workflowId: string): boolean {
+    this.ensureInitialized(); // Ensure service is initialized before use
+    
     try {
       const initialLength = this.workflows.length;
       this.workflows = this.workflows.filter(w => w.id !== workflowId);
@@ -298,6 +324,8 @@ class WorkflowCreationService {
 
   // This part of the code calculates workflow statistics safely
   public getWorkflowStats() {
+    this.ensureInitialized(); // Ensure service is initialized before use
+    
     try {
       const now = new Date();
       const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
@@ -321,5 +349,34 @@ class WorkflowCreationService {
   }
 }
 
+// This part of the code creates a safe fallback service for error cases
+class FallbackWorkflowService implements IWorkflowCreationService {
+  createWorkflowFromAction(): CreatedWorkflow {
+    throw new Error('WorkflowCreationService failed to initialize');
+  }
+  getWorkflows(): CreatedWorkflow[] {
+    return [];
+  }
+  updateWorkflow(): boolean {
+    return false;
+  }
+  deleteWorkflow(): boolean {
+    return false;
+  }
+  getWorkflowStats() {
+    return { active: 0, completedThisWeek: 0, overdue: 0, totalSaved: 0 };
+  }
+}
+
 // This part of the code exports the singleton instance for consistent state across the application
-export const workflowCreationService = new WorkflowCreationService();
+// Wrapped in try-catch to prevent import-time crashes
+let workflowCreationService: IWorkflowCreationService;
+
+try {
+  workflowCreationService = new WorkflowCreationService();
+} catch (error) {
+  console.error('Failed to initialize WorkflowCreationService:', error);
+  workflowCreationService = new FallbackWorkflowService();
+}
+
+export { workflowCreationService };
