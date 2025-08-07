@@ -23,7 +23,7 @@ export function InboundIntelligenceSection({ inboundIntelligence, isLoading }: I
     },
     {
       title: "Delayed Shipments",
-      value: `${inboundIntelligence.delayedShipments.count} (${inboundIntelligence.delayedShipments.percentage.toFixed(1)}%)`,
+      value: `${inboundIntelligence.delayedShipments.count} (${(inboundIntelligence.delayedShipments.percentage || 0).toFixed(1)}%)`,
       icon: AlertTriangle,
       color: "text-red-600",
       bgColor: "bg-red-50",
@@ -31,7 +31,7 @@ export function InboundIntelligenceSection({ inboundIntelligence, isLoading }: I
     },
     {
       title: "Avg Delay Days",
-      value: inboundIntelligence.avgDelayDays.toFixed(1),
+      value: (inboundIntelligence.avgDelayDays || 0).toFixed(1),
       icon: Clock,
       color: "text-yellow-600",
       bgColor: "bg-yellow-50",

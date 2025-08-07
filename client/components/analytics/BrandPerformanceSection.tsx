@@ -155,7 +155,7 @@ export function BrandPerformanceSection({ brandPerformance, isLoading }: BrandPe
                     {brand.skuCount.toLocaleString()} SKUs
                   </div>
                   <div className="text-sm text-gray-500">
-                    {brand.inventoryPercentage.toFixed(1)}% of inventory
+                    {(brand.inventoryPercentage || 0).toFixed(1)}% of inventory
                   </div>
                 </div>
               </div>

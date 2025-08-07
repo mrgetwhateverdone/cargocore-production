@@ -44,7 +44,7 @@ export function AnalyticsKPISection({ kpis, isLoading }: AnalyticsKPISectionProp
     
     if (format === "percentage") {
       const sign = showIndicator && value > 0 ? "+" : "";
-      return `${sign}${value.toFixed(1)}%`;
+      return `${sign}${(value || 0).toFixed(1)}%`;
     }
     
     return value.toString();

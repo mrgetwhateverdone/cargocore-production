@@ -71,7 +71,7 @@ export function OperationalBreakdownSection({ breakdown, isLoading }: Operationa
           {/* This part of the code shows the calculated on-time rate */}
           <div className="mt-4 pt-3 border-t border-gray-200">
             <div className="text-sm text-gray-500">
-              On-time rate: {breakdown.orderAnalysis.onTimeRate.toFixed(1)}%
+              On-time rate: {(breakdown.orderAnalysis.onTimeRate || 0).toFixed(1)}%
             </div>
           </div>
         </div>
