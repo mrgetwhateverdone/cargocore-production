@@ -24,18 +24,20 @@ export function InsightsSection({ insights, isLoading }: InsightsSectionProps) {
     }
 
     try {
-      // Transform insight data into action format (your exact pattern)
-      const suggestedAction = {
-        label: insight.title,
-        type: 'create_workflow' as const,
-        target: 'insight_management',
-        values: insight.suggestedActions || [],
-        priority: insight.severity === 'critical' ? 'critical' as const :
-                 insight.severity === 'warning' ? 'high' as const : 'medium' as const
-      };
-
-      // THIS IS THE KEY LINE - Creates the workflow (your exact pattern)
-      await createWorkflow(suggestedAction, 'ai_insight', insight.id, insight.title);
+      // THIS IS THE KEY LINE - Creates the workflow (ChatGPT's recommended scalable pattern)
+      await createWorkflow({
+        action: {
+          label: insight.title,
+          type: 'create_workflow',
+          target: 'insight_management',
+          values: insight.suggestedActions || [],
+          priority: (insight.severity === 'critical' ? 'critical' :
+                    insight.severity === 'warning' ? 'high' : 'medium') as 'low' | 'medium' | 'high' | 'critical',
+        },
+        source: 'ai_insight',
+        sourceId: insight.id,
+        insightTitle: insight.title,
+      });
       
     } catch (error) {
       console.error('Failed to create workflow:', error);

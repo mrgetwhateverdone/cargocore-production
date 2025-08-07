@@ -106,18 +106,20 @@ export function InsightOverlay({ isOpen, onClose, insight, agentName = "Dashboar
     }
     
     try {
-      // Transform insight data into workflow format (your exact pattern)
-      const suggestedAction = {
-        label: action,           // ← "Process inventory items"
-        type: 'create_workflow' as const,            // ← "create_workflow" 
-        target: 'insight_management',        // ← "inventory_management"
-        values: insight.suggestedActions || [],        // ← ["SKU123", "SKU456"]
-        priority: insight.severity === 'critical' ? 'critical' as const :
-                 insight.severity === 'warning' ? 'high' as const : 'medium' as const
-      };
-
-      // THIS IS THE KEY LINE - Creates the workflow (your exact pattern)
-      await createWorkflow(suggestedAction, 'ai_insight', insight.id, insight.title);
+      // THIS IS THE KEY LINE - Creates the workflow (ChatGPT's recommended scalable pattern)
+      await createWorkflow({
+        action: {
+          label: action,           // ← "Process inventory items"
+          type: 'create_workflow',            // ← "create_workflow" 
+          target: 'insight_management',        // ← "inventory_management"
+          values: insight.suggestedActions || [],        // ← ["SKU123", "SKU456"]
+          priority: (insight.severity === 'critical' ? 'critical' :
+                    insight.severity === 'warning' ? 'high' : 'medium') as 'low' | 'medium' | 'high' | 'critical',
+        },
+        source: 'ai_insight',
+        sourceId: insight.id,
+        insightTitle: insight.title,
+      });
       
       setShowSuccess(true);
       setTimeout(() => {

@@ -102,18 +102,25 @@ export const useWorkflows = () => {
   };
 };
 
-// This part of the code provides workflow creation with custom event dispatch system (your exact pattern)
-export const useWorkflowCreation = () => {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const createWorkflow = useCallback(async (action: {
+// This part of the code provides workflow creation with custom event dispatch system (ChatGPT's recommended scalable pattern)
+interface CreateWorkflowInput {
+  action: {
     label: string;
     type: 'create_workflow';
     target?: string;
     values?: string[];
     priority: 'low' | 'medium' | 'high' | 'critical';
-  }, source: string, sourceId: string, insightTitle: string) => {
+  };
+  source: string;
+  sourceId: string;
+  insightTitle: string;
+}
+
+export const useWorkflowCreation = () => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const createWorkflow = useCallback(async ({ action, source, sourceId, insightTitle }: CreateWorkflowInput) => {
     setLoading(true);
     setError(null);
 
