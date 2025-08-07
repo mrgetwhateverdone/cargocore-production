@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Package, AlertTriangle, Clock, TrendingDown, Globe, Search } from "lucide-react";
+import { useState, useMemo } from "react";
+import { Package, AlertTriangle, Clock, TrendingDown, Globe, Search, ChevronUp, ChevronDown, ArrowUpDown } from "lucide-react";
 import type { InboundShipmentIntelligence, OrderData } from "@/types/api";
 
 interface InboundIntelligenceSectionProps {
@@ -7,9 +7,14 @@ interface InboundIntelligenceSectionProps {
   isLoading?: boolean;
 }
 
+type SortField = 'product_sku' | 'supplier' | 'ship_from_country' | 'expected_date' | 'status' | 'value' | 'expected_quantity';
+type SortDirection = 'asc' | 'desc' | 'default';
+
 export function InboundIntelligenceSection({ inboundIntelligence, isLoading }: InboundIntelligenceSectionProps) {
   const [activeTab, setActiveTab] = useState<'overview' | 'delayed' | 'all'>('overview');
   const [searchTerm, setSearchTerm] = useState('');
+  const [sortField, setSortField] = useState<SortField>('expected_date');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc'); // Default to most recent first
 
   // This part of the code defines the intelligence overview cards
   const intelligenceCards = [
@@ -74,6 +79,91 @@ export function InboundIntelligenceSection({ inboundIntelligence, isLoading }: I
 
     return data;
   };
+
+  // This part of the code handles column sorting with 3-state cycle
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      // Cycle through states: desc -> asc -> default
+      if (sortDirection === 'desc') {
+        setSortDirection('asc');
+      } else if (sortDirection === 'asc') {
+        setSortDirection('default');
+        setSortField('expected_date'); // Reset to default sort
+      } else {
+        setSortDirection('desc');
+      }
+    } else {
+      setSortField(field);
+      setSortDirection('desc'); // Always start with most recent/highest first
+    }
+  };
+
+  // This part of the code gets the appropriate sort icon for column headers
+  const getSortIcon = (field: SortField) => {
+    if (sortField !== field) {
+      return <ArrowUpDown className="h-4 w-4 opacity-50" />;
+    }
+    
+    switch (sortDirection) {
+      case 'desc':
+        return <ChevronDown className="h-4 w-4" />;
+      case 'asc':
+        return <ChevronUp className="h-4 w-4" />;
+      default:
+        return <ArrowUpDown className="h-4 w-4 opacity-50" />;
+    }
+  };
+
+  // This part of the code sorts the filtered data based on current sort settings
+  const sortedData = useMemo(() => {
+    const filtered = getFilteredData();
+    
+    if (sortDirection === 'default') {
+      return filtered; // Return original order
+    }
+
+    return [...filtered].sort((a, b) => {
+      let valueA: any;
+      let valueB: any;
+
+      switch (sortField) {
+        case 'expected_date':
+          valueA = new Date(a.expected_date || 0).getTime();
+          valueB = new Date(b.expected_date || 0).getTime();
+          break;
+        case 'product_sku':
+          valueA = (a.product_sku || '').toLowerCase();
+          valueB = (b.product_sku || '').toLowerCase();
+          break;
+        case 'supplier':
+          valueA = (a.supplier || '').toLowerCase();
+          valueB = (b.supplier || '').toLowerCase();
+          break;
+        case 'ship_from_country':
+          valueA = (a.ship_from_country || '').toLowerCase();
+          valueB = (b.ship_from_country || '').toLowerCase();
+          break;
+        case 'status':
+          valueA = a.status.toLowerCase();
+          valueB = b.status.toLowerCase();
+          break;
+        case 'value':
+          valueA = (a.unit_cost || 0) * a.expected_quantity;
+          valueB = (b.unit_cost || 0) * b.expected_quantity;
+          break;
+        case 'expected_quantity':
+          valueA = a.expected_quantity;
+          valueB = b.expected_quantity;
+          break;
+        default:
+          return 0;
+      }
+
+      if (valueA < valueB) return sortDirection === 'asc' ? -1 : 1;
+      if (valueA > valueB) return sortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }, [activeTab, searchTerm, inboundIntelligence, sortField, sortDirection]);
 
   // This part of the code formats currency values
   const formatCurrency = (value: number | null) => {
@@ -238,7 +328,7 @@ export function InboundIntelligenceSection({ inboundIntelligence, isLoading }: I
 
         {/* Data Table */}
         <div className="overflow-x-auto">
-          {filteredData.length === 0 ? (
+          {sortedData.length === 0 ? (
             <div className="px-6 py-12 text-center">
               <p className="text-gray-500">Information not in dataset.</p>
             </div>
@@ -246,31 +336,73 @@ export function InboundIntelligenceSection({ inboundIntelligence, isLoading }: I
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Product SKU
+                  <th 
+                    onClick={() => handleSort('product_sku')}
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none"
+                  >
+                    <div className="flex items-center space-x-1">
+                      <span>Product SKU</span>
+                      {getSortIcon('product_sku')}
+                    </div>
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Supplier
+                  <th 
+                    onClick={() => handleSort('supplier')}
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none"
+                  >
+                    <div className="flex items-center space-x-1">
+                      <span>Supplier</span>
+                      {getSortIcon('supplier')}
+                    </div>
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Origin
+                  <th 
+                    onClick={() => handleSort('ship_from_country')}
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none"
+                  >
+                    <div className="flex items-center space-x-1">
+                      <span>Origin</span>
+                      {getSortIcon('ship_from_country')}
+                    </div>
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Expected Date
+                  <th 
+                    onClick={() => handleSort('expected_date')}
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none"
+                  >
+                    <div className="flex items-center space-x-1">
+                      <span>Expected Date</span>
+                      {getSortIcon('expected_date')}
+                    </div>
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
+                  <th 
+                    onClick={() => handleSort('status')}
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none"
+                  >
+                    <div className="flex items-center space-x-1">
+                      <span>Status</span>
+                      {getSortIcon('status')}
+                    </div>
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Value
+                  <th 
+                    onClick={() => handleSort('value')}
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none"
+                  >
+                    <div className="flex items-center space-x-1">
+                      <span>Value</span>
+                      {getSortIcon('value')}
+                    </div>
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Items
+                  <th 
+                    onClick={() => handleSort('expected_quantity')}
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none"
+                  >
+                    <div className="flex items-center space-x-1">
+                      <span>Items</span>
+                      {getSortIcon('expected_quantity')}
+                    </div>
                   </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {filteredData.map((item, index) => (
+                {sortedData.map((item, index) => (
                   <tr key={`${item.order_id}-${index}`} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                       {item.product_sku || 'N/A'}

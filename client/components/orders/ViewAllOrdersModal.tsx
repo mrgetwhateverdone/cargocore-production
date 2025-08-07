@@ -1,4 +1,5 @@
-import { X } from "lucide-react";
+import { useState, useMemo } from "react";
+import { X, ChevronUp, ChevronDown, ArrowUpDown } from "lucide-react";
 import type { OrderData } from "@/types/api";
 
 interface ViewAllOrdersModalProps {
@@ -8,7 +9,100 @@ interface ViewAllOrdersModalProps {
   totalCount: number;
 }
 
+type SortField = 'order_id' | 'created_date' | 'brand_name' | 'status' | 'sla_status' | 'supplier' | 'expected_date' | 'expected_quantity';
+type SortDirection = 'asc' | 'desc' | 'default';
+
 export function ViewAllOrdersModal({ isOpen, onClose, orders, totalCount }: ViewAllOrdersModalProps) {
+  const [sortField, setSortField] = useState<SortField>('created_date');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc'); // Default to most recent first
+
+  // This part of the code handles column sorting with 3-state cycle
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      // Cycle through states: desc -> asc -> default
+      if (sortDirection === 'desc') {
+        setSortDirection('asc');
+      } else if (sortDirection === 'asc') {
+        setSortDirection('default');
+        setSortField('created_date'); // Reset to default sort
+      } else {
+        setSortDirection('desc');
+      }
+    } else {
+      setSortField(field);
+      setSortDirection('desc'); // Always start with most recent/highest first
+    }
+  };
+
+  // This part of the code gets the appropriate sort icon for column headers
+  const getSortIcon = (field: SortField) => {
+    if (sortField !== field) {
+      return <ArrowUpDown className="h-4 w-4 opacity-50" />;
+    }
+    
+    switch (sortDirection) {
+      case 'desc':
+        return <ChevronDown className="h-4 w-4" />;
+      case 'asc':
+        return <ChevronUp className="h-4 w-4" />;
+      default:
+        return <ArrowUpDown className="h-4 w-4 opacity-50" />;
+    }
+  };
+
+  // This part of the code sorts the orders based on current sort settings
+  const sortedOrders = useMemo(() => {
+    if (sortDirection === 'default') {
+      return [...orders]; // Return original order
+    }
+
+    return [...orders].sort((a, b) => {
+      let valueA: any;
+      let valueB: any;
+
+      switch (sortField) {
+        case 'created_date':
+          valueA = new Date(a.created_date).getTime();
+          valueB = new Date(b.created_date).getTime();
+          break;
+        case 'order_id':
+          valueA = a.order_id.toLowerCase();
+          valueB = b.order_id.toLowerCase();
+          break;
+        case 'brand_name':
+          valueA = a.brand_name.toLowerCase();
+          valueB = b.brand_name.toLowerCase();
+          break;
+        case 'status':
+          valueA = a.status.toLowerCase();
+          valueB = b.status.toLowerCase();
+          break;
+        case 'sla_status':
+          valueA = a.sla_status.toLowerCase();
+          valueB = b.sla_status.toLowerCase();
+          break;
+        case 'supplier':
+          valueA = (a.supplier || '').toLowerCase();
+          valueB = (b.supplier || '').toLowerCase();
+          break;
+        case 'expected_date':
+          valueA = new Date(a.expected_date || 0).getTime();
+          valueB = new Date(b.expected_date || 0).getTime();
+          break;
+        case 'expected_quantity':
+          valueA = a.expected_quantity;
+          valueB = b.expected_quantity;
+          break;
+        default:
+          return 0;
+      }
+
+      if (valueA < valueB) return sortDirection === 'asc' ? -1 : 1;
+      if (valueA > valueB) return sortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }, [orders, sortField, sortDirection]);
+
   // This part of the code determines the color for order status badges
   const getStatusColor = (status: string) => {
     const statusLower = status.toLowerCase();
@@ -96,34 +190,82 @@ export function ViewAllOrdersModal({ isOpen, onClose, orders, totalCount }: View
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50 sticky top-0">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Order ID
+                      <th 
+                        onClick={() => handleSort('order_id')}
+                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none"
+                      >
+                        <div className="flex items-center space-x-1">
+                          <span>Order ID</span>
+                          {getSortIcon('order_id')}
+                        </div>
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Date
+                      <th 
+                        onClick={() => handleSort('created_date')}
+                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none"
+                      >
+                        <div className="flex items-center space-x-1">
+                          <span>Date</span>
+                          {getSortIcon('created_date')}
+                        </div>
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Brand
+                      <th 
+                        onClick={() => handleSort('brand_name')}
+                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none"
+                      >
+                        <div className="flex items-center space-x-1">
+                          <span>Brand</span>
+                          {getSortIcon('brand_name')}
+                        </div>
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Status
+                      <th 
+                        onClick={() => handleSort('status')}
+                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none"
+                      >
+                        <div className="flex items-center space-x-1">
+                          <span>Status</span>
+                          {getSortIcon('status')}
+                        </div>
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        SLA
+                      <th 
+                        onClick={() => handleSort('sla_status')}
+                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none"
+                      >
+                        <div className="flex items-center space-x-1">
+                          <span>SLA</span>
+                          {getSortIcon('sla_status')}
+                        </div>
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Supplier
+                      <th 
+                        onClick={() => handleSort('supplier')}
+                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none"
+                      >
+                        <div className="flex items-center space-x-1">
+                          <span>Supplier</span>
+                          {getSortIcon('supplier')}
+                        </div>
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Expected
+                      <th 
+                        onClick={() => handleSort('expected_date')}
+                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none"
+                      >
+                        <div className="flex items-center space-x-1">
+                          <span>Expected</span>
+                          {getSortIcon('expected_date')}
+                        </div>
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Quantity
+                      <th 
+                        onClick={() => handleSort('expected_quantity')}
+                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none"
+                      >
+                        <div className="flex items-center space-x-1">
+                          <span>Quantity</span>
+                          {getSortIcon('expected_quantity')}
+                        </div>
                       </th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {orders.map((order, index) => (
+                    {sortedOrders.map((order, index) => (
                       <tr key={`${order.order_id}-${index}`} className="hover:bg-gray-50">
                         {/* Order ID */}
                         <td className="px-6 py-4 whitespace-nowrap">
