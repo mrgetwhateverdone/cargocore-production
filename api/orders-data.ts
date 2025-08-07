@@ -73,7 +73,7 @@ async function fetchShipments(): Promise<ShipmentData[]> {
   }
 
   // This part of the code fetches from inbound_shipments_details_mv API with COMP002_3PL company filter
-  const url = `${baseUrl}?token=${token}&limit=200&company_url=COMP002_3PL`;
+  const url = `${baseUrl}?token=${token}&limit=1000&company_url=COMP002_3PL`;
   const response = await fetch(url);
   if (!response.ok) {
     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -252,8 +252,8 @@ function calculateInboundIntelligence(orders: OrderData[]): any {
     avgDelayDays: Math.round(avgDelayDays * 10) / 10,
     valueAtRisk: Math.round(valueAtRisk),
     geopoliticalRisks,
-    recentShipments: orders.slice(0, 10), // Most recent 10
-    delayedShipmentsList: delayedOrders.slice(0, 20), // Top 20 delayed
+    recentShipments: orders.slice(0, 50), // Most recent 50 for better overview
+    delayedShipmentsList: delayedOrders.slice(0, 100), // Top 100 delayed for comprehensive view
   };
 }
 
@@ -424,7 +424,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const insightsData = await generateOrdersInsights(orders, kpis, inboundIntelligence);
 
     const ordersData = {
-      orders: orders.slice(0, 50), // Limit for performance, show top 50
+      orders: orders.slice(0, 500), // Show up to 500 orders for comprehensive view while maintaining performance
       kpis,
       insights: insightsData.map((insight, index) => ({
         id: `orders-insight-${index}`,

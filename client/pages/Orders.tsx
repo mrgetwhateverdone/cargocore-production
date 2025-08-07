@@ -118,10 +118,7 @@ export default function Orders() {
         <ViewAllShipmentsModal
           isOpen={showViewAllShipmentsModal}
           onClose={handleCloseShipmentsModal}
-          shipments={[
-            ...(data?.inboundIntelligence.recentShipments || []),
-            ...(data?.inboundIntelligence.delayedShipmentsList || [])
-          ]}
+          shipments={data?.orders || []} // Use all orders data as shipments since orders are derived from shipments
           title="All Inbound Shipments"
         />
 
