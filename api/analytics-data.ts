@@ -386,7 +386,8 @@ async function generateAnalyticsInsights(
     const consistencyScore = Math.max(0, 10 - volumeVariance);
     const trendConfidence = Math.min(95, 60 + (consistencyScore * 3.5));
     
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+    const openaiUrl = process.env.OPENAI_API_URL || "https://api.openai.com/v1/chat/completions";
+    const response = await fetch(openaiUrl, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${apiKey}`,
@@ -476,7 +477,7 @@ CRITICAL: suggestedActions must be:
       title: "Declining Order Volume",
       description: `Order volume has decreased by ${Math.abs(kpis.orderVolumeGrowth).toFixed(1)}% compared to previous period. This trend requires immediate attention to maintain business growth.`,
       severity: "warning",
-      dollarImpact: 5000,
+      dollarImpact: 0, // No mock values - real impact calculation not available
       suggestedActions: [
         "Analyze customer churn patterns for top brands",
         "Review pricing strategy against market conditions",
@@ -491,7 +492,7 @@ CRITICAL: suggestedActions must be:
       title: "Low Fulfillment Efficiency",
       description: `Fulfillment efficiency at ${kpis.fulfillmentEfficiency.toFixed(1)}% is below optimal levels. Focus on process improvements to reach 90%+ efficiency.`,
       severity: "critical",
-      dollarImpact: 10000,
+      dollarImpact: 0, // No mock values - real impact calculation not available
       suggestedActions: [
         "Audit warehouse processes for bottlenecks",
         "Implement staff training on efficiency best practices",
@@ -506,7 +507,7 @@ CRITICAL: suggestedActions must be:
       title: "Brand Portfolio Diversification",
       description: `Portfolio includes ${brandPerformance.totalBrands} brands with ${brandPerformance.topBrand.name} leading with ${brandPerformance.topBrand.skuCount} SKUs. Consider brand consolidation strategies.`,
       severity: "info",
-      dollarImpact: 2500,
+      dollarImpact: 0, // No mock values - real impact calculation not available
       suggestedActions: [
         `Monitor ${brandPerformance.topBrand.name} performance for concentration risk`,
         "Analyze profitability by brand to identify consolidation opportunities",

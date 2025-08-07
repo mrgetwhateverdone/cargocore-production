@@ -256,7 +256,8 @@ async function generateInsights(
     const topSuppliers = Object.entries(supplierCounts).sort(([,a], [,b]) => b - a).slice(0, 3);
     const supplierConcentration = topSuppliers.reduce((sum, [,count]) => sum + count, 0) / shipments.length * 100;
     
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+    const openaiUrl = process.env.OPENAI_API_URL || "https://api.openai.com/v1/chat/completions";
+    const response = await fetch(openaiUrl, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${apiKey}`,

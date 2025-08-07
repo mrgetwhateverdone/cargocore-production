@@ -304,7 +304,8 @@ async function generateOrdersInsights(
   }
 
   try {
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+    const openaiUrl = process.env.OPENAI_API_URL || "https://api.openai.com/v1/chat/completions";
+    const response = await fetch(openaiUrl, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${apiKey}`,
