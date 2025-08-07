@@ -119,17 +119,23 @@ export const useWorkflowCreation = () => {
   const createWorkflow = useCallback(async (insight: Parameters<typeof createFromInsight>[0]) => {
     setCreating(true);
     try {
+      // This part of the code validates insight data before creating workflow
+      if (!insight || typeof insight !== 'object') {
+        throw new Error('Invalid insight data provided');
+      }
+      
       const workflow = createFromInsight(insight);
       
       // Dispatch custom event for toast notification
       window.dispatchEvent(new CustomEvent('workflowCreated', { 
-        detail: { workflow, insightTitle: insight.title } 
+        detail: { workflow, insightTitle: insight.title || 'Workflow' } 
       }));
       
       return workflow;
     } catch (error) {
       console.error('Failed to create workflow:', error);
-      throw error;
+      // Re-throw with more user-friendly message
+      throw new Error(`Unable to create workflow: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setCreating(false);
     }

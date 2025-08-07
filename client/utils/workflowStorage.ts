@@ -103,7 +103,12 @@ export const createWorkflowFromInsight = (insight: {
   dollarImpact?: number;
   source: string;
 }): CreatedWorkflow => {
-  const steps: WorkflowStep[] = insight.suggestedActions.map((action, index) => ({
+  // This part of the code ensures suggestedActions is valid to prevent runtime errors
+  const actions = Array.isArray(insight.suggestedActions) && insight.suggestedActions.length > 0 
+    ? insight.suggestedActions 
+    : ['Review insight', 'Take action'];
+    
+  const steps: WorkflowStep[] = actions.map((action, index) => ({
     id: `step_${Date.now()}_${index}`,
     title: action,
     completed: false,
@@ -112,15 +117,15 @@ export const createWorkflowFromInsight = (insight: {
 
   return {
     id: `workflow_${Date.now()}`,
-    title: insight.title,
-    description: insight.description,
+    title: insight.title || 'Untitled Workflow',
+    description: insight.description || 'No description available',
     priority: mapSeverityToPriority(insight.severity),
     status: 'todo',
     source: 'ai_insight',
-    sourceId: insight.id,
+    sourceId: insight.id || 'unknown',
     steps,
     estimatedTime: `${steps.length * 15} minutes`, // 15 minutes per step estimate
-    tags: [insight.source.replace('_', ' '), insight.severity],
+    tags: [insight.source?.replace('_', ' ') || 'unknown', insight.severity],
     createdAt: new Date().toISOString(),
     dollarImpact: insight.dollarImpact || 0
   };

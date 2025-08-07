@@ -22,12 +22,13 @@ export function InsightsSection({ insights, isLoading }: InsightsSectionProps) {
         title: insight.title,
         description: insight.description,
         severity: insight.severity,
-        suggestedActions: insight.suggestedActions,
+        suggestedActions: insight.suggestedActions || [],
         dollarImpact: insight.dollarImpact,
         source: insight.source
       });
     } catch (error) {
       console.error('Failed to create workflow:', error);
+      alert('Failed to create workflow. Please try again.');
     }
   };
 

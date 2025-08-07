@@ -104,7 +104,7 @@ export function InsightOverlay({ isOpen, onClose, insight, agentName = "Dashboar
         title: insight.title,
         description: insight.description,
         severity: insight.severity,
-        suggestedActions: insight.suggestedActions,
+        suggestedActions: insight.suggestedActions || [],
         dollarImpact: insight.dollarImpact,
         source: insight.source
       });
@@ -117,6 +117,7 @@ export function InsightOverlay({ isOpen, onClose, insight, agentName = "Dashboar
       
     } catch (error) {
       console.error('Failed to create workflow:', error);
+      alert('Failed to create workflow. Please try again.');
     } finally {
       setProcessingActionId(null);
     }
