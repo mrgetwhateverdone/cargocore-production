@@ -155,10 +155,10 @@ class InternalApiService {
 
       console.log(
         "✅ Client: AI insights received securely:",
-        result.insights?.length || 0,
+        result.data?.length || 0,
         "insights",
       );
-      return result.insights || [];
+      return result.data || [];
     } catch (error) {
       console.error("❌ Client: AI insights API call failed:", error);
       throw new Error(

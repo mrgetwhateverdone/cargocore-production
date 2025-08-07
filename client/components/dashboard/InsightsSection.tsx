@@ -1,5 +1,8 @@
-import { TriangleAlert, Info, Target, DollarSign } from "lucide-react";
+import { TriangleAlert, Info, Target, DollarSign, Plus } from "lucide-react";
+import { useState } from "react";
 import type { AIInsight } from "@/types/api";
+import { InsightOverlay } from "../InsightOverlay";
+import { useWorkflowCreation } from "../../hooks/useWorkflows";
 
 interface InsightsSectionProps {
   insights: AIInsight[];
@@ -7,6 +10,32 @@ interface InsightsSectionProps {
 }
 
 export function InsightsSection({ insights, isLoading }: InsightsSectionProps) {
+  const [selectedInsight, setSelectedInsight] = useState<AIInsight | null>(null);
+  const { createWorkflow, creating } = useWorkflowCreation();
+
+  // This part of the code handles quick workflow creation from the + button without opening overlay
+  const handleQuickAdd = async (e: React.MouseEvent, insight: AIInsight) => {
+    e.stopPropagation(); // Prevent card click
+    try {
+      await createWorkflow({
+        id: insight.id,
+        title: insight.title,
+        description: insight.description,
+        severity: insight.severity,
+        suggestedActions: insight.suggestedActions,
+        dollarImpact: insight.dollarImpact,
+        source: insight.source
+      });
+    } catch (error) {
+      console.error('Failed to create workflow:', error);
+    }
+  };
+
+  // This part of the code opens the detailed overlay when the card is clicked
+  const handleCardClick = (insight: AIInsight) => {
+    setSelectedInsight(insight);
+  };
+
   const getInsightIcon = (severity: string) => {
     switch (severity) {
       case "critical":
@@ -69,13 +98,23 @@ export function InsightsSection({ insights, isLoading }: InsightsSectionProps) {
         {insights?.map((insight) => (
           <div
             key={insight.id}
-            className={`w-full border rounded-lg p-4 transition-colors hover:opacity-80 ${getInsightStyles(insight.severity)}`}
+            onClick={() => handleCardClick(insight)}
+            className={`w-full border rounded-lg p-4 transition-all cursor-pointer hover:shadow-md hover:scale-[1.02] relative ${getInsightStyles(insight.severity)}`}
           >
             <div className="flex items-start justify-between mb-3">
               <div className="flex items-center">
                 {getInsightIcon(insight.severity)}
                 <h3 className="ml-2 font-semibold text-sm">{insight.title}</h3>
               </div>
+              {/* This part of the code adds the small + button for quick workflow creation */}
+              <button
+                onClick={(e) => handleQuickAdd(e, insight)}
+                disabled={creating}
+                className="p-1 hover:bg-white hover:bg-opacity-50 rounded-full transition-colors disabled:opacity-50"
+                title="Quick add to workflows"
+              >
+                <Plus className="h-4 w-4" />
+              </button>
             </div>
 
             <p className="text-sm mb-3 leading-relaxed">
@@ -105,6 +144,16 @@ export function InsightsSection({ insights, isLoading }: InsightsSectionProps) {
             processed.
           </p>
         </div>
+      )}
+
+      {/* This part of the code renders the insight overlay when an insight is selected */}
+      {selectedInsight && (
+        <InsightOverlay
+          isOpen={!!selectedInsight}
+          onClose={() => setSelectedInsight(null)}
+          insight={selectedInsight}
+          agentName="Dashboard Agent"
+        />
       )}
     </div>
   );
