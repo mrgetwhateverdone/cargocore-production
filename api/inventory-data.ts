@@ -335,33 +335,40 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const inventoryData = {
       kpis,
-      insights,
+      insights: insights.map((insight, index) => ({
+        id: `inventory-insight-${index}`,
+        title: insight.title,
+        description: insight.description,
+        severity:
+          insight.severity === "critical"
+            ? ("critical" as const)
+            : insight.severity === "warning"
+              ? ("warning" as const)
+              : ("info" as const),
+        dollarImpact: insight.dollarImpact || 0,
+        suggestedActions: insight.suggestedActions || [
+          `Address ${insight.title.toLowerCase()}`,
+          "Implement corrective measures",
+        ],
+        createdAt: new Date().toISOString(),
+        source: "inventory_agent" as const,
+      })),
       inventory: inventory.slice(0, 500), // Limit for performance
       lastUpdated: new Date().toISOString(),
     };
 
-    console.log("✅ Server: Inventory data compiled successfully");
-    console.log("📊 Server: Inventory summary:", {
-      totalSKUs: kpis.totalSKUs,
-      inStock: kpis.inStockCount,
-      outOfStock: kpis.unfulfillableCount,
-      overstocked: kpis.overstockedCount,
-      insights: insights.length,
-    });
-
+    console.log("✅ Vercel API: Inventory data compiled successfully");
     res.status(200).json({
       success: true,
       data: inventoryData,
+      message: "Inventory data retrieved successfully",
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    console.error("❌ Server: Inventory API error:", error);
-
+    console.error("❌ Vercel API Error:", error);
     res.status(500).json({
-      success: false,
-      message: "Failed to fetch inventory data",
-      error: error instanceof Error ? error.message : "Unknown error",
-      timestamp: new Date().toISOString(),
+      error: "Failed to fetch inventory data",
+      details: error instanceof Error ? error.message : "Unknown error",
     });
   }
 }
