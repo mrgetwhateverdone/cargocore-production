@@ -11,10 +11,12 @@ import { InventoryTableSection } from "@/components/inventory/InventoryTableSect
 import { BrandPerformanceSection } from "@/components/inventory/BrandPerformanceSection";
 import { SupplierAnalysisSection } from "@/components/inventory/SupplierAnalysisSection";
 import { ViewAllInventoryModal } from "@/components/inventory/ViewAllInventoryModal";
+import { ViewAllBrandsModal } from "@/components/inventory/ViewAllBrandsModal";
 
 export default function Inventory() {
   const { data, isLoading, error, refetch } = useInventoryData();
   const [showViewAllModal, setShowViewAllModal] = useState(false);
+  const [showViewAllBrandsModal, setShowViewAllBrandsModal] = useState(false);
 
   // This part of the code processes inventory data for table display
   const inventory = data?.inventory || [];
@@ -31,6 +33,16 @@ export default function Inventory() {
   // This part of the code handles closing the view all inventory modal
   const handleCloseModal = () => {
     setShowViewAllModal(false);
+  };
+
+  // This part of the code handles opening the view all brands modal
+  const handleViewAllBrands = () => {
+    setShowViewAllBrandsModal(true);
+  };
+
+  // This part of the code handles closing the view all brands modal
+  const handleCloseBrandsModal = () => {
+    setShowViewAllBrandsModal(false);
   };
 
   if (isLoading) {
@@ -94,6 +106,7 @@ export default function Inventory() {
         <BrandPerformanceSection
           brandPerformance={data.brandPerformance || []}
           isLoading={isLoading}
+          onViewAll={handleViewAllBrands}
         />
 
         {/* This part of the code displays supplier analysis and risk assessment */}
@@ -108,6 +121,13 @@ export default function Inventory() {
           onClose={handleCloseModal}
           inventory={inventory}
           totalCount={totalCount}
+        />
+
+        {/* This part of the code displays the view all brands modal */}
+        <ViewAllBrandsModal
+          isOpen={showViewAllBrandsModal}
+          onClose={handleCloseBrandsModal}
+          brands={data.brandPerformance || []}
         />
       </div>
     </Layout>

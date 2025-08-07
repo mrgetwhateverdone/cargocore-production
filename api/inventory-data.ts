@@ -116,8 +116,7 @@ function calculateBrandPerformance(products: ProductData[]) {
       portfolio_percentage: totalPortfolioValue > 0 ? Math.round((data.totalValue / totalPortfolioValue) * 100) : 0,
       efficiency_score: Math.round((data.totalValue / data.skuCount) * (data.totalQuantity / data.skuCount))
     }))
-    .sort((a, b) => b.total_value - a.total_value)
-    .slice(0, 10); // Top 10 brands
+    .sort((a, b) => b.total_value - a.total_value); // All brands, sorted by value
 }
 
 function calculateSupplierAnalysis(products: ProductData[]) {

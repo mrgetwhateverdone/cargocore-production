@@ -3,9 +3,10 @@ import type { BrandPerformance } from "@/types/api";
 interface BrandPerformanceSectionProps {
   brandPerformance: BrandPerformance[];
   isLoading?: boolean;
+  onViewAll?: () => void;
 }
 
-export function BrandPerformanceSection({ brandPerformance, isLoading }: BrandPerformanceSectionProps) {
+export function BrandPerformanceSection({ brandPerformance, isLoading, onViewAll }: BrandPerformanceSectionProps) {
   // This part of the code formats currency values for display
   const formatCurrency = (value: number) => {
     if (value >= 1000000) return `$${(value / 1000000).toFixed(1)}M`;
@@ -94,7 +95,7 @@ export function BrandPerformanceSection({ brandPerformance, isLoading }: BrandPe
 
         {/* This part of the code displays the brand ranking list */}
         <div className="space-y-3 max-h-96 overflow-y-auto">
-          {brandPerformance.map((brand, index) => {
+          {brandPerformance.slice(0, 10).map((brand, index) => {
             // This part of the code determines rank badge styling
             let rankBadgeClass = "bg-gray-100 text-gray-800";
             if (index === 0) rankBadgeClass = "bg-yellow-100 text-yellow-800"; // Gold
@@ -139,6 +140,21 @@ export function BrandPerformanceSection({ brandPerformance, isLoading }: BrandPe
             );
           })}
         </div>
+
+        {/* This part of the code displays the View All button when there are more than 10 brands */}
+        {brandPerformance.length > 10 && onViewAll && (
+          <div className="mt-6 text-center">
+            <button
+              onClick={onViewAll}
+              className="inline-flex items-center px-4 py-2 border border-blue-300 text-sm font-medium rounded-md text-blue-700 bg-white hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+            >
+              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+              View All {brandPerformance.length} Brands
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
