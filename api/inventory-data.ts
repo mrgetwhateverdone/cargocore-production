@@ -25,25 +25,28 @@ async function fetchProducts(): Promise<ProductData[]> {
     return [];
   }
 
-  const url = `${baseUrl}/v0/pipes/product_details_mv.json?token=${token}&limit=1000`;
+  // This part of the code matches the working dashboard API URL pattern
+  const url = `${baseUrl}?token=${token}&limit=1000&company_url=COMP002_packiyo`;
   
   try {
+    console.log("🔒 Fetching from TinyBird:", url.replace(token, "[TOKEN]"));
     const response = await fetch(url);
     if (!response.ok) {
-      console.log("⚠️ TinyBird API failed, using fallback");
+      console.log("⚠️ TinyBird API failed:", response.status, response.statusText);
       return [];
     }
     const result = await response.json();
+    console.log("✅ TinyBird response:", result.data?.length || 0, "products");
     return result.data || [];
   } catch (error) {
-    console.log("⚠️ TinyBird fetch failed, using fallback");
+    console.log("⚠️ TinyBird fetch failed:", error);
     return [];
   }
 }
 
 function calculateEnhancedKPIs(products: ProductData[]) {
-  // Filter to company data
-  const companyProducts = products.filter(p => p.company_url === 'COMP002_packiyo');
+  // Data is already filtered by company_url in the API call
+  const companyProducts = products;
   
   // Basic counts
   const totalSKUs = companyProducts.length;
@@ -79,7 +82,8 @@ function calculateEnhancedKPIs(products: ProductData[]) {
 }
 
 function calculateBrandPerformance(products: ProductData[]) {
-  const companyProducts = products.filter(p => p.company_url === 'COMP002_packiyo');
+  // Data is already filtered by company_url in the API call
+  const companyProducts = products;
   const brandMap = new Map<string, {skuCount: number, totalValue: number, totalQuantity: number}>();
   
   companyProducts.forEach(p => {
@@ -113,7 +117,8 @@ function calculateBrandPerformance(products: ProductData[]) {
 }
 
 function calculateSupplierAnalysis(products: ProductData[]) {
-  const companyProducts = products.filter(p => p.company_url === 'COMP002_packiyo');
+  // Data is already filtered by company_url in the API call
+  const companyProducts = products;
   const supplierMap = new Map<string, {skuCount: number, totalValue: number, countries: Set<string>}>();
   
   companyProducts.forEach(p => {
@@ -147,8 +152,8 @@ function calculateSupplierAnalysis(products: ProductData[]) {
 }
 
 function transformToEnhancedInventoryItems(products: ProductData[]) {
+  // Data is already filtered by company_url in the API call
   return products
-    .filter(p => p.company_url === 'COMP002_packiyo')
     .map(p => {
       const cost = p.unit_cost || 0;
       const totalValue = p.unit_quantity * cost;
