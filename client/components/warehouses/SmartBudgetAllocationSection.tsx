@@ -1,4 +1,6 @@
+import { useState } from "react";
 import type { BudgetAllocation } from "@/types/api";
+import { WarehouseModal } from "./WarehouseModal";
 
 interface SmartBudgetAllocationSectionProps {
   budgetAllocations: BudgetAllocation[];
@@ -10,6 +12,62 @@ interface SmartBudgetAllocationSectionProps {
  * AI-powered budget optimization system with performance-based recommendations
  */
 export function SmartBudgetAllocationSection({ budgetAllocations, isLoading }: SmartBudgetAllocationSectionProps) {
+  const [showAllModal, setShowAllModal] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [riskFilter, setRiskFilter] = useState<string>("all");
+
+  // This part of the code determines which allocations to show by default (top 5 high-impact)
+  const highImpactAllocations = budgetAllocations
+    .sort((a, b) => Math.abs(b.changeAmount) - Math.abs(a.changeAmount)) // Sort by impact size
+    .slice(0, 5);
+
+  // This part of the code handles modal search and filtering
+  const filteredAllocations = budgetAllocations.filter(allocation => {
+    const matchesSearch = allocation.warehouseName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         allocation.warehouseId.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesRisk = riskFilter === "all" || allocation.riskLevel === riskFilter;
+    
+    return matchesSearch && matchesRisk;
+  });
+
+  // This part of the code creates filter options with counts
+  const riskCounts = budgetAllocations.reduce((acc, allocation) => {
+    acc[allocation.riskLevel] = (acc[allocation.riskLevel] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
+  const filters = [
+    {
+      label: "All Risk Levels",
+      value: "all",
+      count: budgetAllocations.length,
+      active: riskFilter === "all",
+      onClick: () => setRiskFilter("all")
+    },
+    {
+      label: "High Risk",
+      value: "High",
+      count: riskCounts["High"] || 0,
+      active: riskFilter === "High",
+      onClick: () => setRiskFilter("High")
+    },
+    {
+      label: "Medium Risk",
+      value: "Medium", 
+      count: riskCounts["Medium"] || 0,
+      active: riskFilter === "Medium",
+      onClick: () => setRiskFilter("Medium")
+    },
+    {
+      label: "Low Risk",
+      value: "Low",
+      count: riskCounts["Low"] || 0,
+      active: riskFilter === "Low",
+      onClick: () => setRiskFilter("Low")
+    }
+  ];
+
   // This part of the code handles loading state
   if (isLoading) {
     return (
@@ -69,18 +127,113 @@ export function SmartBudgetAllocationSection({ budgetAllocations, isLoading }: S
     }
   };
 
+  // This part of the code creates a budget allocation card component
+  const renderAllocationCard = (allocation: BudgetAllocation) => (
+    <div
+      key={allocation.warehouseId}
+      className={`border rounded-lg p-4 shadow-sm hover:shadow-md transition-all ${getCardColor(allocation.changePercentage)}`}
+    >
+      {/* Card Header */}
+      <div className="mb-4">
+        <h3 className="text-sm font-medium text-gray-900 truncate mb-1">
+          {allocation.warehouseName}
+        </h3>
+        <div className="flex items-center justify-between">
+          <span className="text-xs text-gray-500">
+            Performance Score: {allocation.performanceScore}/100
+          </span>
+          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getRiskLevelColor(allocation.riskLevel)}`}>
+            {allocation.riskLevel} Risk
+          </span>
+        </div>
+      </div>
+
+      {/* Budget Comparison */}
+      <div className="mb-4 space-y-2">
+        <div className="flex justify-between items-center">
+          <span className="text-xs text-gray-600">Current Budget</span>
+          <span className="text-sm font-medium text-gray-900">
+            ${allocation.currentBudget.toLocaleString()}
+          </span>
+        </div>
+        <div className="flex justify-between items-center">
+          <span className="text-xs text-gray-600">Recommended</span>
+          <span className="text-sm font-medium text-gray-900">
+            ${allocation.recommendedBudget.toLocaleString()}
+          </span>
+        </div>
+        
+        {/* Change Amount and Percentage */}
+        <div className="pt-2 border-t border-gray-200">
+          <div className="flex justify-between items-center">
+            <span className="text-xs text-gray-600">Change</span>
+            <div className="text-right">
+              <div className={`text-sm font-semibold ${getChangeColor(allocation.changePercentage)}`}>
+                {allocation.changeAmount >= 0 ? '+' : ''}${allocation.changeAmount.toLocaleString()}
+              </div>
+              <div className={`text-xs ${getChangeColor(allocation.changePercentage)}`}>
+                {allocation.changePercentage >= 0 ? '+' : ''}{allocation.changePercentage.toFixed(1)}%
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Expected ROI */}
+      <div className="mb-4">
+        <div className="flex justify-between items-center">
+          <span className="text-xs text-gray-600">Expected ROI</span>
+          <span className="text-sm font-semibold text-green-600">
+            {allocation.expectedROI}%
+          </span>
+        </div>
+      </div>
+
+      {/* Justification */}
+      <div className="bg-white rounded-lg p-3 border border-gray-200">
+        <h4 className="text-xs font-medium text-gray-900 mb-2">
+          AI Recommendation
+        </h4>
+        <p className="text-xs text-gray-600 leading-relaxed">
+          {allocation.justification}
+        </p>
+      </div>
+    </div>
+  );
+
   return (
     <div className="mb-6">
-      {/* Section Header */}
-      <div className="flex items-center mb-4">
-        <span className="text-green-600 mr-2">💰</span>
-        <h2 className="text-lg font-medium text-gray-900">
-          Smart Budget Allocation Engine
-        </h2>
-        <span className="ml-2 inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
-          AI-Optimized
-        </span>
+      {/* Section Header with View All Button */}
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center">
+          <span className="text-green-600 mr-2">💰</span>
+          <h2 className="text-lg font-medium text-gray-900">
+            Smart Budget Allocation Engine
+          </h2>
+          <span className="ml-2 inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+            AI-Optimized
+          </span>
+        </div>
+        {budgetAllocations.length > highImpactAllocations.length && (
+          <button
+            onClick={() => setShowAllModal(true)}
+            className="inline-flex items-center px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-md hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            View All Recommendations ({budgetAllocations.length})
+          </button>
+        )}
       </div>
+
+      {/* High Impact Banner */}
+      {budgetAllocations.length > 5 && (
+        <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+          <p className="text-sm text-green-800">
+            <span className="font-medium">💡 Showing top 5 highest-impact budget recommendations</span>
+            <span className="mx-2">•</span>
+            <span>Total impact: ${highImpactAllocations.reduce((sum, a) => sum + Math.abs(a.changeAmount), 0).toLocaleString()}</span>
+          </p>
+        </div>
+      )}
 
       {/* Summary Banner */}
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
@@ -110,7 +263,7 @@ export function SmartBudgetAllocationSection({ budgetAllocations, isLoading }: S
         </div>
       </div>
 
-      {/* Budget Allocation Cards */}
+      {/* High-Impact Budget Allocation Cards */}
       {budgetAllocations.length === 0 ? (
         <div className="bg-white border border-gray-200 rounded-lg p-6 text-center">
           <p className="text-sm text-gray-500">
@@ -119,80 +272,94 @@ export function SmartBudgetAllocationSection({ budgetAllocations, isLoading }: S
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {budgetAllocations.map((allocation) => (
-            <div
-              key={allocation.warehouseId}
-              className={`border rounded-lg p-4 shadow-sm hover:shadow-md transition-all ${getCardColor(allocation.changePercentage)}`}
-            >
-              {/* Card Header */}
-              <div className="mb-4">
-                <h3 className="text-sm font-medium text-gray-900 truncate mb-1">
-                  {allocation.warehouseName}
+          {highImpactAllocations.map(renderAllocationCard)}
+        </div>
+      )}
+
+      {/* Modal for All Budget Allocations */}
+      <WarehouseModal
+        isOpen={showAllModal}
+        onClose={() => setShowAllModal(false)}
+        title={`All Budget Recommendations (${budgetAllocations.length})`}
+        searchPlaceholder="Search by warehouse name or ID..."
+        onSearch={setSearchTerm}
+        filters={filters}
+        showExport={true}
+        onExport={() => {
+          // This part of the code handles budget allocation data export
+          const csvData = budgetAllocations.map(a => ({
+            Name: a.warehouseName,
+            ID: a.warehouseId,
+            CurrentBudget: a.currentBudget,
+            RecommendedBudget: a.recommendedBudget,
+            Change: a.changeAmount,
+            ChangePercent: a.changePercentage,
+            ExpectedROI: a.expectedROI,
+            RiskLevel: a.riskLevel,
+            PerformanceScore: a.performanceScore
+          }));
+          
+          const csv = [
+            Object.keys(csvData[0]).join(','),
+            ...csvData.map(row => Object.values(row).join(','))
+          ].join('\n');
+          
+          const blob = new Blob([csv], { type: 'text/csv' });
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'budget-allocations.csv';
+          a.click();
+        }}
+      >
+        {/* Modal Content */}
+        <div className="space-y-4">
+          {/* Results Summary */}
+          <div className="flex items-center justify-between">
+            <div className="text-sm text-gray-600">
+              Showing {filteredAllocations.length} of {budgetAllocations.length} recommendations
+            </div>
+            <div className="text-sm text-gray-600">
+              Total Budget Impact: ${filteredAllocations.reduce((sum, a) => sum + Math.abs(a.changeAmount), 0).toLocaleString()}
+            </div>
+          </div>
+          
+          {/* Summary Banner */}
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div>
+                <h3 className="text-sm font-medium text-blue-900 mb-1">
+                  Total Annual Budget
                 </h3>
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-gray-500">
-                    Performance Score: {allocation.performanceScore}/100
-                  </span>
-                  <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getRiskLevelColor(allocation.riskLevel)}`}>
-                    {allocation.riskLevel} Risk
-                  </span>
-                </div>
+                <p className="text-xl font-bold text-blue-900">
+                  ${filteredAllocations.reduce((sum, a) => sum + a.recommendedBudget, 0).toLocaleString()}
+                </p>
               </div>
-
-              {/* Budget Comparison */}
-              <div className="mb-4 space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-xs text-gray-600">Current Budget</span>
-                  <span className="text-sm font-medium text-gray-900">
-                    ${allocation.currentBudget.toLocaleString()}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-xs text-gray-600">Recommended</span>
-                  <span className="text-sm font-medium text-gray-900">
-                    ${allocation.recommendedBudget.toLocaleString()}
-                  </span>
-                </div>
-                
-                {/* Change Amount and Percentage */}
-                <div className="pt-2 border-t border-gray-200">
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs text-gray-600">Change</span>
-                    <div className="text-right">
-                      <div className={`text-sm font-semibold ${getChangeColor(allocation.changePercentage)}`}>
-                        {allocation.changeAmount >= 0 ? '+' : ''}${allocation.changeAmount.toLocaleString()}
-                      </div>
-                      <div className={`text-xs ${getChangeColor(allocation.changePercentage)}`}>
-                        {allocation.changePercentage >= 0 ? '+' : ''}{allocation.changePercentage.toFixed(1)}%
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Expected ROI */}
-              <div className="mb-4">
-                <div className="flex justify-between items-center">
-                  <span className="text-xs text-gray-600">Expected ROI</span>
-                  <span className="text-sm font-semibold text-green-600">
-                    {allocation.expectedROI}%
-                  </span>
-                </div>
-              </div>
-
-              {/* Justification */}
-              <div className="bg-white rounded-lg p-3 border border-gray-200">
-                <h4 className="text-xs font-medium text-gray-900 mb-2">
-                  AI Recommendation
-                </h4>
-                <p className="text-xs text-gray-600 leading-relaxed">
-                  {allocation.justification}
+              <div>
+                <h3 className="text-sm font-medium text-blue-900 mb-1">
+                  Avg Expected ROI
+                </h3>
+                <p className="text-xl font-bold text-blue-900">
+                  {filteredAllocations.length > 0 ? 
+                    (filteredAllocations.reduce((sum, a) => sum + a.expectedROI, 0) / filteredAllocations.length).toFixed(1) : 
+                    0}%
                 </p>
               </div>
             </div>
-          ))}
+          </div>
+          
+          {/* All Budget Allocation Cards in Modal */}
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            {filteredAllocations.map(renderAllocationCard)}
+          </div>
+          
+          {filteredAllocations.length === 0 && (
+            <div className="text-center py-8">
+              <p className="text-gray-500">No budget allocations match your current filters.</p>
+            </div>
+          )}
         </div>
-      )}
+      </WarehouseModal>
 
       {/* Footer Information */}
       <div className="mt-4 text-center">
