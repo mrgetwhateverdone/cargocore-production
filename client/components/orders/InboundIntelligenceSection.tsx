@@ -119,6 +119,59 @@ export function InboundIntelligenceSection({ inboundIntelligence, isLoading, onV
   const sortedData = useMemo(() => {
     const filtered = getFilteredData();
     
+    let sorted = filtered;
+    if (sortDirection !== 'default') {
+      sorted = [...filtered].sort((a, b) => {
+        let valueA: any;
+        let valueB: any;
+
+        switch (sortField) {
+          case 'expected_date':
+            valueA = new Date(a.expected_date || 0).getTime();
+            valueB = new Date(b.expected_date || 0).getTime();
+            break;
+          case 'product_sku':
+            valueA = (a.product_sku || '').toLowerCase();
+            valueB = (b.product_sku || '').toLowerCase();
+            break;
+          case 'supplier':
+            valueA = (a.supplier || '').toLowerCase();
+            valueB = (b.supplier || '').toLowerCase();
+            break;
+          case 'ship_from_country':
+            valueA = (a.ship_from_country || '').toLowerCase();
+            valueB = (b.ship_from_country || '').toLowerCase();
+            break;
+          case 'status':
+            valueA = a.status.toLowerCase();
+            valueB = b.status.toLowerCase();
+            break;
+          case 'value':
+            valueA = (a.unit_cost || 0) * a.expected_quantity;
+            valueB = (b.unit_cost || 0) * b.expected_quantity;
+            break;
+          case 'expected_quantity':
+            valueA = a.expected_quantity;
+            valueB = b.expected_quantity;
+            break;
+          default:
+            return 0;
+        }
+
+        if (valueA < valueB) return sortDirection === 'asc' ? -1 : 1;
+        if (valueA > valueB) return sortDirection === 'asc' ? 1 : -1;
+        return 0;
+      });
+    }
+
+    // This part of the code limits to 15 items for main page display
+    return sorted.slice(0, 15);
+  }, [activeTab, searchTerm, inboundIntelligence, sortField, sortDirection]);
+
+  // This part of the code gets all sorted data for the View All functionality
+  const allSortedData = useMemo(() => {
+    const filtered = getFilteredData();
+    
     if (sortDirection === 'default') {
       return filtered; // Return original order
     }
@@ -439,13 +492,13 @@ export function InboundIntelligenceSection({ inboundIntelligence, isLoading, onV
         </div>
         
         {/* This part of the code displays the bubble View All button at the bottom */}
-        {onViewAll && sortedData.length > 0 && (
+        {onViewAll && allSortedData.length > 15 && (
           <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 text-center">
             <button
               onClick={onViewAll}
               className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-full shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
             >
-              View All Shipments
+              View All Shipments ({allSortedData.length})
             </button>
           </div>
         )}
