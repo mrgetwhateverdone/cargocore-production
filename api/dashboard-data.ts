@@ -314,14 +314,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             .map((shipment) => shipment.purchase_order_number),
         ).size,
       },
-      warehouseInventory: [
-        ...new Set(
-          shipments.map((s) => ({
-            id: s.warehouse_id,
-            name: s.supplier, // Use supplier as warehouse name to match server logic
-          })),
-        ),
-      ].map((warehouse, index) => {
+      warehouseInventory: (() => {
+        // This part of the code provides proper warehouse deduplication using Map
+        const warehouseMap = new Map();
+        shipments.forEach((s) => {
+          if (s.warehouse_id && !warehouseMap.has(s.warehouse_id)) {
+            warehouseMap.set(s.warehouse_id, {
+              id: s.warehouse_id,
+              name: s.supplier, // Use supplier as warehouse name to match server logic
+            });
+          }
+        });
+        
+        return Array.from(warehouseMap.values());
+      })().map((warehouse, index) => {
         // This part of the code provides realistic warehouse-specific inventory numbers
         // Using deterministic calculation based on warehouse ID to ensure consistency
         const warehouseHash = warehouse.id ? warehouse.id.split('-')[0] : 'default';

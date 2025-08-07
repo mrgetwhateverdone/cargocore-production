@@ -515,15 +515,18 @@ function getInventoryByWarehouse(
   shipments: ShipmentData[],
 ) {
   // This part of the code provides realistic warehouse-specific inventory numbers  
-  // Using deterministic calculation to avoid performance issues and ensure consistency
-  return [
-    ...new Set(
-      shipments.map((s) => ({
+  // Using proper Map-based deduplication to ensure unique warehouses
+  const warehouseMap = new Map();
+  shipments.forEach((s) => {
+    if (s.warehouse_id && !warehouseMap.has(s.warehouse_id)) {
+      warehouseMap.set(s.warehouse_id, {
         id: s.warehouse_id,
         name: s.supplier, // Use supplier as warehouse name
-      })),
-    ),
-  ].map((warehouse) => {
+      });
+    }
+  });
+  
+  return Array.from(warehouseMap.values()).map((warehouse) => {
     // This part of the code generates consistent warehouse-specific numbers based on warehouse ID
     const warehouseHash = warehouse.id ? warehouse.id.split('-')[0] : 'default';
     const seedValue = warehouseHash.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
