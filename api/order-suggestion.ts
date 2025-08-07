@@ -256,29 +256,58 @@ function analyzeOrderContext(orderData: OrderData): {
  * Create detailed prompt for OpenAI analysis
  */
 function createOrderAnalysisPrompt(orderData: OrderData, context: any): string {
-  return `Analyze this 3PL order and provide actionable recommendations:
+  // Calculate enhanced order intelligence metrics
+  const orderValue = (orderData.received_quantity || 0) * (orderData.unit_cost || 0);
+  const quantityVariance = orderData.expected_quantity - orderData.received_quantity;
+  const variancePercent = orderData.expected_quantity > 0 ? 
+    Math.abs(quantityVariance) / orderData.expected_quantity * 100 : 0;
+  
+  // Determine order complexity and risk factors
+  const complexityFactors = [];
+  if (quantityVariance !== 0) complexityFactors.push('quantity variance');
+  if (orderData.sla_status.toLowerCase().includes('risk')) complexityFactors.push('SLA risk');
+  if (orderData.status.toLowerCase().includes('delayed')) complexityFactors.push('delivery delay');
+  if (!orderData.supplier) complexityFactors.push('supplier uncertainty');
+  
+  const complexityScore = Math.min(10, complexityFactors.length * 2.5 + (variancePercent / 10));
+  
+  return `You are a precision operations analyst specializing in individual order optimization within portfolio context. Provide tactical recommendations that optimize both individual order and system performance.
 
-ORDER DETAILS:
+CONTEXTUAL ORDER INTELLIGENCE:
+=============================
+
+ORDER PROFILE ANALYSIS:
 - Order ID: ${orderData.order_id}
-- Brand: ${orderData.brand_name}
-- Status: ${orderData.status}
-- SLA Status: ${orderData.sla_status}
-- Expected Quantity: ${orderData.expected_quantity}
-- Received Quantity: ${orderData.received_quantity}
-- Supplier: ${orderData.supplier || 'Not specified'}
-- Expected Date: ${orderData.expected_date || 'Not specified'}
-- Origin: ${orderData.ship_from_country || 'Unknown'}
+- Brand Tier: ${orderData.brand_name} (customer value segment)
+- Order Complexity Score: ${complexityScore.toFixed(1)}/10
+- Financial Value: $${orderValue.toFixed(2)}
+- Status Profile: ${orderData.status} (SLA: ${orderData.sla_status})
 
-IDENTIFIED ISSUES: ${context.issues.join(', ') || 'None'}
-FOCUS AREAS: ${context.focusAreas.join(', ') || 'General optimization'}
+PORTFOLIO IMPACT ANALYSIS:
+- Quantity Performance: ${orderData.received_quantity}/${orderData.expected_quantity} (${variancePercent.toFixed(1)}% variance)
+- Supplier Performance: ${orderData.supplier || 'Unknown supplier'} from ${orderData.ship_from_country || 'Unknown origin'}
+- Expected Delivery: ${orderData.expected_date || 'No target date'}
+- Risk Factors: ${complexityFactors.join(', ') || 'Standard processing'}
 
-Provide a concise recommendation focusing on:
-1. Immediate actions needed
-2. Root cause if issues exist
-3. Prevention strategies
-4. Expected business impact
+PREDICTIVE ORDER INTELLIGENCE:
+- Success Probability: ${Math.max(10, 100 - (complexityScore * 8)).toFixed(1)}% based on ${complexityFactors.length + 2} factors
+- Financial Impact: ${quantityVariance !== 0 ? `$${Math.abs(quantityVariance * (orderData.unit_cost || 50)).toFixed(2)} variance` : 'On target'}
+- Processing Priority: ${context.priority} (${context.estimatedImpact})
+- Risk Assessment: ${context.issues.join(', ') || 'Low risk profile'}
 
-Keep response under 150 words and actionable for logistics managers.`;
+OPTIMIZATION VECTORS:
+- Immediate Focus Areas: ${context.focusAreas.join(', ') || 'Standard workflow'}
+- Resource Allocation: ${complexityScore > 5 ? 'High-touch processing required' : 'Standard processing flow'}
+- Timeline Optimization: ${orderData.expected_date ? 'Target date established' : 'Expedite date setting'}
+- Quality Assurance: ${variancePercent > 10 ? 'Enhanced QA protocols needed' : 'Standard QA sufficient'}
+
+PROVIDE PRECISION GUIDANCE:
+1. IMMEDIATE ACTIONS: What specific steps will optimize this order's success probability?
+2. RESOURCE OPTIMIZATION: How should resources be allocated for maximum efficiency?
+3. PORTFOLIO EFFECTS: How does optimizing this order impact other operations?
+4. LEARNING INSIGHTS: What patterns can be applied to similar future orders?
+
+Provide tactical decisions with confidence scores and specific implementation steps. Focus on actionable logistics management decisions.`;
 }
 
 /**

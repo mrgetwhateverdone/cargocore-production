@@ -225,11 +225,36 @@ async function generateInsights(
   try {
     const financialImpacts = calculateFinancialImpacts(products, shipments);
     
-    // This part of the code provides comprehensive financial context to AI for better insights
+    // This part of the code calculates enhanced operational intelligence metrics
     const atRiskShipments = shipments.filter(s => s.expected_quantity !== s.received_quantity).length;
     const cancelledShipments = shipments.filter(s => s.status === "cancelled").length;
     const inactiveProducts = products.filter(p => !p.active).length;
+    const activeProducts = products.filter(p => p.active).length;
     const totalShipmentValue = shipments.reduce((sum, s) => sum + (s.received_quantity * (s.unit_cost || 0)), 0);
+    
+    // Enhanced analytics calculations
+    const uniqueBrands = new Set(products.map(p => p.brand_name)).size;
+    const uniqueSuppliers = new Set(products.map(p => p.supplier_name)).size;
+    const skuUtilization = activeProducts / products.length * 100;
+    const onTimeShipments = shipments.filter(s => s.status === "completed" || s.status === "delivered").length;
+    const delayedShipments = shipments.filter(s => s.status.includes("delayed") || s.status === "late").length;
+    const quantityAccuracy = shipments.length > 0 ? (shipments.filter(s => s.expected_quantity === s.received_quantity).length / shipments.length) * 100 : 100;
+    const avgOrderValue = totalShipmentValue / shipments.length;
+    const costPerShipment = totalShipmentValue / shipments.length;
+    
+    // Geographic and supplier risk analysis
+    const geoRiskCountries = shipments.filter(s => s.ship_from_country && ['China', 'Russia', 'Ukraine', 'Taiwan'].includes(s.ship_from_country)).length;
+    const geoRiskPercent = shipments.length > 0 ? (geoRiskCountries / shipments.length) * 100 : 0;
+    const topRiskCountries = Array.from(new Set(shipments.filter(s => s.ship_from_country && ['China', 'Russia', 'Ukraine', 'Taiwan'].includes(s.ship_from_country)).map(s => s.ship_from_country))).slice(0, 3);
+    
+    // Supplier concentration analysis
+    const supplierCounts = shipments.reduce((acc, s) => {
+      const supplier = s.supplier || 'Unknown';
+      acc[supplier] = (acc[supplier] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+    const topSuppliers = Object.entries(supplierCounts).sort(([,a], [,b]) => b - a).slice(0, 3);
+    const supplierConcentration = topSuppliers.reduce((sum, [,count]) => sum + count, 0) / shipments.length * 100;
     
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
@@ -242,35 +267,62 @@ async function generateInsights(
         messages: [
           {
             role: "user",
-            content: `Analyze this 3PL logistics data and provide 2-3 actionable insights with real financial impact.
+            content: `You are a senior 3PL operations analyst. Analyze this comprehensive logistics data and provide strategic insights with quantified financial impact.
 
-OPERATIONAL DATA:
-- Total Products: ${products.length} (${inactiveProducts} inactive)
-- Total Shipments: ${shipments.length} (${atRiskShipments} with quantity discrepancies, ${cancelledShipments} cancelled)
-- Total Shipment Value: $${Math.round(totalShipmentValue).toLocaleString()}
+OPERATIONAL INTELLIGENCE:
+=========================
 
-FINANCIAL IMPACT ANALYSIS:
-- Quantity Discrepancy Impact: $${financialImpacts.quantityDiscrepancyImpact.toLocaleString()}
-- Cancelled Shipments Impact: $${financialImpacts.cancelledShipmentsImpact.toLocaleString()}
-- Inactive Products Lost Revenue: $${financialImpacts.inactiveProductsValue.toLocaleString()}/month
+INVENTORY & PRODUCT ANALYSIS:
+- Total Products: ${products.length} (${activeProducts} active, ${inactiveProducts} inactive)
+- Product Diversity: ${uniqueBrands} brands across ${uniqueSuppliers} suppliers
+- SKU Utilization: ${skuUtilization.toFixed(1)}% active portfolio
+- Inactive Product Value: $${financialImpacts.inactiveProductsValue.toLocaleString()}/month lost opportunity
+
+SHIPMENT & FULFILLMENT PERFORMANCE:
+- Total Shipments: ${shipments.length} (${onTimeShipments} on-time, ${delayedShipments} delayed)
+- Quantity Accuracy: ${quantityAccuracy.toFixed(1)}% (${atRiskShipments} with variances)
+- Financial Impact of Delays: $${financialImpacts.quantityDiscrepancyImpact.toLocaleString()}
+- Cancelled Shipment Impact: $${financialImpacts.cancelledShipmentsImpact.toLocaleString()}
+
+RISK & FINANCIAL EXPOSURE:
+- At-Risk Shipment Value: $${Math.round(totalShipmentValue).toLocaleString()}
+- Geographic Risk Concentration: ${geoRiskPercent.toFixed(1)}% from ${topRiskCountries.join(', ')}
+- Supplier Concentration Risk: ${supplierConcentration.toFixed(1)}% (top 3 suppliers)
 - Total Financial Risk: $${financialImpacts.totalFinancialRisk.toLocaleString()}
 
-Generate insights focusing on the highest financial impact areas. Include specific dollar amounts and percentages.
+EFFICIENCY & OPTIMIZATION OPPORTUNITIES:
+- Average Order Value: $${avgOrderValue.toFixed(2)}
+- Cost Per Shipment: $${costPerShipment.toFixed(2)}
+- Processing Efficiency: ${quantityAccuracy.toFixed(1)}% accuracy rate
+- Portfolio Optimization: ${((inactiveProducts / products.length) * 100).toFixed(1)}% inactive SKUs
 
-FORMAT AS JSON ARRAY:
+PROVIDE STRATEGIC ANALYSIS (3-4 insights):
+1. HIGH-IMPACT RISKS: What operational issues could cost >$50K in 90 days?
+2. IMMEDIATE OPTIMIZATIONS: Which process improvements offer fastest ROI?
+3. SUPPLIER STRATEGY: How to reduce concentration risk while maintaining efficiency?
+4. FINANCIAL PRIORITIES: Where should operations invest to maximize margin improvement?
+
+Each insight must include:
+- Specific dollar impact (calculated from real data)
+- Timeline for implementation (30/60/90 days)
+- Success metrics to track progress
+- Resource requirements
+
+FORMAT AS ACTIONABLE JSON:
 [
   {
     "type": "warning",
-    "title": "Specific Issue Title",
-    "description": "Detailed analysis with financial impact and recommendations",
+    "title": "Strategic Issue Title",
+    "description": "Detailed analysis with financial impact, timeline, and specific recommendations for operational improvement",
     "severity": "critical|warning|info",
-    "dollarImpact": actual_dollar_amount
+    "dollarImpact": actual_calculated_dollar_amount,
+    "suggestedActions": ["Specific Action 1", "Specific Action 2", "Specific Action 3"]
   }
 ]`,
           },
         ],
-        max_tokens: 500,
-        temperature: 0.3,
+        max_tokens: 800,
+        temperature: 0.2,
       }),
     });
 

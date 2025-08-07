@@ -315,43 +315,62 @@ async function generateOrdersInsights(
         messages: [
           {
             role: "user",
-            content: `You are a 3PL orders specialist. Analyze this orders data and generate 2-3 actionable insights focused on order fulfillment, delays, and optimization opportunities.
+            content: `You are a supply chain optimization expert. Analyze order flow patterns and provide operational intelligence for process improvement.
 
-ORDERS KPIS:
-- Orders Today: ${kpis.ordersToday}
-- At-Risk Orders: ${kpis.atRiskOrders}
-- Open POs: ${kpis.openPOs}
-- Unfulfillable SKUs: ${kpis.unfulfillableSKUs}
+FLOW ANALYSIS:
+==============
 
-INBOUND INTELLIGENCE:
-- Total Inbound: ${inboundIntelligence.totalInbound}
-- Delayed Shipments: ${inboundIntelligence.delayedShipments.count} (${inboundIntelligence.delayedShipments.percentage.toFixed(1)}%)
-- Average Delay: ${inboundIntelligence.avgDelayDays} days
-- Value at Risk: $${inboundIntelligence.valueAtRisk.toLocaleString()}
+ORDER VELOCITY & THROUGHPUT:
+- Current Daily Orders: ${kpis.ordersToday || 0}
+- At-Risk Orders: ${kpis.atRiskOrders} (${inboundIntelligence.totalInbound > 0 ? ((kpis.atRiskOrders / inboundIntelligence.totalInbound) * 100).toFixed(1) : 0}% of total)
+- Open Purchase Orders: ${kpis.openPOs}
+- Processing Bottlenecks: ${kpis.unfulfillableSKUs} unfulfillable SKUs
+- Perfect Order Rate: ${inboundIntelligence.totalInbound > 0 ? (((inboundIntelligence.totalInbound - inboundIntelligence.delayedShipments.count) / inboundIntelligence.totalInbound) * 100).toFixed(1) : 100}%
 
-GEOPOLITICAL RISKS:
-${inboundIntelligence.geopoliticalRisks ? 
-  `- Risk Countries: ${inboundIntelligence.geopoliticalRisks.riskCountries.join(', ')}
-- Affected Shipments: ${inboundIntelligence.geopoliticalRisks.affectedShipments}` : 
-  '- No significant geopolitical risks detected'
-}
+SUPPLIER ECOSYSTEM INTELLIGENCE:
+- Total Inbound Shipments: ${inboundIntelligence.totalInbound}
+- Delayed Shipments: ${inboundIntelligence.delayedShipments.count} (${(inboundIntelligence.delayedShipments.percentage || 0).toFixed(1)}%)
+- Average Lead Time Variance: ${(inboundIntelligence.avgDelayDays || 0).toFixed(1)} days delay
+- Financial Impact of Delays: $${inboundIntelligence.valueAtRisk.toLocaleString()}
+- Supplier Reliability Rate: ${inboundIntelligence.totalInbound > 0 ? (((inboundIntelligence.totalInbound - inboundIntelligence.delayedShipments.count) / inboundIntelligence.totalInbound) * 100).toFixed(1) : 100}%
 
-Generate insights focusing on order fulfillment optimization, delay reduction, and supply chain risk mitigation.
+DEMAND PATTERN RECOGNITION:
+- Order Volume Trend: ${kpis.ordersToday > 0 ? 'Active daily flow' : 'Low volume period'}
+- Inventory Availability: ${((orders.length - kpis.unfulfillableSKUs) / Math.max(orders.length, 1) * 100).toFixed(1)}% fulfillable
+- Processing Efficiency: ${inboundIntelligence.totalInbound > 0 ? (((inboundIntelligence.totalInbound - kpis.atRiskOrders) / inboundIntelligence.totalInbound) * 100).toFixed(1) : 100}% orders on track
+- Supply Chain Velocity: ${inboundIntelligence.avgDelayDays > 0 ? (1 / (inboundIntelligence.avgDelayDays + 1) * 100).toFixed(1) : 95}% optimal speed
 
-FORMAT AS JSON ARRAY:
+RISK & RESILIENCE ASSESSMENT:
+- Supply Chain Risk Score: ${Math.min(10, Math.max(1, (inboundIntelligence.delayedShipments.percentage || 0) / 10 + (kpis.atRiskOrders / Math.max(inboundIntelligence.totalInbound, 1)) * 10)).toFixed(1)}/10
+- Geographic Risk Exposure: ${inboundIntelligence.geopoliticalRisks ? 
+  `${inboundIntelligence.geopoliticalRisks.riskCountries.join(', ')} (${inboundIntelligence.geopoliticalRisks.affectedShipments} shipments affected)` : 
+  'Low geographic concentration risk'}
+- Financial Exposure: $${inboundIntelligence.valueAtRisk.toLocaleString()} at risk
+- Recovery Capacity: ${Math.max(1, 10 - (inboundIntelligence.delayedShipments.percentage || 0) / 10).toFixed(1)}/10
+
+PROVIDE OPERATIONAL STRATEGY (3-4 actionable insights):
+1. FLOW OPTIMIZATION: How to reduce cycle time by 15% without quality loss?
+2. SUPPLIER PORTFOLIO: Which supplier relationships need immediate attention?
+3. DEMAND INTELLIGENCE: How to leverage patterns for proactive planning?
+4. RESILIENCE BUILDING: What investments improve supply chain robustness?
+
+Focus on implementable changes with 30-90 day impact timelines and specific ROI calculations.
+
+FORMAT AS OPERATIONS PLAYBOOK JSON:
 [
   {
     "type": "warning",
-    "title": "Orders Insight Title",
-    "description": "Detailed analysis with specific recommendations",
+    "title": "Supply Chain Strategy Title",
+    "description": "Operational analysis with flow optimization, supplier intelligence, and resilience recommendations with specific implementation steps",
     "severity": "critical|warning|info",
-    "dollarImpact": estimated_dollar_amount
+    "dollarImpact": calculated_financial_impact,
+    "suggestedActions": ["Flow Action 1", "Supplier Action 2", "Resilience Action 3"]
   }
 ]`,
           },
         ],
-        max_tokens: 500,
-        temperature: 0.3,
+        max_tokens: 700,
+        temperature: 0.2,
       }),
     });
 
