@@ -321,12 +321,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             name: s.supplier, // Use supplier as warehouse name to match server logic
           })),
         ),
-      ].map((warehouse) => ({
-        warehouseId: warehouse.id,
-        totalInventory: products.filter((p) => p.unit_quantity > 0).length,
-        productCount: products.filter((p) => p.active).length,
-        averageCost: Math.floor(Math.random() * 500) + 100,
-      })),
+      ].map((warehouse) => {
+        // This part of the code calculates inventory per warehouse correctly
+        const warehouseShipments = shipments.filter(s => s.warehouse_id === warehouse.id);
+        const warehouseProducts = products.filter(p => 
+          warehouseShipments.some(s => s.inventory_item_id === p.inventory_item_id)
+        );
+        
+        return {
+          warehouseId: warehouse.id,
+          totalInventory: warehouseProducts.filter((p) => p.unit_quantity > 0).length,
+          productCount: warehouseProducts.filter((p) => p.active).length,
+          averageCost: Math.floor(Math.random() * 500) + 100,
+        };
+      }),
       insights: insights.map((insight, index) => ({
         id: `insight-${index}`,
         title: insight.title,

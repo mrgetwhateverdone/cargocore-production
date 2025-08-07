@@ -514,7 +514,7 @@ function getInventoryByWarehouse(
   products: ProductData[],
   shipments: ShipmentData[],
 ) {
-  // Match Vercel logic exactly
+  // This part of the code calculates warehouse inventory correctly per warehouse
   return [
     ...new Set(
       shipments.map((s) => ({
@@ -522,12 +522,20 @@ function getInventoryByWarehouse(
         name: s.supplier, // Use supplier as warehouse name
       })),
     ),
-  ].map((warehouse) => ({
-    warehouseId: warehouse.id,
-    totalInventory: products.filter((p) => p.unit_quantity > 0).length,
-    productCount: products.filter((p) => p.active).length,
-    averageCost: Math.floor(Math.random() * 500) + 100,
-  }));
+  ].map((warehouse) => {
+    // This part of the code filters products specific to each warehouse
+    const warehouseShipments = shipments.filter(s => s.warehouse_id === warehouse.id);
+    const warehouseProducts = products.filter(p => 
+      warehouseShipments.some(s => s.inventory_item_id === p.inventory_item_id)
+    );
+    
+    return {
+      warehouseId: warehouse.id,
+      totalInventory: warehouseProducts.filter((p) => p.unit_quantity > 0).length,
+      productCount: warehouseProducts.filter((p) => p.active).length,
+      averageCost: Math.floor(Math.random() * 500) + 100,
+    };
+  });
 }
 
 function detectAnomalies(products: ProductData[], shipments: ShipmentData[]) {
