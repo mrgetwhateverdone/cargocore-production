@@ -1,4 +1,5 @@
 import type { Anomaly } from "@/types/api";
+import { BrainIcon } from "../ui/BrainIcon";
 
 interface AnomalyDetectorSectionProps {
   anomalies: Anomaly[];
@@ -60,7 +61,11 @@ export function AnomalyDetectorSection({
               className={`w-full flex items-center justify-between p-3 rounded-lg border transition-all hover:opacity-80 cursor-pointer ${getSeverityStyles(anomaly.severity)}`}
             >
               <div className="flex-1">
-                <h3 className="font-medium text-sm mb-1">{anomaly.title}</h3>
+                <div className="flex items-center">
+                  <h3 className="font-medium text-sm mb-1">{anomaly.title}</h3>
+                  {/* This part of the code adds a blue brain icon to indicate AI-generated anomaly detection */}
+                  <BrainIcon className="h-4 w-4 ml-2 text-blue-600" />
+                </div>
                 <p className="text-sm opacity-90">{anomaly.description}</p>
               </div>
               <div className="ml-4 text-lg">{anomaly.icon}</div>

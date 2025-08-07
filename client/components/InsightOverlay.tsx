@@ -5,6 +5,7 @@ import React, { useState, useEffect } from 'react';
 import { X, AlertTriangle, TrendingUp, DollarSign, Loader2, CheckCircle } from 'lucide-react';
 import { useWorkflowCreation } from '../hooks/useWorkflows';
 import { useDashboardData } from '../hooks/useDashboardData';
+import { BrainIcon } from './ui/BrainIcon';
 
 interface InsightOverlayProps {
   isOpen: boolean;
@@ -158,7 +159,11 @@ export function InsightOverlay({ isOpen, onClose, insight, agentName = "Dashboar
           <div className="flex items-center space-x-3">
             {getSeverityIcon()}
             <div>
-              <h2 className="text-xl font-semibold text-gray-900">{insight.title}</h2>
+              <div className="flex items-center">
+                <h2 className="text-xl font-semibold text-gray-900">{insight.title}</h2>
+                {/* This part of the code adds a blue brain icon to indicate AI-generated content */}
+                <BrainIcon className="h-5 w-5 ml-3 text-blue-600" />
+              </div>
               <div className="flex items-center space-x-2 mt-1">
                 <span className={`px-2 py-1 text-xs font-medium rounded-full ${styles.badge}`}>
                   AI Generated Insight

@@ -6,6 +6,7 @@ import { RefreshCw, Plus, Bot, Settings, Calendar, Trash2, Play, CheckCircle, Cl
 import { Layout } from '../components/layout/Layout';
 import { useWorkflows } from '../hooks/useWorkflows';
 import { CreatedWorkflow } from '../utils/workflowStorage';
+import { BrainIcon } from '../components/ui/BrainIcon';
 
 export default function Workflows() {
   const { workflows, loading, stats, workflowsByStatus, updateWorkflowStatus, removeWorkflow, refreshWorkflows } = useWorkflows();
@@ -50,6 +51,10 @@ export default function Workflows() {
             <Settings className="h-5 w-5 text-gray-600" />
           )}
           <h3 className="font-semibold text-gray-900">{workflow.title}</h3>
+          {/* This part of the code adds a blue brain icon to indicate AI-generated workflows */}
+          {workflow.source === 'ai_insight' && (
+            <BrainIcon className="h-4 w-4 text-blue-600" />
+          )}
         </div>
         {getPriorityBadge(workflow.priority)}
       </div>

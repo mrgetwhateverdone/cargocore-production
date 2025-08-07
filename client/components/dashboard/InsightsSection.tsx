@@ -3,6 +3,7 @@ import { useState } from "react";
 import type { AIInsight } from "@/types/api";
 import { InsightOverlay } from "../InsightOverlay";
 import { useWorkflowCreation } from "../../hooks/useWorkflows";
+import { BrainIcon } from "../ui/BrainIcon";
 
 interface InsightsSectionProps {
   insights: AIInsight[];
@@ -128,6 +129,8 @@ export function InsightsSection({ insights, isLoading }: InsightsSectionProps) {
               <div className="flex items-center">
                 {getInsightIcon(insight.severity)}
                 <h3 className="ml-2 font-semibold text-sm">{insight.title}</h3>
+                {/* This part of the code adds a blue brain icon to indicate AI-generated content */}
+                <BrainIcon className="h-4 w-4 ml-2 text-blue-600" />
               </div>
               {/* This part of the code adds the small + button for quick workflow creation */}
               <button
