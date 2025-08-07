@@ -130,7 +130,7 @@ export function InsightsSection({ insights, isLoading }: InsightsSectionProps) {
                 {getInsightIcon(insight.severity)}
                 <h3 className="ml-2 font-semibold text-sm">{insight.title}</h3>
                 {/* This part of the code adds a blue brain icon to indicate AI-generated content */}
-                <BrainIcon className="h-4 w-4 ml-2 text-blue-600" />
+                <BrainIcon className="h-5 w-5 ml-2 text-blue-600" />
               </div>
               {/* This part of the code adds the small + button for quick workflow creation */}
               <button

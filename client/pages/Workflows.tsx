@@ -53,7 +53,7 @@ export default function Workflows() {
           <h3 className="font-semibold text-gray-900">{workflow.title}</h3>
           {/* This part of the code adds a blue brain icon to indicate AI-generated workflows */}
           {workflow.source === 'ai_insight' && (
-            <BrainIcon className="h-4 w-4 text-blue-600" />
+            <BrainIcon className="h-5 w-5 text-blue-600" />
           )}
         </div>
         {getPriorityBadge(workflow.priority)}

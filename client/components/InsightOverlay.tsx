@@ -162,7 +162,7 @@ export function InsightOverlay({ isOpen, onClose, insight, agentName = "Dashboar
               <div className="flex items-center">
                 <h2 className="text-xl font-semibold text-gray-900">{insight.title}</h2>
                 {/* This part of the code adds a blue brain icon to indicate AI-generated content */}
-                <BrainIcon className="h-5 w-5 ml-3 text-blue-600" />
+                <BrainIcon className="h-6 w-6 ml-3 text-blue-600" />
               </div>
               <div className="flex items-center space-x-2 mt-1">
                 <span className={`px-2 py-1 text-xs font-medium rounded-full ${styles.badge}`}>

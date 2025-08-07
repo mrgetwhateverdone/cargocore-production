@@ -64,7 +64,7 @@ export function AnomalyDetectorSection({
                 <div className="flex items-center">
                   <h3 className="font-medium text-sm mb-1">{anomaly.title}</h3>
                   {/* This part of the code adds a blue brain icon to indicate AI-generated anomaly detection */}
-                  <BrainIcon className="h-4 w-4 ml-2 text-blue-600" />
+                  <BrainIcon className="h-5 w-5 ml-2 text-blue-600" />
                 </div>
                 <p className="text-sm opacity-90">{anomaly.description}</p>
               </div>
