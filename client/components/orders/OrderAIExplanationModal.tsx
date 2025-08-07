@@ -15,19 +15,22 @@ export function OrderAIExplanationModal({ isOpen, onClose, order }: OrderAIExpla
 
   // This part of the code generates AI explanation when modal opens with an order
   useEffect(() => {
-    if (isOpen && order && !orderSuggestionMutation.isPending) {
+    if (isOpen && order) {
       setExplanation("");
-      // Generate AI explanation for the order
-      orderSuggestionMutation.mutate(order, {
-        onSuccess: (suggestion) => {
-          setExplanation(suggestion.suggestion);
-        },
-        onError: () => {
-          setExplanation("Unable to generate AI explanation at this time. Please try again later.");
-        }
-      });
+      // Reset mutation state and generate AI explanation for the order
+      orderSuggestionMutation.reset();
+      orderSuggestionMutation.mutate(order);
     }
-  }, [isOpen, order]);
+  }, [isOpen, order?.order_id]); // Only depend on isOpen and order ID to prevent excessive calls
+
+  // This part of the code handles the mutation result
+  useEffect(() => {
+    if (orderSuggestionMutation.isSuccess && orderSuggestionMutation.data) {
+      setExplanation(orderSuggestionMutation.data.suggestion);
+    } else if (orderSuggestionMutation.isError) {
+      setExplanation("Unable to generate AI explanation at this time. Please try again later.");
+    }
+  }, [orderSuggestionMutation.isSuccess, orderSuggestionMutation.isError, orderSuggestionMutation.data]);
 
   // This part of the code handles backdrop click to close modal
   const handleBackdropClick = (e: React.MouseEvent) => {
