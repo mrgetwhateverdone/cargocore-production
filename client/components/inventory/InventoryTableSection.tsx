@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { ChevronUp, ChevronDown, ArrowUpDown } from "lucide-react";
+import { ChevronUp, ChevronDown, ArrowUpDown, Search } from "lucide-react";
 import type { InventoryItem } from "@/types/api";
 
 interface InventoryTableSectionProps {
@@ -22,6 +22,7 @@ export function InventoryTableSection({
 }: InventoryTableSectionProps) {
   const [sortField, setSortField] = useState<SortField>('sku');
   const [sortDirection, setSortDirection] = useState<SortDirection>('default');
+  const [searchTerm, setSearchTerm] = useState('');
 
   // This part of the code determines the color for inventory status badges
   const getStatusColor = (status: string) => {
@@ -78,13 +79,27 @@ export function InventoryTableSection({
     return <ArrowUpDown className="h-4 w-4 text-gray-400" />;
   };
 
-  // This part of the code sorts the inventory data based on current sort settings
+  // This part of the code filters inventory based on search term
+  const filteredInventory = useMemo(() => {
+    if (!searchTerm.trim()) return inventory;
+    
+    const searchLower = searchTerm.toLowerCase();
+    return inventory.filter(item =>
+      item.sku.toLowerCase().includes(searchLower) ||
+      item.product_name.toLowerCase().includes(searchLower) ||
+      item.brand_name.toLowerCase().includes(searchLower) ||
+      item.status.toLowerCase().includes(searchLower) ||
+      (item.supplier && item.supplier.toLowerCase().includes(searchLower))
+    );
+  }, [inventory, searchTerm]);
+
+  // This part of the code sorts the filtered inventory data based on current sort settings
   const sortedInventory = useMemo(() => {
     if (sortDirection === 'default') {
-      return inventory;
+      return filteredInventory;
     }
 
-    return [...inventory].sort((a, b) => {
+    return [...filteredInventory].sort((a, b) => {
       let aValue: any = a[sortField];
       let bValue: any = b[sortField];
 
@@ -104,7 +119,7 @@ export function InventoryTableSection({
         return aValue < bValue ? 1 : aValue > bValue ? -1 : 0;
       }
     });
-  }, [inventory, sortField, sortDirection]);
+  }, [filteredInventory, sortField, sortDirection]);
 
   // This part of the code formats dates for display
   const formatDate = (dateString: string | null) => {
@@ -141,13 +156,29 @@ export function InventoryTableSection({
   return (
     <div className="bg-white rounded-lg border border-gray-200 shadow-sm mb-6">
       <div className="p-6 border-b border-gray-200">
-        <div className="flex justify-between items-center">
+        <div className="flex justify-between items-center mb-4">
           <div>
             <h3 className="text-lg font-medium text-gray-900">Inventory</h3>
             <p className="text-sm text-gray-500">
-              Showing {sortedInventory.length} of {totalCount} SKUs
+              {searchTerm.trim() ? (
+                <>Showing {sortedInventory.length} of {filteredInventory.length} filtered SKUs (from {totalCount} total)</>
+              ) : (
+                <>Showing {sortedInventory.length} of {totalCount} SKUs</>
+              )}
             </p>
           </div>
+        </div>
+
+        {/* This part of the code displays the search input */}
+        <div className="relative mb-4">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+          <input
+            type="text"
+            placeholder="Search by SKU, product name, brand, status, or supplier..."
+            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
         </div>
       </div>
 
@@ -274,13 +305,13 @@ export function InventoryTableSection({
         </table>
       </div>
 
-      {hasMore && onViewAll && (
+      {(hasMore || searchTerm.trim()) && onViewAll && (
         <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 text-center">
           <button
             onClick={onViewAll}
             className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-full shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
           >
-            View All Inventory
+            {searchTerm.trim() ? 'View All Filtered Results' : 'View All Inventory'}
           </button>
         </div>
       )}
