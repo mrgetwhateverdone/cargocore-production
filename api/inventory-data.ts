@@ -71,18 +71,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const kpis = products.length > 0 
       ? calculateRealKPIs(products) 
       : {
-          totalSKUs: 50,
-          inStockCount: 30, 
-          unfulfillableCount: 15,
-          overstockedCount: 5,
-          avgDaysOnHand: 45
+          totalSKUs: 0,
+          inStockCount: 0, 
+          unfulfillableCount: 0,
+          overstockedCount: 0,
+          avgDaysOnHand: null
         };
 
     console.log("📊 KPIs calculated:", kpis);
 
     const inventoryData = {
       kpis,
-      insights: [
+      insights: products.length > 0 ? [
         {
           id: "inventory-insight-1",
           title: "Stock Analysis",
@@ -93,19 +93,43 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           createdAt: new Date().toISOString(),
           source: "inventory_agent" as const,
         }
-      ],
-      inventory: [
+      ] : [
         {
-          sku: "TEST-001",
-          product_name: "Test Product",
-          brand_name: "Test Brand",
-          on_hand: 100,
-          committed: 10,
-          available: 90,
-          status: "In Stock" as const,
+          id: "inventory-insight-1",
+          title: "Information Not Available",
+          description: "Inventory insights are not available. Data source connection required.",
+          severity: "info" as const,
+          dollarImpact: 0,
+          suggestedActions: ["Check data source connection"],
+          createdAt: new Date().toISOString(),
+          source: "inventory_agent" as const,
+        }
+      ],
+      inventory: products.length > 0 ? [
+        {
+          sku: "N/A",
+          product_name: "Information not available in dataset",
+          brand_name: "N/A",
+          on_hand: 0,
+          committed: 0,
+          available: 0,
+          status: "Out of Stock" as const,
           warehouse_id: null,
-          supplier: "Test Supplier",
-          last_updated: new Date().toISOString()
+          supplier: "N/A",
+          last_updated: null
+        }
+      ] : [
+        {
+          sku: "N/A",
+          product_name: "Information not available in dataset",
+          brand_name: "N/A",
+          on_hand: 0,
+          committed: 0,
+          available: 0,
+          status: "Out of Stock" as const,
+          warehouse_id: null,
+          supplier: "N/A",
+          last_updated: null
         }
       ],
       lastUpdated: new Date().toISOString(),
