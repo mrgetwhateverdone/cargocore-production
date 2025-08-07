@@ -7,6 +7,7 @@ import {
   getProductsData,
   getShipmentsData,
   generateInsights,
+  getAnalyticsData,
 } from "./routes/dashboard";
 
 export function createServer() {
@@ -54,6 +55,9 @@ export function createServer() {
 
   // Complete dashboard data (recommended - single request)
   app.get("/api/dashboard-data", getDashboardData);
+
+  // Complete analytics data (analytics dashboard)
+  app.get("/api/analytics-data", getAnalyticsData);
 
   // Individual data endpoints (for specific page needs)
   app.get("/api/products", getProductsData);

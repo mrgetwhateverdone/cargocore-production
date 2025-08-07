@@ -11,6 +11,7 @@ import type {
   ProductData,
   ShipmentData,
   AIInsight,
+  AnalyticsData,
 } from "@/types/api";
 
 interface APIResponse<T> {
@@ -183,6 +184,38 @@ class InternalApiService {
     } catch (error) {
       console.error("❌ Client: Server status check failed:", error);
       throw error;
+    }
+  }
+
+  /**
+   * Fetch complete analytics data from secure server endpoint
+   * NO external API keys - server handles TinyBird + OpenAI calls
+   */
+  async getAnalyticsData(): Promise<AnalyticsData> {
+    try {
+      console.log("🔒 Client: Fetching analytics data from secure server...");
+
+      const response = await fetch(`${this.baseUrl}/api/analytics-data`);
+
+      if (!response.ok) {
+        throw new Error(
+          `Internal API Error: ${response.status} ${response.statusText}`,
+        );
+      }
+
+      const result: APIResponse<AnalyticsData> = await response.json();
+
+      if (!result.success || !result.data) {
+        throw new Error(result.message || "Failed to fetch analytics data");
+      }
+
+      console.log("✅ Client: Analytics data received securely from server");
+      return result.data;
+    } catch (error) {
+      console.error("❌ Client: Analytics API call failed:", error);
+      throw new Error(
+        `Unable to load analytics data: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
     }
   }
 

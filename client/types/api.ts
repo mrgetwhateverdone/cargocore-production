@@ -127,6 +127,84 @@ export interface DashboardData {
   lastUpdated: string;
 }
 
+// Analytics KPIs
+export interface AnalyticsKPIs {
+  orderVolumeGrowth: number | null;  // percentage with +/- indicator
+  returnRate: number | null;         // percentage 
+  fulfillmentEfficiency: number | null; // percentage
+  inventoryHealthScore: number | null;   // percentage
+}
+
+// Performance Metrics
+export interface PerformanceMetrics {
+  orderVolumeTrend: {
+    growthRate: number;
+    totalOrdersAnalyzed: number;
+  };
+  fulfillmentPerformance: {
+    efficiencyRate: number;
+    onTimeOrders: number;
+  };
+}
+
+// Data Insights Dashboard
+export interface DataInsightsDashboard {
+  totalDataPoints: number;
+  activeWarehouses: {
+    count: number;
+    avgSLA: number;
+  };
+  uniqueBrands: number;
+  inventoryHealth: {
+    percentage: number;
+    skusInStock: number;
+  };
+}
+
+// Operational Breakdown
+export interface OperationalBreakdown {
+  orderAnalysis: {
+    totalOrders: number;
+    onTimeOrders: number;
+    delayedOrders: number;
+    onTimeRate: number;
+  };
+  inventoryAnalysis: {
+    totalSKUs: number;
+    inStock: number;
+    lowStock: number;
+    outOfStock: number;
+    avgInventoryLevel: number;
+  };
+}
+
+// Brand Performance
+export interface BrandPerformance {
+  totalBrands: number;
+  topBrand: {
+    name: string;
+    skuCount: number;
+  };
+  brandRankings: Array<{
+    rank: number;
+    brandName: string;
+    skuCount: number;
+    inventoryPercentage: number;
+    performanceLevel: string;
+  }>;
+}
+
+// Analytics Data (combined)
+export interface AnalyticsData {
+  kpis: AnalyticsKPIs;
+  insights: AIInsight[]; // Reuse existing type but from "analytics_agent"
+  performanceMetrics: PerformanceMetrics;
+  dataInsights: DataInsightsDashboard;
+  operationalBreakdown: OperationalBreakdown;
+  brandPerformance: BrandPerformance;
+  lastUpdated: string;
+}
+
 // API Error Types
 export interface APIError {
   message: string;
