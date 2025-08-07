@@ -30,6 +30,16 @@ interface ProductData {
   updated_date: string | null;
 }
 
+// Analytics Insight interface for type safety
+interface AnalyticsInsight {
+  type: string;
+  title: string;
+  description: string;
+  severity: string;
+  dollarImpact: number;
+  suggestedActions?: string[];
+}
+
 // TinyBird Shipments API Response - standardized interface
 interface ShipmentData {
   company_url: string;
@@ -327,11 +337,11 @@ async function generateAnalyticsInsights(
   kpis: any,
   performanceMetrics: any,
   brandPerformance: any
-): Promise<any[]> {
+): Promise<AnalyticsInsight[]> {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
     // This part of the code generates analytics insights without AI when API key is not available
-    const insights = [];
+    const insights: AnalyticsInsight[] = [];
     
     if (kpis.orderVolumeGrowth < -10) {
       insights.push({
@@ -339,7 +349,7 @@ async function generateAnalyticsInsights(
         title: "Declining Order Volume",
         description: `Order volume has decreased by ${Math.abs(kpis.orderVolumeGrowth).toFixed(1)}% compared to previous period. This trend requires immediate attention to maintain business growth.`,
         severity: "warning",
-        dollarImpact: 5000,
+        dollarImpact: 0, // No mock values - real impact calculation not available
       });
     }
     
@@ -469,7 +479,7 @@ CRITICAL: suggestedActions must be:
   }
 
   // This part of the code generates fallback analytics insights when AI fails
-  const insights = [];
+  const insights: AnalyticsInsight[] = [];
   
   if (kpis.orderVolumeGrowth < -10) {
     insights.push({
