@@ -66,8 +66,6 @@ export const useOrderSuggestion = () => {
       toast.success(`AI Suggestion for ${orderData.order_id}`, {
         description: suggestion.suggestion,
         duration: 6000, // Auto-dismiss after 6 seconds
-        icon: <Lightbulb className="h-4 w-4" />,
-        className: "bg-green-50 border-green-200 text-green-800",
       });
     },
     onError: (error, orderData) => {

@@ -89,7 +89,7 @@ export function ViewAllOrdersModal({ isOpen, onClose, orders, totalCount }: View
           <div className="p-6">
             {orders.length === 0 ? (
               <div className="text-center py-12">
-                <p className="text-gray-500">No orders found</p>
+                <p className="text-gray-500">Information not in dataset.</p>
               </div>
             ) : (
               <div className="overflow-x-auto max-h-96 overflow-y-auto">

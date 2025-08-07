@@ -240,7 +240,7 @@ export function InboundIntelligenceSection({ inboundIntelligence, isLoading }: I
         <div className="overflow-x-auto">
           {filteredData.length === 0 ? (
             <div className="px-6 py-12 text-center">
-              <p className="text-gray-500">No shipments found matching your criteria</p>
+              <p className="text-gray-500">Information not in dataset.</p>
             </div>
           ) : (
             <table className="min-w-full divide-y divide-gray-200">

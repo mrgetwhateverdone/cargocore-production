@@ -240,7 +240,7 @@ function calculateInboundIntelligence(orders: OrderData[]): any {
   const geopoliticalRisks = riskOrders.length > 0 ? {
     riskCountries: [...new Set(riskOrders.map(order => order.ship_from_country).filter(Boolean))],
     affectedShipments: riskOrders.length,
-    avgDelayIncrease: 5.2 // Simulated average delay increase
+    avgDelayIncrease: 0 // No simulated data
   } : undefined;
   
   return {
@@ -296,7 +296,7 @@ async function generateOrdersInsights(
         title: "Geopolitical Risk Assessment",
         description: `${inboundIntelligence.geopoliticalRisks.affectedShipments} shipments from risk-prone regions (${inboundIntelligence.geopoliticalRisks.riskCountries.join(', ')}). Consider supply chain diversification.`,
         severity: "info",
-        dollarImpact: 3000,
+        dollarImpact: 0,
       });
     }
     
@@ -395,7 +395,7 @@ FORMAT AS JSON ARRAY:
       title: "Geopolitical Risk Assessment",
       description: `${inboundIntelligence.geopoliticalRisks.affectedShipments} shipments from risk-prone regions (${inboundIntelligence.geopoliticalRisks.riskCountries.join(', ')}). Consider supply chain diversification.`,
       severity: "info",
-      dollarImpact: 3000,
+      dollarImpact: 0,
     });
   }
   

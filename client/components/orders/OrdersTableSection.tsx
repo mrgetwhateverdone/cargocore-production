@@ -112,15 +112,11 @@ export function OrdersTableSection({
 
       {/* This part of the code displays the orders table */}
       <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
-        <div className="px-6 py-3 border-b border-gray-200 bg-gray-50">
-          <p className="text-sm text-gray-600">
-            Loading real order data from TinyBird...
-          </p>
-        </div>
+
 
         {orders.length === 0 ? (
           <div className="px-6 py-12 text-center">
-            <p className="text-gray-500">No orders found for the specified company and brand</p>
+            <p className="text-gray-500">Information not in dataset.</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
