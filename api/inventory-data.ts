@@ -73,7 +73,7 @@ async function fetchProducts(): Promise<ProductData[]> {
  * This part of the code transforms product data into inventory structure
  * Maps product fields to inventory concepts
  */
-function transformProductsToInventory(products: ProductData[]) {
+function transformProductsToInventoryItems(products: ProductData[]) {
   return products
     .filter(product => product.company_url === 'COMP002_packiyo') // Same filter as other pages
     .map(product => {
@@ -309,26 +309,7 @@ CRITICAL: suggestedActions must be:
     });
   }
 
-  return insights.map((insight, index) => ({
-    ...insight,
-    id: `inventory_insight_${Date.now()}_${index}`,
-    source: "inventory_agent",
-    timestamp: new Date().toISOString(),
-    type: insight.type,
-    title: insight.title,
-    description: insight.description,
-    severity: insight.severity === "critical" 
-      ? ("critical" as const)
-      : insight.severity === "warning" 
-      ? ("warning" as const) 
-      : ("info" as const),
-    dollarImpact: insight.dollarImpact || 0,
-    suggestedActions: [
-      `Address ${insight.title.toLowerCase()}`,
-      "Review inventory optimization strategies",
-      "Implement monitoring for similar issues"
-    ]
-  }));
+  return insights;
 }
 
 /**
@@ -348,7 +329,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // This part of the code fetches and processes all inventory data
     const products = await fetchProducts();
-    const inventory = transformProductsToInventory(products);
+    const inventory = transformProductsToInventoryItems(products);
     const kpis = calculateInventoryKPIs(inventory);
     const insights = await generateInventoryInsights(inventory, kpis);
 
