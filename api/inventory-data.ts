@@ -104,13 +104,17 @@ function calculateBrandPerformance(products: ProductData[]) {
     }
   });
   
+  const totalPortfolioValue = Array.from(brandMap.values()).reduce((sum, data) => sum + data.totalValue, 0);
+  
   return Array.from(brandMap.entries())
     .map(([brand, data]) => ({
       brand_name: brand,
       sku_count: data.skuCount,
       total_value: Math.round(data.totalValue),
       total_quantity: data.totalQuantity,
-      avg_value_per_sku: Math.round(data.totalValue / data.skuCount)
+      avg_value_per_sku: Math.round(data.totalValue / data.skuCount),
+      portfolio_percentage: totalPortfolioValue > 0 ? Math.round((data.totalValue / totalPortfolioValue) * 100) : 0,
+      efficiency_score: Math.round((data.totalValue / data.skuCount) * (data.totalQuantity / data.skuCount))
     }))
     .sort((a, b) => b.total_value - a.total_value)
     .slice(0, 10); // Top 10 brands

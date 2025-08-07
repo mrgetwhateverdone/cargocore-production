@@ -446,6 +446,8 @@ export interface BrandPerformance {
   total_value: number;
   total_quantity: number;
   avg_value_per_sku: number;
+  portfolio_percentage: number;
+  efficiency_score: number;
 }
 
 export interface SupplierAnalysis {

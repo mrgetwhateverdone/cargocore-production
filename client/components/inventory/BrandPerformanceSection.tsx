@@ -48,20 +48,20 @@ export function BrandPerformanceSection({ brandPerformance, isLoading }: BrandPe
   return (
     <div className="bg-white rounded-lg border border-gray-200 shadow-sm mb-6">
       <div className="p-6 border-b border-gray-200">
-        <h3 className="text-lg font-medium text-gray-900">Brand Performance</h3>
+        <h3 className="text-lg font-medium text-gray-900">Brand Inventory Investment</h3>
         <p className="text-sm text-gray-500">
-          Top {brandPerformance.length} brands by inventory value
+          Financial analysis of {brandPerformance.length} brands by inventory value and efficiency
         </p>
       </div>
 
       <div className="p-6">
-        {/* This part of the code displays brand performance summary cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        {/* This part of the code displays inventory investment summary cards */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
           <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
             <div className="text-2xl font-semibold text-blue-600">
               {brandPerformance.length}
             </div>
-            <div className="text-sm text-blue-800">Total Brands</div>
+            <div className="text-sm text-blue-800">Brands in Portfolio</div>
           </div>
           
           {brandPerformance[0] && (
@@ -69,16 +69,25 @@ export function BrandPerformanceSection({ brandPerformance, isLoading }: BrandPe
               <div className="text-lg font-semibold text-green-600 truncate">
                 {brandPerformance[0].brand_name}
               </div>
-              <div className="text-sm text-green-800">Top Brand</div>
+              <div className="text-sm text-green-800">Highest Investment</div>
+            </div>
+          )}
+          
+          {brandPerformance[0] && (
+            <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
+              <div className="text-lg font-semibold text-purple-600">
+                {formatCurrency(brandPerformance[0].total_value)}
+              </div>
+              <div className="text-sm text-purple-800">Top Brand Value</div>
             </div>
           )}
           
           {brandPerformance[0] && (
             <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
-              <div className="text-2xl font-semibold text-orange-600">
-                {brandPerformance[0].sku_count}
+              <div className="text-lg font-semibold text-orange-600">
+                {formatCurrency(brandPerformance[0].avg_value_per_sku)}
               </div>
-              <div className="text-sm text-orange-800">Top Brand SKUs</div>
+              <div className="text-sm text-orange-800">Avg Value/SKU</div>
             </div>
           )}
         </div>
@@ -92,12 +101,14 @@ export function BrandPerformanceSection({ brandPerformance, isLoading }: BrandPe
             else if (index === 1) rankBadgeClass = "bg-gray-300 text-gray-800"; // Silver
             else if (index === 2) rankBadgeClass = "bg-orange-100 text-orange-800"; // Bronze
 
-            // This part of the code determines performance level
-            let performanceLevel = "Developing Brand";
-            if (index === 0) performanceLevel = "Leading Brand";
-            else if (index <= 2) performanceLevel = "Top Performer";
-            else if (index <= Math.floor(brandPerformance.length * 0.3)) performanceLevel = "Strong Performer";
-            else if (index <= Math.floor(brandPerformance.length * 0.7)) performanceLevel = "Average Performer";
+            // This part of the code determines investment classification based on value efficiency
+            let investmentClass = "Value Investment";
+            const avgValue = brand.avg_value_per_sku;
+            if (index === 0) investmentClass = "Premium Portfolio";
+            else if (avgValue > 50) investmentClass = "High-Value Brand";
+            else if (avgValue > 20) investmentClass = "Mid-Tier Brand";
+            else if (avgValue > 10) investmentClass = "Value Brand";
+            else investmentClass = "Economy Brand";
 
             return (
               <div
@@ -112,7 +123,7 @@ export function BrandPerformanceSection({ brandPerformance, isLoading }: BrandPe
                   
                   <div>
                     <div className="font-medium text-gray-900">{brand.brand_name}</div>
-                    <div className="text-sm text-gray-500">{performanceLevel}</div>
+                    <div className="text-sm text-gray-500">{investmentClass}</div>
                   </div>
                 </div>
                 
@@ -121,7 +132,7 @@ export function BrandPerformanceSection({ brandPerformance, isLoading }: BrandPe
                     {formatCurrency(brand.total_value)}
                   </div>
                   <div className="text-sm text-gray-500">
-                    {brand.sku_count} SKUs • Avg {formatCurrency(brand.avg_value_per_sku)}/SKU
+                    {brand.sku_count} SKUs • {formatCurrency(brand.avg_value_per_sku)}/SKU • {brand.portfolio_percentage}% of portfolio
                   </div>
                 </div>
               </div>
