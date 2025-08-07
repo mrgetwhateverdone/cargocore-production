@@ -146,15 +146,26 @@ export const useWorkflowCreation = () => {
         insightTitle // ← insight.title
       );
 
-      // Store success message
+      // Store success message and dispatch event safely
       const successMessage = `Workflow "${workflow.title}" has been created`;
       if (typeof window !== 'undefined') {
-        localStorage.setItem('workflow_success_message', successMessage);
-        
-        // CRITICAL: Dispatch custom event to notify other components
-        window.dispatchEvent(new CustomEvent('workflowCreated', { 
-          detail: { workflow, message: successMessage }
-        }));
+        try {
+          localStorage.setItem('workflow_success_message', successMessage);
+          
+          // CRITICAL: Dispatch custom event to notify other components
+          window.dispatchEvent(new CustomEvent('workflowCreated', { 
+            detail: { 
+              workflow, 
+              message: successMessage,
+              insightTitle: insightTitle || workflow.title 
+            }
+          }));
+          
+          console.log('✅ Workflow created successfully:', workflow.id);
+        } catch (eventError) {
+          console.error('Event dispatch error:', eventError);
+          // Don't let event dispatch errors break workflow creation
+        }
       }
 
       return workflow;

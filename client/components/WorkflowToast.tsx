@@ -67,10 +67,40 @@ export const showWorkflowCreatedToast = (workflowTitle: string) => {
 
 // This part of the code sets up global workflow creation event listener for automatic toast notifications
 export function WorkflowToastListener() {
+  const navigate = useNavigate();
+
   useEffect(() => {
     const handleWorkflowCreated = (event: CustomEvent) => {
-      const { workflow, insightTitle } = event.detail;
-      showWorkflowCreatedToast(insightTitle || workflow.title);
+      try {
+        const { workflow, insightTitle, message } = event.detail || {};
+        const title = insightTitle || workflow?.title || 'Workflow';
+        
+        console.log('Toast listener received workflow event:', { workflow, insightTitle, message, title });
+        
+        // This part of the code uses a simple toast instead of custom component to prevent navigation crashes
+        toast.success(
+          `✓ Workflow "${title}" created successfully!`,
+          {
+            duration: 5000,
+            position: 'top-right',
+            action: {
+              label: 'View Workflows →',
+              onClick: () => {
+                try {
+                  navigate('/workflows');
+                } catch (navError) {
+                  console.error('Navigation error:', navError);
+                  window.location.href = '/workflows'; // Fallback navigation
+                }
+              },
+            },
+          }
+        );
+      } catch (error) {
+        console.error('WorkflowToastListener error:', error);
+        // Fallback simple toast
+        toast.success('✓ Workflow created successfully!', { duration: 3000 });
+      }
     };
 
     window.addEventListener('workflowCreated', handleWorkflowCreated as EventListener);
@@ -78,7 +108,7 @@ export function WorkflowToastListener() {
     return () => {
       window.removeEventListener('workflowCreated', handleWorkflowCreated as EventListener);
     };
-  }, []);
+  }, [navigate]);
 
   return null; // This component doesn't render anything
 }
