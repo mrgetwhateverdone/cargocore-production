@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { X, ChevronUp, ChevronDown, ArrowUpDown, Search } from "lucide-react";
+import { X, ChevronUp, ChevronDown, ArrowUpDown, Search, Eye } from "lucide-react";
 import type { OrderData } from "@/types/api";
 
 interface ViewAllOrdersModalProps {
@@ -7,12 +7,13 @@ interface ViewAllOrdersModalProps {
   onClose: () => void;
   orders: OrderData[];
   totalCount: number;
+  onViewOrder?: (order: OrderData) => void;
 }
 
 type SortField = 'order_id' | 'created_date' | 'brand_name' | 'status' | 'sla_status' | 'supplier' | 'expected_date' | 'expected_quantity';
 type SortDirection = 'asc' | 'desc' | 'default';
 
-export function ViewAllOrdersModal({ isOpen, onClose, orders, totalCount }: ViewAllOrdersModalProps) {
+export function ViewAllOrdersModal({ isOpen, onClose, orders, totalCount, onViewOrder }: ViewAllOrdersModalProps) {
   const [sortField, setSortField] = useState<SortField>('created_date');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc'); // Default to most recent first
   const [searchTerm, setSearchTerm] = useState('');
@@ -291,6 +292,9 @@ export function ViewAllOrdersModal({ isOpen, onClose, orders, totalCount }: View
                           {getSortIcon('expected_quantity')}
                         </div>
                       </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Actions
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
@@ -350,6 +354,19 @@ export function ViewAllOrdersModal({ isOpen, onClose, orders, totalCount }: View
                           <div className="text-sm text-gray-900">
                             {order.received_quantity} / {order.expected_quantity}
                           </div>
+                        </td>
+                        
+                        {/* Actions */}
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                          {onViewOrder && (
+                            <button
+                              onClick={() => onViewOrder(order)}
+                              className="inline-flex items-center justify-center w-8 h-8 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                              title="View order details and AI analysis"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </button>
+                          )}
                         </td>
                       </tr>
                     ))}

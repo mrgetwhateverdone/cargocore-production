@@ -1,7 +1,6 @@
 import { useState, useMemo } from "react";
-import { Eye, Loader2, ChevronUp, ChevronDown, ArrowUpDown } from "lucide-react";
+import { Eye, ChevronUp, ChevronDown, ArrowUpDown } from "lucide-react";
 import type { OrderData } from "@/types/api";
-import { useOrderSuggestion } from "@/hooks/useOrdersData";
 
 interface OrdersTableSectionProps {
   orders: OrderData[];
@@ -9,6 +8,7 @@ interface OrdersTableSectionProps {
   hasMore: boolean;
   isLoading?: boolean;
   onViewAll?: () => void;
+  onViewOrder?: (order: OrderData) => void;
 }
 
 type SortField = 'order_id' | 'created_date' | 'brand_name' | 'status' | 'sla_status';
@@ -19,12 +19,11 @@ export function OrdersTableSection({
   totalCount, 
   hasMore, 
   isLoading, 
-  onViewAll 
+  onViewAll,
+  onViewOrder 
 }: OrdersTableSectionProps) {
-  const [processingOrderId, setProcessingOrderId] = useState<string | null>(null);
   const [sortField, setSortField] = useState<SortField>('created_date');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc'); // Default to most recent first
-  const orderSuggestionMutation = useOrderSuggestion();
 
   // This part of the code determines the color for order status badges
   const getStatusColor = (status: string) => {
@@ -46,13 +45,10 @@ export function OrdersTableSection({
     return 'bg-gray-100 text-gray-800';
   };
 
-  // This part of the code handles AI suggestion generation for specific orders
-  const handleViewOrder = async (order: OrderData) => {
-    setProcessingOrderId(order.order_id);
-    try {
-      await orderSuggestionMutation.mutateAsync(order);
-    } finally {
-      setProcessingOrderId(null);
+  // This part of the code handles opening the AI explanation modal for specific orders
+  const handleViewOrder = (order: OrderData) => {
+    if (onViewOrder) {
+      onViewOrder(order);
     }
   };
 
@@ -283,24 +279,14 @@ export function OrdersTableSection({
                       </span>
                     </td>
                     
-                    {/* This part of the code displays the AI suggestion action button */}
+                    {/* This part of the code displays the view order action button */}
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <button
                         onClick={() => handleViewOrder(order)}
-                        disabled={processingOrderId === order.order_id || orderSuggestionMutation.isPending}
-                        className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="inline-flex items-center justify-center w-8 h-8 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                        title="View order details and AI analysis"
                       >
-                        {processingOrderId === order.order_id ? (
-                          <>
-                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                            Analyzing...
-                          </>
-                        ) : (
-                          <>
-                            <Eye className="h-4 w-4 mr-2" />
-                            View
-                          </>
-                        )}
+                        <Eye className="h-4 w-4" />
                       </button>
                     </td>
                   </tr>
