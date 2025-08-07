@@ -330,6 +330,50 @@ async function fetchShipmentsInternal() {
   return { data: result.data };
 }
 
+/**
+ * This part of the code calculates real financial impact from operational data
+ * Uses actual unit costs and quantity discrepancies for accurate dollar amounts
+ */
+function calculateFinancialImpacts(products: ProductData[], shipments: ShipmentData[]) {
+  // Calculate impact from quantity discrepancies
+  const quantityDiscrepancyImpact = shipments
+    .filter(s => s.expected_quantity !== s.received_quantity && s.unit_cost)
+    .reduce((sum, shipment) => {
+      const quantityDiff = Math.abs(shipment.expected_quantity - shipment.received_quantity);
+      return sum + (quantityDiff * (shipment.unit_cost || 0));
+    }, 0);
+
+  // Calculate impact from cancelled shipments
+  const cancelledShipmentsImpact = shipments
+    .filter(s => s.status === "cancelled" && s.unit_cost)
+    .reduce((sum, shipment) => {
+      return sum + (shipment.expected_quantity * (shipment.unit_cost || 0));
+    }, 0);
+
+  // Calculate lost revenue from inactive products
+  const inactiveProductsValue = products
+    .filter(p => !p.active && p.unit_cost)
+    .reduce((sum, product) => {
+      // Estimate monthly lost revenue potential
+      return sum + ((product.unit_cost || 0) * product.unit_quantity * 30);
+    }, 0);
+
+  // Calculate total inventory value at risk
+  const atRiskInventoryValue = shipments
+    .filter(s => s.expected_quantity !== s.received_quantity || s.status === "cancelled")
+    .reduce((sum, shipment) => {
+      return sum + (shipment.received_quantity * (shipment.unit_cost || 0));
+    }, 0);
+
+  return {
+    quantityDiscrepancyImpact: Math.round(quantityDiscrepancyImpact),
+    cancelledShipmentsImpact: Math.round(cancelledShipmentsImpact),
+    inactiveProductsValue: Math.round(inactiveProductsValue),
+    atRiskInventoryValue: Math.round(atRiskInventoryValue),
+    totalFinancialRisk: Math.round(quantityDiscrepancyImpact + cancelledShipmentsImpact + inactiveProductsValue)
+  };
+}
+
 async function generateInsightsInternal(data: any) {
   const prompt = buildAnalysisPrompt(data);
 
@@ -355,33 +399,39 @@ async function generateInsightsInternal(data: any) {
 
 function buildAnalysisPrompt(data: any): string {
   const { warehouseInventory, kpis, products, shipments } = data;
-
+  
+  const financialImpacts = calculateFinancialImpacts(products, shipments);
   const totalProducts = products.length;
   const totalShipments = shipments.length;
   const activeProducts = products.filter((p: ProductData) => p.active).length;
-  const inactiveProducts = products.filter(
-    (p: ProductData) => !p.active,
-  ).length;
+  const inactiveProducts = products.filter((p: ProductData) => !p.active).length;
+  const atRiskShipments = shipments.filter((s: ShipmentData) => s.expected_quantity !== s.received_quantity).length;
+  const cancelledShipments = shipments.filter((s: ShipmentData) => s.status === "cancelled").length;
+  const totalShipmentValue = shipments.reduce((sum: number, s: ShipmentData) => sum + (s.received_quantity * (s.unit_cost || 0)), 0);
 
   return `
-You are a 3PL operations analyst. Analyze this real logistics data and generate 2-3 actionable insights for CargoCore dashboard.
+You are a 3PL operations analyst. Analyze this real logistics data and generate 2-3 actionable insights with real financial impact.
 
 OPERATIONAL DATA:
-- Total Products: ${totalProducts}
-- Active Products: ${activeProducts}
-- Inactive Products: ${inactiveProducts}
-- Total Shipments: ${totalShipments}
-- KPIs: ${JSON.stringify(kpis)}
+- Total Products: ${totalProducts} (${inactiveProducts} inactive)
+- Total Shipments: ${totalShipments} (${atRiskShipments} with quantity discrepancies, ${cancelledShipments} cancelled)
+- Total Shipment Value: $${Math.round(totalShipmentValue).toLocaleString()}
 
-Generate exactly 2-3 insights focusing on operational efficiency, financial impact, and strategic intelligence.
+FINANCIAL IMPACT ANALYSIS:
+- Quantity Discrepancy Impact: $${financialImpacts.quantityDiscrepancyImpact.toLocaleString()}
+- Cancelled Shipments Impact: $${financialImpacts.cancelledShipmentsImpact.toLocaleString()}
+- Inactive Products Lost Revenue: $${financialImpacts.inactiveProductsValue.toLocaleString()}/month
+- Total Financial Risk: $${financialImpacts.totalFinancialRisk.toLocaleString()}
+
+Generate insights focusing on the highest financial impact areas. Include specific dollar amounts and percentages.
 
 FORMAT AS JSON ARRAY:
 [
   {
-    "title": "Specific Actionable Title",
-    "description": "Detailed analysis with real data points",
+    "title": "Specific Issue Title",
+    "description": "Detailed analysis with financial impact and recommendations",
     "severity": "critical|warning|info",
-    "dollarImpact": number,
+    "dollarImpact": actual_dollar_amount,
     "suggestedActions": ["Action 1", "Action 2"]
   }
 ]
@@ -410,21 +460,8 @@ function parseInsightsResponse(content: string) {
     }));
   } catch (error) {
     console.error("Failed to parse AI insights:", error);
-    return [
-      {
-        id: `fallback-insight-${Date.now()}`,
-        title: "Operational Analysis Required",
-        description: "AI analysis completed but detailed parsing unavailable.",
-        severity: "info",
-        dollarImpact: 0,
-        suggestedActions: [
-          "Review supplier performance",
-          "Analyze inventory distribution",
-        ],
-        createdAt: new Date().toISOString(),
-        source: "dashboard_agent",
-      },
-    ];
+    // This part of the code returns empty insights when AI parsing fails - only show real data-driven insights
+    return [];
   }
 }
 
@@ -527,15 +564,28 @@ function getInventoryByWarehouse(
   });
   
   return Array.from(warehouseMap.values()).map((warehouse) => {
-    // This part of the code generates consistent warehouse-specific numbers based on warehouse ID
-    const warehouseHash = warehouse.id ? warehouse.id.split('-')[0] : 'default';
-    const seedValue = warehouseHash.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    // This part of the code calculates real warehouse inventory from actual shipment data
+    const warehouseShipments = shipments.filter(s => s.warehouse_id === warehouse.id);
+    const warehouseProducts = products.filter(p => 
+      warehouseShipments.some(s => s.inventory_item_id === p.inventory_item_id)
+    );
+    
+    const totalInventory = warehouseShipments.reduce((sum, shipment) => 
+      sum + shipment.received_quantity, 0
+    );
+    
+    const averageCost = warehouseShipments.length > 0 
+      ? warehouseShipments
+          .filter(s => s.unit_cost !== null)
+          .reduce((sum, shipment) => sum + (shipment.unit_cost || 0), 0) / 
+        warehouseShipments.filter(s => s.unit_cost !== null).length
+      : 0;
     
     return {
       warehouseId: warehouse.id,
-      totalInventory: Math.floor((seedValue % 500) + 100), // Deterministic range 100-599
-      productCount: Math.floor((seedValue % 200) + 50), // Deterministic range 50-249
-      averageCost: Math.floor((seedValue % 400) + 200), // Deterministic range 200-599
+      totalInventory,
+      productCount: warehouseProducts.length,
+      averageCost: Math.round(averageCost || 0),
     };
   });
 }

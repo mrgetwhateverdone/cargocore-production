@@ -113,56 +113,124 @@ async function fetchShipments(): Promise<ShipmentData[]> {
 }
 
 /**
- * This part of the code generates AI insights using standardized logic
+ * This part of the code calculates real financial impact from operational data
+ * Uses actual unit costs and quantity discrepancies for accurate dollar amounts
+ */
+function calculateFinancialImpacts(products: ProductData[], shipments: ShipmentData[]) {
+  // Calculate impact from quantity discrepancies
+  const quantityDiscrepancyImpact = shipments
+    .filter(s => s.expected_quantity !== s.received_quantity && s.unit_cost)
+    .reduce((sum, shipment) => {
+      const quantityDiff = Math.abs(shipment.expected_quantity - shipment.received_quantity);
+      return sum + (quantityDiff * (shipment.unit_cost || 0));
+    }, 0);
+
+  // Calculate impact from cancelled shipments
+  const cancelledShipmentsImpact = shipments
+    .filter(s => s.status === "cancelled" && s.unit_cost)
+    .reduce((sum, shipment) => {
+      return sum + (shipment.expected_quantity * (shipment.unit_cost || 0));
+    }, 0);
+
+  // Calculate lost revenue from inactive products
+  const inactiveProductsValue = products
+    .filter(p => !p.active && p.unit_cost)
+    .reduce((sum, product) => {
+      // Estimate monthly lost revenue potential
+      return sum + ((product.unit_cost || 0) * product.unit_quantity * 30);
+    }, 0);
+
+  // Calculate total inventory value at risk
+  const atRiskInventoryValue = shipments
+    .filter(s => s.expected_quantity !== s.received_quantity || s.status === "cancelled")
+    .reduce((sum, shipment) => {
+      return sum + (shipment.received_quantity * (shipment.unit_cost || 0));
+    }, 0);
+
+  return {
+    quantityDiscrepancyImpact: Math.round(quantityDiscrepancyImpact),
+    cancelledShipmentsImpact: Math.round(cancelledShipmentsImpact),
+    inactiveProductsValue: Math.round(inactiveProductsValue),
+    atRiskInventoryValue: Math.round(atRiskInventoryValue),
+    totalFinancialRisk: Math.round(quantityDiscrepancyImpact + cancelledShipmentsImpact + inactiveProductsValue)
+  };
+}
+
+/**
+ * This part of the code generates AI insights using real financial data
  * Matches the server implementation calculations for consistent results
  */
+interface InsightData {
+  type: string;
+  title: string;
+  description: string;
+  severity: "critical" | "warning" | "info";
+  dollarImpact?: number;
+}
+
 async function generateInsights(
   products: ProductData[],
   shipments: ShipmentData[],
-): Promise<any[]> {
+): Promise<InsightData[]> {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
-    // This part of the code uses standardized fallback insights matching server logic
+    // This part of the code generates data-driven insights with real financial impact when AI is not available
+    const insights: InsightData[] = [];
+    const financialImpacts = calculateFinancialImpacts(products, shipments);
+    
     const atRiskCount = shipments.filter(
       (shipment) =>
         shipment.expected_quantity !== shipment.received_quantity ||
         shipment.status === "cancelled",
     ).length;
     
-    const openPOs = new Set(
-      shipments
-        .filter(
-          (shipment) =>
-            shipment.purchase_order_number &&
-            shipment.status !== "completed" &&
-            shipment.status !== "cancelled",
-        )
-        .map((shipment) => shipment.purchase_order_number),
-    ).size;
+    const atRiskPercentage = shipments.length > 0 ? (atRiskCount / shipments.length * 100).toFixed(1) : 0;
     
-    return [
-      {
+    // Only include insights if they represent actual issues or notable conditions
+    if (atRiskCount > 0 && financialImpacts.quantityDiscrepancyImpact > 0) {
+      insights.push({
         type: "warning",
-        title: "High At-Risk Orders",
-        description: `The 'atRiskOrders' KPI is showing a high value of ${atRiskCount} out of ${shipments.length} total shipments. This represents a significant risk to business operations as these orders might not be fulfilled on time or at all.`,
-        severity: "critical",
-      },
-      {
-        type: "warning",
-        title: "Substantial Open Purchase Orders",
-        description: `There are currently ${openPOs} open purchase orders. These unfulfilled orders could potentially impact customer satisfaction and financial performance.`,
-        severity: "warning",
-      },
-      {
+        title: "Quantity Discrepancy Impact",
+        description: `${atRiskCount} shipments (${atRiskPercentage}%) have quantity discrepancies with financial impact of $${financialImpacts.quantityDiscrepancyImpact.toLocaleString()}.`,
+        severity: financialImpacts.quantityDiscrepancyImpact > 10000 ? "critical" : "warning",
+        dollarImpact: financialImpacts.quantityDiscrepancyImpact,
+      });
+    }
+    
+    if (financialImpacts.cancelledShipmentsImpact > 0) {
+      const cancelledCount = shipments.filter(s => s.status === "cancelled").length;
+      insights.push({
+        type: "warning", 
+        title: "Cancelled Shipments Impact",
+        description: `${cancelledCount} cancelled shipments represent $${financialImpacts.cancelledShipmentsImpact.toLocaleString()} in lost inventory value.`,
+        severity: financialImpacts.cancelledShipmentsImpact > 5000 ? "critical" : "warning",
+        dollarImpact: financialImpacts.cancelledShipmentsImpact,
+      });
+    }
+    
+    const inactiveProducts = products.filter((p) => !p.active).length;
+    if (inactiveProducts > 0 && financialImpacts.inactiveProductsValue > 0) {
+      insights.push({
         type: "info",
-        title: "Optimal Product Activation",
-        description: `All ${products.filter((p) => p.active).length} products are active, which means there are no inactive products not generating revenue. This is a positive indication of product utilization.`,
+        title: "Inactive Product Revenue Loss",
+        description: `${inactiveProducts} inactive products represent potential monthly revenue loss of $${financialImpacts.inactiveProductsValue.toLocaleString()}.`,
         severity: "info",
-      },
-    ];
+        dollarImpact: financialImpacts.inactiveProductsValue,
+      });
+    }
+    
+    return insights;
   }
 
   try {
+    const financialImpacts = calculateFinancialImpacts(products, shipments);
+    
+    // This part of the code provides comprehensive financial context to AI for better insights
+    const atRiskShipments = shipments.filter(s => s.expected_quantity !== s.received_quantity).length;
+    const cancelledShipments = shipments.filter(s => s.status === "cancelled").length;
+    const inactiveProducts = products.filter(p => !p.active).length;
+    const totalShipmentValue = shipments.reduce((sum, s) => sum + (s.received_quantity * (s.unit_cost || 0)), 0);
+    
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -174,10 +242,34 @@ async function generateInsights(
         messages: [
           {
             role: "user",
-            content: `Analyze this logistics data and provide 3 key insights. Products: ${products.length} total, ${products.filter((p) => !p.active).length} inactive. Shipments: ${shipments.length} total, ${shipments.filter((s) => s.expected_quantity !== s.received_quantity).length} at-risk. Format as JSON array with: type, title, description, severity (critical/warning/info)`,
+            content: `Analyze this 3PL logistics data and provide 2-3 actionable insights with real financial impact.
+
+OPERATIONAL DATA:
+- Total Products: ${products.length} (${inactiveProducts} inactive)
+- Total Shipments: ${shipments.length} (${atRiskShipments} with quantity discrepancies, ${cancelledShipments} cancelled)
+- Total Shipment Value: $${Math.round(totalShipmentValue).toLocaleString()}
+
+FINANCIAL IMPACT ANALYSIS:
+- Quantity Discrepancy Impact: $${financialImpacts.quantityDiscrepancyImpact.toLocaleString()}
+- Cancelled Shipments Impact: $${financialImpacts.cancelledShipmentsImpact.toLocaleString()}
+- Inactive Products Lost Revenue: $${financialImpacts.inactiveProductsValue.toLocaleString()}/month
+- Total Financial Risk: $${financialImpacts.totalFinancialRisk.toLocaleString()}
+
+Generate insights focusing on the highest financial impact areas. Include specific dollar amounts and percentages.
+
+FORMAT AS JSON ARRAY:
+[
+  {
+    "type": "warning",
+    "title": "Specific Issue Title",
+    "description": "Detailed analysis with financial impact and recommendations",
+    "severity": "critical|warning|info",
+    "dollarImpact": actual_dollar_amount
+  }
+]`,
           },
         ],
-        max_tokens: 300,
+        max_tokens: 500,
         temperature: 0.3,
       }),
     });
@@ -193,44 +285,52 @@ async function generateInsights(
     console.error("OpenAI analysis failed:", error);
   }
 
-  // This part of the code provides standardized fallback insights matching server implementation
+  // This part of the code generates data-driven insights with real financial impact when AI fails
+  const insights: InsightData[] = [];
+  const financialImpacts = calculateFinancialImpacts(products, shipments);
+  
   const atRiskCount = shipments.filter(
     (shipment) =>
       shipment.expected_quantity !== shipment.received_quantity ||
       shipment.status === "cancelled",
   ).length;
   
-  const openPOs = new Set(
-    shipments
-      .filter(
-        (shipment) =>
-          shipment.purchase_order_number &&
-          shipment.status !== "completed" &&
-          shipment.status !== "cancelled",
-      )
-      .map((shipment) => shipment.purchase_order_number),
-  ).size;
+  const atRiskPercentage = shipments.length > 0 ? (atRiskCount / shipments.length * 100).toFixed(1) : 0;
   
-  return [
-    {
+  // Only include insights if they represent actual issues or notable conditions
+  if (atRiskCount > 0 && financialImpacts.quantityDiscrepancyImpact > 0) {
+    insights.push({
       type: "warning",
-      title: "High At-Risk Orders",
-      description: `The 'atRiskOrders' KPI is showing a high value of ${atRiskCount} out of ${shipments.length} total shipments. This represents a significant risk to business operations as these orders might not be fulfilled on time or at all.`,
-      severity: "critical",
-    },
-    {
-      type: "warning",
-      title: "Substantial Open Purchase Orders",
-      description: `There are currently ${openPOs} open purchase orders. These unfulfilled orders could potentially impact customer satisfaction and financial performance.`,
-      severity: "warning",
-    },
-    {
+      title: "Quantity Discrepancy Impact",
+      description: `${atRiskCount} shipments (${atRiskPercentage}%) have quantity discrepancies with financial impact of $${financialImpacts.quantityDiscrepancyImpact.toLocaleString()}.`,
+      severity: financialImpacts.quantityDiscrepancyImpact > 10000 ? "critical" : "warning",
+      dollarImpact: financialImpacts.quantityDiscrepancyImpact,
+    });
+  }
+  
+  if (financialImpacts.cancelledShipmentsImpact > 0) {
+    const cancelledCount = shipments.filter(s => s.status === "cancelled").length;
+    insights.push({
+      type: "warning", 
+      title: "Cancelled Shipments Impact",
+      description: `${cancelledCount} cancelled shipments represent $${financialImpacts.cancelledShipmentsImpact.toLocaleString()} in lost inventory value.`,
+      severity: financialImpacts.cancelledShipmentsImpact > 5000 ? "critical" : "warning",
+      dollarImpact: financialImpacts.cancelledShipmentsImpact,
+    });
+  }
+  
+  const inactiveProducts = products.filter((p) => !p.active).length;
+  if (inactiveProducts > 0 && financialImpacts.inactiveProductsValue > 0) {
+    insights.push({
       type: "info",
-      title: "Optimal Product Activation",
-      description: `All ${products.filter((p) => p.active).length} products are active, which means there are no inactive products not generating revenue. This is a positive indication of product utilization.`,
+      title: "Inactive Product Revenue Loss",
+      description: `${inactiveProducts} inactive products represent potential monthly revenue loss of $${financialImpacts.inactiveProductsValue.toLocaleString()}.`,
       severity: "info",
-    },
-  ];
+      dollarImpact: financialImpacts.inactiveProductsValue,
+    });
+  }
+  
+  return insights;
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -327,17 +427,29 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         });
         
         return Array.from(warehouseMap.values());
-      })().map((warehouse, index) => {
-        // This part of the code provides realistic warehouse-specific inventory numbers
-        // Using deterministic calculation based on warehouse ID to ensure consistency
-        const warehouseHash = warehouse.id ? warehouse.id.split('-')[0] : 'default';
-        const seedValue = warehouseHash.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+      })().map((warehouse) => {
+        // This part of the code calculates real warehouse inventory from actual shipment data
+        const warehouseShipments = shipments.filter(s => s.warehouse_id === warehouse.id);
+        const warehouseProducts = products.filter(p => 
+          warehouseShipments.some(s => s.inventory_item_id === p.inventory_item_id)
+        );
+        
+        const totalInventory = warehouseShipments.reduce((sum, shipment) => 
+          sum + shipment.received_quantity, 0
+        );
+        
+        const averageCost = warehouseShipments.length > 0 
+          ? warehouseShipments
+              .filter(s => s.unit_cost !== null)
+              .reduce((sum, shipment, _, arr) => sum + (shipment.unit_cost || 0), 0) / 
+            warehouseShipments.filter(s => s.unit_cost !== null).length
+          : 0;
         
         return {
           warehouseId: warehouse.id,
-          totalInventory: Math.floor((seedValue % 500) + 100), // Deterministic range 100-599
-          productCount: Math.floor((seedValue % 200) + 50), // Deterministic range 50-249  
-          averageCost: Math.floor((seedValue % 400) + 200), // Deterministic range 200-599
+          totalInventory,
+          productCount: warehouseProducts.length,
+          averageCost: Math.round(averageCost || 0),
         };
       }),
       insights: insights.map((insight, index) => ({
@@ -350,7 +462,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             : insight.severity === "warning"
               ? ("warning" as const)
               : ("info" as const),
-        dollarImpact: Math.floor(Math.random() * 10000) + 1000,
+        dollarImpact: insight.dollarImpact || 0, // This part of the code uses real financial impact from AI or calculations
         suggestedActions: [
           `Review ${insight.title.toLowerCase()}`,
           "Take corrective action",
