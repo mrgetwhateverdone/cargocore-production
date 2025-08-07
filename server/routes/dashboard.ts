@@ -318,10 +318,10 @@ async function fetchProductsInternal() {
 async function fetchShipmentsInternal() {
   const baseUrl = process.env.WAREHOUSE_BASE_URL!;
   const token = process.env.WAREHOUSE_TOKEN!;
-  // Add filters for specific company and brand + limit for performance
-  const url = `${baseUrl}?token=${token}&limit=150&company_url=COMP002_3PL&brand_id=561bdd14-630a-4a0c-9493-50a513bbb946`;
+  // This part of the code fetches from inbound_shipments_details_mv API with COMP002_3PL company filter
+  const url = `${baseUrl}?token=${token}&limit=150&company_url=COMP002_3PL`;
   console.log(
-    "🚛 Local: Fetching shipments with limit=150 for faster response",
+    "🚛 Local: Fetching shipments from inbound_shipments_details_mv API with COMP002_3PL filter",
   );
 
   const response = await fetch(url);

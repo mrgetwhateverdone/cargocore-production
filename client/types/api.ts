@@ -1,4 +1,4 @@
-// TinyBird Product Details API Response
+// TinyBird Product Details API Response - product_details_mv schema
 export interface ProductData {
   product_id: string;
   company_url: string;
@@ -23,7 +23,7 @@ export interface ProductData {
   updated_date: string | null;
 }
 
-// TinyBird Shipments API Response
+// TinyBird Shipments API Response - inbound_shipments_details_mv schema
 export interface ShipmentData {
   company_url: string;
   shipment_id: string;
