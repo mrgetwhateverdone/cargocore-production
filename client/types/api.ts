@@ -301,6 +301,111 @@ export interface OrderSuggestion {
   estimatedImpact?: string;
 }
 
+// Warehouse Performance Data
+export interface WarehouseData {
+  warehouseId: string;
+  warehouseName: string;
+  supplierName: string; // Original supplier identifier for data traceability
+  slaPerformance: number; // percentage
+  activeOrders: number;
+  avgFulfillmentTime: number; // hours
+  totalSKUs: number;
+  throughput: number; // monthly throughput volume
+  status: "Excellent" | "Good" | "Needs Attention";
+  performanceScore: number; // 0-100 score for ranking
+  location?: {
+    city: string | null;
+    state: string | null;
+    country: string | null;
+  };
+}
+
+// Warehouse KPIs
+export interface WarehouseKPIs {
+  avgSLAPercentage: number | null;
+  totalActiveOrders: number | null;
+  avgFulfillmentTime: number | null; // hours
+  totalInboundThroughput: number | null;
+}
+
+// Warehouse Performance Rankings
+export interface WarehousePerformanceRanking {
+  rank: number;
+  warehouseId: string;
+  warehouseName: string;
+  slaPerformance: number;
+  activeOrders: number;
+  avgFulfillmentTime: number;
+  status: "Excellent" | "Good" | "Needs Attention";
+}
+
+// Smart Budget Allocation
+export interface BudgetAllocation {
+  warehouseId: string;
+  warehouseName: string;
+  currentBudget: number;
+  recommendedBudget: number;
+  changeAmount: number;
+  changePercentage: number;
+  expectedROI: number;
+  justification: string;
+  riskLevel: "Low" | "Medium" | "High";
+  performanceScore: number;
+}
+
+// User Behavior Analysis (simulated)
+export interface UserBehaviorAnalysis {
+  warehouseId: string;
+  warehouseName: string;
+  viewFrequency: number;
+  timeSpent: number; // minutes
+  engagementScore: number;
+  commonActions: string[];
+  nextBestAction: string;
+  personalizedTips: string[];
+}
+
+// Performance Optimization Opportunity
+export interface OptimizationOpportunity {
+  area: string;
+  priority: "High" | "Medium" | "Low";
+  currentValue: number;
+  targetValue: number;
+  investment: number;
+  potentialSavings: number;
+  timeline: string; // e.g., "3-6 months"
+}
+
+// Warehouse Optimization Engine
+export interface WarehouseOptimization {
+  warehouseId: string;
+  warehouseName: string;
+  roiPercentage: number;
+  riskLevel: "Low" | "Medium" | "High";
+  performanceMetrics: {
+    slaPerformance: number;
+    throughput: number;
+    efficiency: number;
+    capacityUsage: number;
+  };
+  opportunities: OptimizationOpportunity[];
+  totalInvestment: number;
+  potentialSavings: number;
+  timeline: string;
+}
+
+// Warehouses Data (combined)
+export interface WarehousesData {
+  warehouses: WarehouseData[];
+  kpis: WarehouseKPIs;
+  insights: AIInsight[]; // Reuse existing type but from "warehouse_agent"
+  performanceRankings: WarehousePerformanceRanking[];
+  budgetAllocations: BudgetAllocation[];
+  userBehavior: UserBehaviorAnalysis[];
+  optimizations: WarehouseOptimization[];
+  lastUpdated: string;
+}
+
 // API Error Types
 export interface APIError {
   message: string;
