@@ -10,7 +10,7 @@ interface InventoryTableSectionProps {
   onViewAll?: () => void;
 }
 
-type SortField = 'sku' | 'product_name' | 'brand_name' | 'on_hand' | 'available' | 'status';
+type SortField = 'sku' | 'product_name' | 'brand_name' | 'on_hand' | 'available' | 'status' | 'unit_cost' | 'total_value' | 'supplier';
 type SortDirection = 'asc' | 'desc' | 'default';
 
 export function InventoryTableSection({ 
@@ -34,9 +34,18 @@ export function InventoryTableSection({
         return 'bg-red-100 text-red-800';
       case 'Overstocked':
         return 'bg-purple-100 text-purple-800';
+      case 'Inactive':
+        return 'bg-gray-100 text-gray-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
+  };
+
+  // This part of the code formats currency values for display
+  const formatCurrency = (value: number) => {
+    if (value >= 1000000) return `$${(value / 1000000).toFixed(1)}M`;
+    if (value >= 1000) return `$${(value / 1000).toFixed(1)}K`;
+    return `$${value.toLocaleString()}`;
   };
 
   // This part of the code handles 3-state sorting: desc -> asc -> default
@@ -182,16 +191,31 @@ export function InventoryTableSection({
                   {getSortIcon('on_hand')}
                 </div>
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Committed
+              <th 
+                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors"
+                onClick={() => handleSort('unit_cost')}
+              >
+                <div className="flex items-center space-x-1">
+                  <span>Unit Cost</span>
+                  {getSortIcon('unit_cost')}
+                </div>
               </th>
               <th 
                 className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors"
-                onClick={() => handleSort('available')}
+                onClick={() => handleSort('total_value')}
               >
                 <div className="flex items-center space-x-1">
-                  <span>Available</span>
-                  {getSortIcon('available')}
+                  <span>Total Value</span>
+                  {getSortIcon('total_value')}
+                </div>
+              </th>
+              <th 
+                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors"
+                onClick={() => handleSort('supplier')}
+              >
+                <div className="flex items-center space-x-1">
+                  <span>Supplier</span>
+                  {getSortIcon('supplier')}
                 </div>
               </th>
               <th 
@@ -208,7 +232,7 @@ export function InventoryTableSection({
           <tbody className="bg-white divide-y divide-gray-200">
             {sortedInventory.length === 0 ? (
               <tr>
-                <td colSpan={7} className="px-6 py-12 text-center">
+                <td colSpan={8} className="px-6 py-12 text-center">
                   <p className="text-gray-500">Information not in dataset.</p>
                 </td>
               </tr>
@@ -228,10 +252,13 @@ export function InventoryTableSection({
                     {item.on_hand}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {item.committed}
+                    ${(item.unit_cost || 0).toFixed(2)}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {item.available}
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                    {formatCurrency(item.total_value || 0)}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {item.supplier || 'N/A'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span

@@ -406,7 +406,7 @@ export interface WarehousesData {
   lastUpdated: string;
 }
 
-// Inventory Data Types (Simple structure following Orders pattern)
+// Enhanced Inventory Data Types (World-Class Dashboard)
 export interface InventoryItem {
   sku: string;
   product_name: string;
@@ -414,13 +414,25 @@ export interface InventoryItem {
   on_hand: number;
   committed: number;
   available: number; // calculated: on_hand - committed
-  status: 'In Stock' | 'Low Stock' | 'Out of Stock' | 'Overstocked';
+  unit_cost: number;
+  total_value: number;
+  supplier: string;
+  country_of_origin: string;
+  status: 'In Stock' | 'Low Stock' | 'Out of Stock' | 'Overstocked' | 'Inactive';
+  active: boolean;
+  days_since_created: number;
   warehouse_id?: string | null;
-  supplier?: string | null;
   last_updated?: string | null;
 }
 
 export interface InventoryKPIs {
+  // Enhanced KPIs
+  totalActiveSKUs: number;
+  totalInventoryValue: number;
+  lowStockAlerts: number;
+  inactiveSKUs: number;
+  
+  // Legacy KPIs for compatibility
   totalSKUs: number;
   inStockCount: number;
   unfulfillableCount: number;
@@ -428,10 +440,28 @@ export interface InventoryKPIs {
   avgDaysOnHand: number | null;
 }
 
+export interface BrandPerformance {
+  brand_name: string;
+  sku_count: number;
+  total_value: number;
+  total_quantity: number;
+  avg_value_per_sku: number;
+}
+
+export interface SupplierAnalysis {
+  supplier_name: string;
+  sku_count: number;
+  total_value: number;
+  countries: string[];
+  concentration_risk: number; // percentage
+}
+
 export interface InventoryData {
   kpis: InventoryKPIs;
   insights: AIInsight[]; // Reuse existing type but from "inventory_agent"
   inventory: InventoryItem[];
+  brandPerformance: BrandPerformance[];
+  supplierAnalysis: SupplierAnalysis[];
   lastUpdated: string;
 }
 

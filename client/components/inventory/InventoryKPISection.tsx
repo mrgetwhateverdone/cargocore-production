@@ -6,35 +6,45 @@ interface InventoryKPISectionProps {
 }
 
 export function InventoryKPISection({ kpis, isLoading }: InventoryKPISectionProps) {
-  // This part of the code defines the KPI cards with their titles and status indicators
+  // This part of the code defines enhanced KPI cards with business-critical metrics
+  const formatCurrency = (value: number) => {
+    if (value >= 1000000) return `$${(value / 1000000).toFixed(1)}M`;
+    if (value >= 1000) return `$${(value / 1000).toFixed(1)}K`;
+    return `$${value.toLocaleString()}`;
+  };
+
   const kpiCards = [
     {
-      title: "Total SKUs In Stock",
-      value: kpis.inStockCount,
-      description: "Active inventory SKU count",
+      title: "Total Active SKUs",
+      value: kpis.totalActiveSKUs,
+      description: "Products available for sale",
       className: "bg-white",
       colorClass: "text-blue-600",
+      format: (val: number | null) => val?.toString() || "0",
     },
     {
-      title: "Unfulfillable SKU Count",
-      value: kpis.unfulfillableCount,
-      description: "Critical inventory shortfalls",
-      className: "bg-white",
-      colorClass: kpis.unfulfillableCount > 0 ? "text-red-600" : "text-gray-600",
-    },
-    {
-      title: "Overstocked SKU Count",
-      value: kpis.overstockedCount,
-      description: "Excess inventory consuming space",
-      className: "bg-white",
-      colorClass: kpis.overstockedCount > 0 ? "text-orange-600" : "text-gray-600",
-    },
-    {
-      title: "Avg Days on Hand",
-      value: kpis.avgDaysOnHand,
-      description: "Average inventory turnover",
+      title: "Total Inventory Value",
+      value: kpis.totalInventoryValue,
+      description: "Total portfolio investment",
       className: "bg-white",
       colorClass: "text-green-600",
+      format: formatCurrency,
+    },
+    {
+      title: "Low Stock Alerts",
+      value: kpis.lowStockAlerts,
+      description: "SKUs requiring replenishment",
+      className: "bg-white",
+      colorClass: kpis.lowStockAlerts > 0 ? "text-orange-600" : "text-gray-600",
+      format: (val: number | null) => val?.toString() || "0",
+    },
+    {
+      title: "Inactive SKUs",
+      value: kpis.inactiveSKUs,
+      description: "Products requiring review",
+      className: "bg-white",
+      colorClass: kpis.inactiveSKUs > 0 ? "text-red-600" : "text-gray-600",
+      format: (val: number | null) => val?.toString() || "0",
     },
   ];
 
@@ -82,7 +92,7 @@ export function InventoryKPISection({ kpis, isLoading }: InventoryKPISectionProp
           
           {/* This part of the code displays the KPI value with appropriate coloring */}
           <div className={`text-2xl font-semibold mb-1 ${kpi.colorClass}`}>
-            {formatValue(kpi.value)}
+            {kpi.format ? kpi.format(kpi.value) : formatValue(kpi.value)}
           </div>
           
           {/* This part of the code displays the KPI description */}

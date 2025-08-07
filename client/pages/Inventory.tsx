@@ -8,6 +8,8 @@ import { ErrorDisplay } from "@/components/ui/error-display";
 import { InventoryKPISection } from "@/components/inventory/InventoryKPISection";
 import { InsightsSection } from "@/components/dashboard/InsightsSection";
 import { InventoryTableSection } from "@/components/inventory/InventoryTableSection";
+import { BrandPerformanceSection } from "@/components/inventory/BrandPerformanceSection";
+import { SupplierAnalysisSection } from "@/components/inventory/SupplierAnalysisSection";
 import { ViewAllInventoryModal } from "@/components/inventory/ViewAllInventoryModal";
 
 export default function Inventory() {
@@ -86,6 +88,18 @@ export default function Inventory() {
           hasMore={hasMore}
           isLoading={isLoading}
           onViewAll={handleViewAll}
+        />
+
+        {/* This part of the code displays brand performance analysis */}
+        <BrandPerformanceSection
+          brandPerformance={data.brandPerformance || []}
+          isLoading={isLoading}
+        />
+
+        {/* This part of the code displays supplier analysis and risk assessment */}
+        <SupplierAnalysisSection
+          supplierAnalysis={data.supplierAnalysis || []}
+          isLoading={isLoading}
         />
 
         {/* This part of the code displays the view all inventory modal */}
