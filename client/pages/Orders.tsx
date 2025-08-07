@@ -11,11 +11,13 @@ import { OrdersTableSection } from "@/components/orders/OrdersTableSection";
 import { InboundIntelligenceSection } from "@/components/orders/InboundIntelligenceSection";
 import { CarrierPerformanceSection } from "@/components/orders/CarrierPerformanceSection";
 import { ViewAllOrdersModal } from "@/components/orders/ViewAllOrdersModal";
+import { ViewAllShipmentsModal } from "@/components/orders/ViewAllShipmentsModal";
 
 export default function Orders() {
   const { data, isLoading, error, refetch } = useOrdersData();
   const { orders, totalCount, hasMore } = useOrdersTable(15);
   const [showViewAllModal, setShowViewAllModal] = useState(false);
+  const [showViewAllShipmentsModal, setShowViewAllShipmentsModal] = useState(false);
 
   // This part of the code handles opening the view all orders modal
   const handleViewAll = () => {
@@ -25,6 +27,16 @@ export default function Orders() {
   // This part of the code handles closing the view all orders modal
   const handleCloseModal = () => {
     setShowViewAllModal(false);
+  };
+
+  // This part of the code handles opening the view all shipments modal
+  const handleViewAllShipments = () => {
+    setShowViewAllShipmentsModal(true);
+  };
+
+  // This part of the code handles closing the view all shipments modal
+  const handleCloseShipmentsModal = () => {
+    setShowViewAllShipmentsModal(false);
   };
 
   return (
@@ -68,6 +80,7 @@ export default function Orders() {
             <InboundIntelligenceSection
               inboundIntelligence={data.inboundIntelligence}
               isLoading={isLoading}
+              onViewAll={handleViewAllShipments}
             />
 
             {/* Carrier Performance Section - Placeholder for future implementation */}
@@ -81,6 +94,17 @@ export default function Orders() {
           onClose={handleCloseModal}
           orders={data?.orders || []}
           totalCount={data?.orders?.length || 0}
+        />
+
+        {/* This part of the code displays the view all shipments modal when triggered */}
+        <ViewAllShipmentsModal
+          isOpen={showViewAllShipmentsModal}
+          onClose={handleCloseShipmentsModal}
+          shipments={[
+            ...(data?.inboundIntelligence.recentShipments || []),
+            ...(data?.inboundIntelligence.delayedShipmentsList || [])
+          ]}
+          title="All Inbound Shipments"
         />
       </div>
     </Layout>

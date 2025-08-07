@@ -5,12 +5,13 @@ import type { InboundShipmentIntelligence, OrderData } from "@/types/api";
 interface InboundIntelligenceSectionProps {
   inboundIntelligence: InboundShipmentIntelligence;
   isLoading?: boolean;
+  onViewAll?: () => void;
 }
 
 type SortField = 'product_sku' | 'supplier' | 'ship_from_country' | 'expected_date' | 'status' | 'value' | 'expected_quantity';
 type SortDirection = 'asc' | 'desc' | 'default';
 
-export function InboundIntelligenceSection({ inboundIntelligence, isLoading }: InboundIntelligenceSectionProps) {
+export function InboundIntelligenceSection({ inboundIntelligence, isLoading, onViewAll }: InboundIntelligenceSectionProps) {
   const [activeTab, setActiveTab] = useState<'overview' | 'delayed' | 'all'>('overview');
   const [searchTerm, setSearchTerm] = useState('');
   const [sortField, setSortField] = useState<SortField>('expected_date');
@@ -436,6 +437,18 @@ export function InboundIntelligenceSection({ inboundIntelligence, isLoading }: I
             </table>
           )}
         </div>
+        
+        {/* This part of the code displays the bubble View All button at the bottom */}
+        {onViewAll && sortedData.length > 0 && (
+          <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 text-center">
+            <button
+              onClick={onViewAll}
+              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-full shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+            >
+              View All Shipments
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

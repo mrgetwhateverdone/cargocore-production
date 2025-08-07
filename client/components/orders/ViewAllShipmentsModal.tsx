@@ -1,19 +1,19 @@
 import { useState, useMemo } from "react";
-import { X, ChevronUp, ChevronDown, ArrowUpDown, Search } from "lucide-react";
+import { X, ChevronUp, ChevronDown, ArrowUpDown, Search, Globe } from "lucide-react";
 import type { OrderData } from "@/types/api";
 
-interface ViewAllOrdersModalProps {
+interface ViewAllShipmentsModalProps {
   isOpen: boolean;
   onClose: () => void;
-  orders: OrderData[];
-  totalCount: number;
+  shipments: OrderData[];
+  title: string;
 }
 
-type SortField = 'order_id' | 'created_date' | 'brand_name' | 'status' | 'sla_status' | 'supplier' | 'expected_date' | 'expected_quantity';
+type SortField = 'product_sku' | 'supplier' | 'ship_from_country' | 'expected_date' | 'status' | 'value' | 'expected_quantity';
 type SortDirection = 'asc' | 'desc' | 'default';
 
-export function ViewAllOrdersModal({ isOpen, onClose, orders, totalCount }: ViewAllOrdersModalProps) {
-  const [sortField, setSortField] = useState<SortField>('created_date');
+export function ViewAllShipmentsModal({ isOpen, onClose, shipments, title }: ViewAllShipmentsModalProps) {
+  const [sortField, setSortField] = useState<SortField>('expected_date');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc'); // Default to most recent first
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -25,7 +25,7 @@ export function ViewAllOrdersModal({ isOpen, onClose, orders, totalCount }: View
         setSortDirection('asc');
       } else if (sortDirection === 'asc') {
         setSortDirection('default');
-        setSortField('created_date'); // Reset to default sort
+        setSortField('expected_date'); // Reset to default sort
       } else {
         setSortDirection('desc');
       }
@@ -51,57 +51,53 @@ export function ViewAllOrdersModal({ isOpen, onClose, orders, totalCount }: View
     }
   };
 
-  // This part of the code filters orders based on search term
-  const filteredOrders = useMemo(() => {
-    if (!searchTerm) return orders;
+  // This part of the code filters shipments based on search term
+  const filteredShipments = useMemo(() => {
+    if (!searchTerm) return shipments;
     
-    return orders.filter(order =>
-      order.order_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.brand_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.status.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.sla_status.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (order.supplier && order.supplier.toLowerCase().includes(searchTerm.toLowerCase()))
+    return shipments.filter(shipment =>
+      shipment.order_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (shipment.product_sku && shipment.product_sku.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (shipment.supplier && shipment.supplier.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (shipment.ship_from_country && shipment.ship_from_country.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      shipment.status.toLowerCase().includes(searchTerm.toLowerCase())
     );
-  }, [orders, searchTerm]);
+  }, [shipments, searchTerm]);
 
-  // This part of the code sorts the filtered orders based on current sort settings
-  const sortedOrders = useMemo(() => {
+  // This part of the code sorts the filtered shipments based on current sort settings
+  const sortedShipments = useMemo(() => {
     if (sortDirection === 'default') {
-      return [...filteredOrders]; // Return original order
+      return [...filteredShipments]; // Return original order
     }
 
-    return [...filteredOrders].sort((a, b) => {
+    return [...filteredShipments].sort((a, b) => {
       let valueA: any;
       let valueB: any;
 
       switch (sortField) {
-        case 'created_date':
-          valueA = new Date(a.created_date).getTime();
-          valueB = new Date(b.created_date).getTime();
+        case 'expected_date':
+          valueA = new Date(a.expected_date || 0).getTime();
+          valueB = new Date(b.expected_date || 0).getTime();
           break;
-        case 'order_id':
-          valueA = a.order_id.toLowerCase();
-          valueB = b.order_id.toLowerCase();
-          break;
-        case 'brand_name':
-          valueA = a.brand_name.toLowerCase();
-          valueB = b.brand_name.toLowerCase();
-          break;
-        case 'status':
-          valueA = a.status.toLowerCase();
-          valueB = b.status.toLowerCase();
-          break;
-        case 'sla_status':
-          valueA = a.sla_status.toLowerCase();
-          valueB = b.sla_status.toLowerCase();
+        case 'product_sku':
+          valueA = (a.product_sku || '').toLowerCase();
+          valueB = (b.product_sku || '').toLowerCase();
           break;
         case 'supplier':
           valueA = (a.supplier || '').toLowerCase();
           valueB = (b.supplier || '').toLowerCase();
           break;
-        case 'expected_date':
-          valueA = new Date(a.expected_date || 0).getTime();
-          valueB = new Date(b.expected_date || 0).getTime();
+        case 'ship_from_country':
+          valueA = (a.ship_from_country || '').toLowerCase();
+          valueB = (b.ship_from_country || '').toLowerCase();
+          break;
+        case 'status':
+          valueA = a.status.toLowerCase();
+          valueB = b.status.toLowerCase();
+          break;
+        case 'value':
+          valueA = (a.unit_cost || 0) * a.expected_quantity;
+          valueB = (b.unit_cost || 0) * b.expected_quantity;
           break;
         case 'expected_quantity':
           valueA = a.expected_quantity;
@@ -115,30 +111,17 @@ export function ViewAllOrdersModal({ isOpen, onClose, orders, totalCount }: View
       if (valueA > valueB) return sortDirection === 'asc' ? 1 : -1;
       return 0;
     });
-  }, [filteredOrders, sortField, sortDirection]);
+  }, [filteredShipments, sortField, sortDirection]);
 
-  // This part of the code determines the color for order status badges
-  const getStatusColor = (status: string) => {
-    const statusLower = status.toLowerCase();
-    if (statusLower.includes('completed') || statusLower.includes('delivered')) return 'bg-green-100 text-green-800';
-    if (statusLower.includes('shipped') || statusLower.includes('transit')) return 'bg-blue-100 text-blue-800';
-    if (statusLower.includes('processing') || statusLower.includes('pending')) return 'bg-yellow-100 text-yellow-800';
-    if (statusLower.includes('delayed') || statusLower.includes('at_risk')) return 'bg-red-100 text-red-800';
-    if (statusLower.includes('cancelled')) return 'bg-gray-100 text-gray-800';
-    return 'bg-gray-100 text-gray-800';
-  };
-
-  // This part of the code determines the color for SLA status badges
-  const getSLAColor = (slaStatus: string) => {
-    const slaLower = slaStatus.toLowerCase();
-    if (slaLower.includes('on_time') || slaLower.includes('on time')) return 'bg-green-100 text-green-800';
-    if (slaLower.includes('at_risk') || slaLower.includes('at risk')) return 'bg-yellow-100 text-yellow-800';
-    if (slaLower.includes('breach') || slaLower.includes('late')) return 'bg-red-100 text-red-800';
-    return 'bg-gray-100 text-gray-800';
+  // This part of the code formats currency values
+  const formatCurrency = (value: number | null) => {
+    if (!value) return '$0';
+    return `$${value.toLocaleString()}`;
   };
 
   // This part of the code formats dates for display
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return 'N/A';
     try {
       return new Date(dateString).toLocaleDateString();
     } catch {
@@ -176,14 +159,14 @@ export function ViewAllOrdersModal({ isOpen, onClose, orders, totalCount }: View
       
       {/* This part of the code creates the modal container */}
       <div className="flex min-h-full items-center justify-center p-4">
-        <div className="relative w-full max-w-6xl bg-white rounded-lg shadow-xl">
+        <div className="relative w-full max-w-7xl bg-white rounded-lg shadow-xl">
           {/* Modal Header */}
           <div className="flex items-center justify-between p-6 border-b border-gray-200">
             <div>
-              <h2 className="text-xl font-semibold text-gray-900">All Orders</h2>
+              <h2 className="text-xl font-semibold text-gray-900">{title}</h2>
               <p className="text-sm text-gray-500 mt-1">
-                Showing {sortedOrders.length} of {totalCount} total orders
-                {searchTerm && ` (filtered from ${orders.length})`}
+                Showing {sortedShipments.length} of {shipments.length} total shipments
+                {searchTerm && ` (filtered)`}
               </p>
             </div>
             <button
@@ -202,7 +185,7 @@ export function ViewAllOrdersModal({ isOpen, onClose, orders, totalCount }: View
                 <Search className="h-4 w-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                 <input
                   type="text"
-                  placeholder="Search order ID, brand, status, supplier..."
+                  placeholder="Search PO numbers, suppliers, origins..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
@@ -210,7 +193,7 @@ export function ViewAllOrdersModal({ isOpen, onClose, orders, totalCount }: View
               </div>
             </div>
 
-            {sortedOrders.length === 0 ? (
+            {sortedShipments.length === 0 ? (
               <div className="text-center py-12">
                 <p className="text-gray-500">Information not in dataset.</p>
               </div>
@@ -220,48 +203,12 @@ export function ViewAllOrdersModal({ isOpen, onClose, orders, totalCount }: View
                   <thead className="bg-gray-50 sticky top-0">
                     <tr>
                       <th 
-                        onClick={() => handleSort('order_id')}
+                        onClick={() => handleSort('product_sku')}
                         className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none"
                       >
                         <div className="flex items-center space-x-1">
-                          <span>Order ID</span>
-                          {getSortIcon('order_id')}
-                        </div>
-                      </th>
-                      <th 
-                        onClick={() => handleSort('created_date')}
-                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none"
-                      >
-                        <div className="flex items-center space-x-1">
-                          <span>Date</span>
-                          {getSortIcon('created_date')}
-                        </div>
-                      </th>
-                      <th 
-                        onClick={() => handleSort('brand_name')}
-                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none"
-                      >
-                        <div className="flex items-center space-x-1">
-                          <span>Brand</span>
-                          {getSortIcon('brand_name')}
-                        </div>
-                      </th>
-                      <th 
-                        onClick={() => handleSort('status')}
-                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none"
-                      >
-                        <div className="flex items-center space-x-1">
-                          <span>Status</span>
-                          {getSortIcon('status')}
-                        </div>
-                      </th>
-                      <th 
-                        onClick={() => handleSort('sla_status')}
-                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none"
-                      >
-                        <div className="flex items-center space-x-1">
-                          <span>SLA</span>
-                          {getSortIcon('sla_status')}
+                          <span>Product SKU</span>
+                          {getSortIcon('product_sku')}
                         </div>
                       </th>
                       <th 
@@ -274,12 +221,39 @@ export function ViewAllOrdersModal({ isOpen, onClose, orders, totalCount }: View
                         </div>
                       </th>
                       <th 
+                        onClick={() => handleSort('ship_from_country')}
+                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none"
+                      >
+                        <div className="flex items-center space-x-1">
+                          <span>Origin</span>
+                          {getSortIcon('ship_from_country')}
+                        </div>
+                      </th>
+                      <th 
                         onClick={() => handleSort('expected_date')}
                         className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none"
                       >
                         <div className="flex items-center space-x-1">
-                          <span>Expected</span>
+                          <span>Expected Date</span>
                           {getSortIcon('expected_date')}
+                        </div>
+                      </th>
+                      <th 
+                        onClick={() => handleSort('status')}
+                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none"
+                      >
+                        <div className="flex items-center space-x-1">
+                          <span>Status</span>
+                          {getSortIcon('status')}
+                        </div>
+                      </th>
+                      <th 
+                        onClick={() => handleSort('value')}
+                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none"
+                      >
+                        <div className="flex items-center space-x-1">
+                          <span>Value</span>
+                          {getSortIcon('value')}
                         </div>
                       </th>
                       <th 
@@ -287,69 +261,40 @@ export function ViewAllOrdersModal({ isOpen, onClose, orders, totalCount }: View
                         className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none"
                       >
                         <div className="flex items-center space-x-1">
-                          <span>Quantity</span>
+                          <span>Items</span>
                           {getSortIcon('expected_quantity')}
                         </div>
                       </th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {sortedOrders.map((order, index) => (
-                      <tr key={`${order.order_id}-${index}`} className="hover:bg-gray-50">
-                        {/* Order ID */}
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">
-                            {order.order_id}
+                    {sortedShipments.map((item, index) => (
+                      <tr key={`${item.order_id}-${index}`} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                          {item.product_sku || 'N/A'}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {item.supplier || 'N/A'}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          <div className="flex items-center">
+                            <Globe className="h-4 w-4 text-gray-400 mr-2" />
+                            {item.ship_from_country || 'N/A'}
                           </div>
                         </td>
-                        
-                        {/* Date */}
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">
-                            {formatDate(order.created_date)}
-                          </div>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {formatDate(item.expected_date)}
                         </td>
-                        
-                        {/* Brand */}
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-500">
-                            {order.brand_name}
-                          </div>
-                        </td>
-                        
-                        {/* Status */}
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(order.status)}`}>
-                            {order.status}
+                          <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">
+                            {item.status}
                           </span>
                         </td>
-                        
-                        {/* SLA Status */}
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getSLAColor(order.sla_status)}`}>
-                            {order.sla_status.replace('_', ' ')}
-                          </span>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {formatCurrency((item.unit_cost || 0) * item.expected_quantity)}
                         </td>
-                        
-                        {/* Supplier */}
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">
-                            {order.supplier || 'N/A'}
-                          </div>
-                        </td>
-                        
-                        {/* Expected Date */}
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">
-                            {order.expected_date ? formatDate(order.expected_date) : 'N/A'}
-                          </div>
-                        </td>
-                        
-                        {/* Quantity */}
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">
-                            {order.received_quantity} / {order.expected_quantity}
-                          </div>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {item.expected_quantity} / {item.received_quantity}
                         </td>
                       </tr>
                     ))}
