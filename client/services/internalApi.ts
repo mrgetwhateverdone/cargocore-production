@@ -12,6 +12,8 @@ import type {
   ShipmentData,
   AIInsight,
   AnalyticsData,
+  OrdersData,
+  OrderSuggestion,
 } from "@/types/api";
 
 interface APIResponse<T> {
@@ -215,6 +217,77 @@ class InternalApiService {
       console.error("❌ Client: Analytics API call failed:", error);
       throw new Error(
         `Unable to load analytics data: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
+    }
+  }
+
+  /**
+   * Fetch complete orders data from secure server endpoint
+   * NO external API keys - server handles TinyBird + OpenAI calls
+   * Uses shipments data transformed into orders structure
+   */
+  async getOrdersData(): Promise<OrdersData> {
+    try {
+      console.log("🔒 Client: Fetching orders data from secure server...");
+
+      const response = await fetch(`${this.baseUrl}/api/orders-data`);
+
+      if (!response.ok) {
+        throw new Error(
+          `Internal API Error: ${response.status} ${response.statusText}`,
+        );
+      }
+
+      const result: APIResponse<OrdersData> = await response.json();
+
+      if (!result.success || !result.data) {
+        throw new Error(result.message || "Failed to fetch orders data");
+      }
+
+      console.log("✅ Client: Orders data received securely from server");
+      return result.data;
+    } catch (error) {
+      console.error("❌ Client: Orders API call failed:", error);
+      throw new Error(
+        `Unable to load orders data: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
+    }
+  }
+
+  /**
+   * Generate AI suggestion for a specific order
+   * NO external API keys - server handles OpenAI calls
+   */
+  async generateOrderSuggestion(orderData: any): Promise<OrderSuggestion> {
+    try {
+      console.log("🔒 Client: Requesting AI order suggestion from secure server...");
+
+      const response = await fetch(`${this.baseUrl}/api/order-suggestion`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ orderData }),
+      });
+
+      if (!response.ok) {
+        throw new Error(
+          `Internal API Error: ${response.status} ${response.statusText}`,
+        );
+      }
+
+      const result: APIResponse<OrderSuggestion> = await response.json();
+
+      if (!result.success || !result.data) {
+        throw new Error(result.message || "Failed to generate order suggestion");
+      }
+
+      console.log("✅ Client: Order suggestion received securely from server");
+      return result.data;
+    } catch (error) {
+      console.error("❌ Client: Order suggestion API call failed:", error);
+      throw new Error(
+        `Unable to generate order suggestion: ${error instanceof Error ? error.message : "Unknown error"}`,
       );
     }
   }

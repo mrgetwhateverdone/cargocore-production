@@ -205,6 +205,72 @@ export interface AnalyticsData {
   lastUpdated: string;
 }
 
+// Orders Data (derived from Shipment data structure)
+export interface OrderData {
+  order_id: string; // maps to purchase_order_number or shipment_id
+  created_date: string;
+  brand_name: string;
+  status: string;
+  sla_status: string;
+  expected_date: string | null;
+  arrival_date: string;
+  supplier: string | null;
+  warehouse_id: string | null;
+  product_sku: string | null;
+  expected_quantity: number;
+  received_quantity: number;
+  unit_cost: number | null;
+  ship_from_country: string | null;
+  notes: string;
+  // Original shipment fields for reference
+  shipment_id: string;
+  inventory_item_id: string;
+}
+
+// Orders KPIs
+export interface OrdersKPIs {
+  ordersToday: number;
+  atRiskOrders: number;
+  openPOs: number;
+  unfulfillableSKUs: number;
+}
+
+// Inbound Shipment Intelligence
+export interface InboundShipmentIntelligence {
+  totalInbound: number;
+  delayedShipments: {
+    count: number;
+    percentage: number;
+  };
+  avgDelayDays: number;
+  valueAtRisk: number;
+  geopoliticalRisks?: {
+    riskCountries: string[];
+    affectedShipments: number;
+    avgDelayIncrease: number;
+  };
+  recentShipments: OrderData[];
+  delayedShipmentsList: OrderData[];
+}
+
+// Orders Data (combined)
+export interface OrdersData {
+  orders: OrderData[];
+  kpis: OrdersKPIs;
+  insights: AIInsight[]; // Reuse existing type but from "orders_agent"
+  inboundIntelligence: InboundShipmentIntelligence;
+  lastUpdated: string;
+}
+
+// AI Order Suggestion
+export interface OrderSuggestion {
+  orderId: string;
+  suggestion: string;
+  priority: "low" | "medium" | "high";
+  actionable: boolean;
+  estimatedImpact?: string;
+}
+
 // API Error Types
 export interface APIError {
   message: string;
