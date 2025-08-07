@@ -17,17 +17,25 @@ export function InsightsSection({ insights, isLoading }: InsightsSectionProps) {
   const handleQuickAdd = async (e: React.MouseEvent, insight: AIInsight) => {
     e.stopPropagation(); // Prevent card click
     
-    // This part of the code validates insight data before attempting workflow creation
-    if (!insight || !insight.title) {
-      console.warn('Invalid insight data for workflow creation');
+    // This part of the code validates insight data before attempting workflow creation (ChatGPT's defensive approach)
+    if (!insight || !insight.title || !insight.id) {
+      console.error('Invalid insight data for workflow creation:', insight);
+      alert('Invalid insight data. Cannot create workflow.');
       return;
     }
+
+    console.log('Creating workflow from insight:', {
+      id: insight.id,
+      title: insight.title,
+      severity: insight.severity,
+      suggestedActions: insight.suggestedActions
+    });
 
     try {
       // THIS IS THE KEY LINE - Creates the workflow (ChatGPT's recommended scalable pattern)
       await createWorkflow({
         action: {
-          label: insight.title,
+          label: insight.title || 'Untitled Workflow',
           type: 'create_workflow',
           target: 'insight_management',
           values: insight.suggestedActions || [],
@@ -35,8 +43,8 @@ export function InsightsSection({ insights, isLoading }: InsightsSectionProps) {
                     insight.severity === 'warning' ? 'high' : 'medium') as 'low' | 'medium' | 'high' | 'critical',
         },
         source: 'ai_insight',
-        sourceId: insight.id,
-        insightTitle: insight.title,
+        sourceId: insight.id || `fallback_${Date.now()}`,
+        insightTitle: insight.title || 'Untitled Workflow',
       });
       
     } catch (error) {

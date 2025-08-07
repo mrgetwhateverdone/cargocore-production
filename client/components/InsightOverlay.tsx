@@ -98,18 +98,24 @@ export function InsightOverlay({ isOpen, onClose, insight, agentName = "Dashboar
   const handleActionClick = async (action: string, index: number) => {
     setProcessingActionId(index); // ← Button shows "Creating Workflow..." spinner
     
-    // This part of the code validates insight and action data before workflow creation
-    if (!insight || !insight.title || !action) {
-      console.warn('Invalid insight or action data for workflow creation');
+    // This part of the code validates insight and action data before workflow creation (ChatGPT's defensive approach)
+    if (!insight || !insight.title || !insight.id || !action) {
+      console.error('Invalid insight or action data for workflow creation:', { insight, action });
+      alert('Invalid data. Cannot create workflow.');
       setProcessingActionId(null);
       return;
     }
+
+    console.log('Creating workflow from overlay:', {
+      insight: { id: insight.id, title: insight.title, severity: insight.severity },
+      action: action
+    });
     
     try {
       // THIS IS THE KEY LINE - Creates the workflow (ChatGPT's recommended scalable pattern)
       await createWorkflow({
         action: {
-          label: action,           // ← "Process inventory items"
+          label: action || 'Default Action',           // ← "Process inventory items"
           type: 'create_workflow',            // ← "create_workflow" 
           target: 'insight_management',        // ← "inventory_management"
           values: insight.suggestedActions || [],        // ← ["SKU123", "SKU456"]
@@ -117,8 +123,8 @@ export function InsightOverlay({ isOpen, onClose, insight, agentName = "Dashboar
                     insight.severity === 'warning' ? 'high' : 'medium') as 'low' | 'medium' | 'high' | 'critical',
         },
         source: 'ai_insight',
-        sourceId: insight.id,
-        insightTitle: insight.title,
+        sourceId: insight.id || `fallback_${Date.now()}`,
+        insightTitle: insight.title || 'Untitled Workflow',
       });
       
       setShowSuccess(true);

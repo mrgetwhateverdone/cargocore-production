@@ -124,6 +124,19 @@ export const useWorkflowCreation = () => {
     setLoading(true);
     setError(null);
 
+    // This part of the code adds defensive validation to prevent crashes (ChatGPT's recommendation)
+    if (!action || !action.label || !action.type || !action.priority) {
+      const errorMsg = `Invalid action object passed to createWorkflow: ${JSON.stringify(action)}`;
+      console.error(errorMsg);
+      throw new Error(errorMsg);
+    }
+
+    if (!source || !sourceId || !insightTitle) {
+      const errorMsg = `Missing required parameters: source=${source}, sourceId=${sourceId}, insightTitle=${insightTitle}`;
+      console.error(errorMsg);
+      throw new Error(errorMsg);
+    }
+
     try {
       // THIS IS THE KEY LINE - Creates the workflow using the service
       const workflow = workflowCreationService.createWorkflowFromAction(
