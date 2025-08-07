@@ -9,6 +9,7 @@ import { InsightsSection } from "@/components/dashboard/InsightsSection";
 import { QuickOverviewSection } from "@/components/dashboard/QuickOverviewSection";
 import { WarehouseInventorySection } from "@/components/dashboard/WarehouseInventorySection";
 import { AnomalyDetectorSection } from "@/components/dashboard/AnomalyDetectorSection";
+import { MinimalWorkflowTest } from "@/components/MinimalWorkflowTest";
 
 export default function Index() {
   const { data, isLoading, error, refetch } = useDashboardData();
@@ -32,6 +33,9 @@ export default function Index() {
 
         {data && (
           <>
+            {/* Debug Test - Remove after fixing */}
+            <MinimalWorkflowTest />
+            
             {/* KPI Section */}
             <KPISection kpis={data.kpis} isLoading={isLoading} />
 

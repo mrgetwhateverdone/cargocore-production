@@ -3,7 +3,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { X, AlertTriangle, TrendingUp, DollarSign, Loader2, CheckCircle } from 'lucide-react';
-import { useWorkflowCreation } from '../hooks/useWorkflows';
+// Temporarily disabled for debugging
+// import { useWorkflowCreation } from '../hooks/useWorkflows';
 import { useDashboardData } from '../hooks/useDashboardData';
 
 interface InsightOverlayProps {
@@ -24,7 +25,8 @@ interface InsightOverlayProps {
 
 // This part of the code renders the main insight overlay with full-screen modal design
 export function InsightOverlay({ isOpen, onClose, insight, agentName = "Dashboard Agent" }: InsightOverlayProps) {
-  const { createWorkflow, creating } = useWorkflowCreation();
+  // Temporarily disabled for debugging
+  // const { createWorkflow, creating } = useWorkflowCreation();
   const { data: dashboardData } = useDashboardData();
   const [processingActionId, setProcessingActionId] = useState<number | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -106,26 +108,15 @@ export function InsightOverlay({ isOpen, onClose, insight, agentName = "Dashboar
     }
     
     try {
-      await createWorkflow({
-        id: insight.id,
-        title: insight.title,
-        description: insight.description,
-        severity: insight.severity,
-        suggestedActions: insight.suggestedActions || [],
-        dollarImpact: insight.dollarImpact,
-        source: insight.source
-      });
-      
+      console.log('Workflow creation clicked (temporarily disabled)', action);
+      alert('Workflow creation temporarily disabled for debugging');
       setShowSuccess(true);
       setTimeout(() => {
         setShowSuccess(false);
         onClose();
       }, 1500);
-      
     } catch (error) {
-      console.error('Failed to create workflow:', error);
-      // This part of the code shows user-friendly error without crashing the app
-      alert('Failed to create workflow. Please try again.');
+      console.error('Debug test error:', error);
     } finally {
       setProcessingActionId(null);
     }
@@ -230,7 +221,7 @@ export function InsightOverlay({ isOpen, onClose, insight, agentName = "Dashboar
                 <button
                   key={index}
                   onClick={() => handleActionClick(action, index)}
-                  disabled={creating || processingActionId !== null}
+                  disabled={processingActionId !== null}
                   className="w-full text-left p-3 bg-white border border-blue-200 rounded-md hover:bg-blue-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <div className="flex items-center justify-between">

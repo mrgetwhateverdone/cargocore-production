@@ -11,33 +11,14 @@ interface InsightsSectionProps {
 
 export function InsightsSection({ insights, isLoading }: InsightsSectionProps) {
   const [selectedInsight, setSelectedInsight] = useState<AIInsight | null>(null);
-  const { createWorkflow, creating } = useWorkflowCreation();
+  // Temporarily disabled to test if this is causing crashes
+  // const { createWorkflow, creating } = useWorkflowCreation();
 
   // This part of the code handles quick workflow creation from the + button without opening overlay
   const handleQuickAdd = async (e: React.MouseEvent, insight: AIInsight) => {
     e.stopPropagation(); // Prevent card click
-    
-    // This part of the code validates insight data before attempting workflow creation
-    if (!insight || !insight.title) {
-      console.warn('Invalid insight data for workflow creation');
-      return;
-    }
-
-    try {
-      await createWorkflow({
-        id: insight.id,
-        title: insight.title,
-        description: insight.description,
-        severity: insight.severity,
-        suggestedActions: insight.suggestedActions || [],
-        dollarImpact: insight.dollarImpact,
-        source: insight.source
-      });
-    } catch (error) {
-      console.error('Failed to create workflow:', error);
-      // This part of the code shows user-friendly error without crashing the app
-      alert('Failed to create workflow. Please try again.');
-    }
+    console.log('Quick add clicked (temporarily disabled)', insight.title);
+    alert('Workflow creation temporarily disabled for debugging');
   };
 
   // This part of the code opens the detailed overlay when the card is clicked
@@ -118,9 +99,8 @@ export function InsightsSection({ insights, isLoading }: InsightsSectionProps) {
               {/* This part of the code adds the small + button for quick workflow creation */}
               <button
                 onClick={(e) => handleQuickAdd(e, insight)}
-                disabled={creating}
-                className="p-1 hover:bg-white hover:bg-opacity-50 rounded-full transition-colors disabled:opacity-50"
-                title="Quick add to workflows"
+                className="p-1 hover:bg-white hover:bg-opacity-50 rounded-full transition-colors"
+                title="Quick add to workflows (debug mode)"
               >
                 <Plus className="h-4 w-4" />
               </button>
