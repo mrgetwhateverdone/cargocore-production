@@ -252,8 +252,8 @@ function calculateInboundIntelligence(orders: OrderData[]): any {
     avgDelayDays: Math.round(avgDelayDays * 10) / 10,
     valueAtRisk: Math.round(valueAtRisk),
     geopoliticalRisks,
-    recentShipments: orders.slice(0, 50), // Most recent 50 for better overview
-    delayedShipmentsList: delayedOrders.slice(0, 100), // Top 100 delayed for comprehensive view
+    recentShipments: orders, // All shipments available for frontend pagination
+    delayedShipmentsList: delayedOrders, // All delayed shipments for comprehensive view
   };
 }
 
