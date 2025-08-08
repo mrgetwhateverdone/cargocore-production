@@ -10,9 +10,10 @@ interface CostCenterTableSectionProps {
 export function CostCenterTableSection({ costCenters, isLoading, onViewAll }: CostCenterTableSectionProps) {
   // This part of the code formats numbers for display
   const formatNumber = (num: number) => {
-    if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
-    if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
-    return num.toLocaleString();
+    const safeNum = num || 0;
+    if (safeNum >= 1000000) return `${(safeNum / 1000000).toFixed(1)}M`;
+    if (safeNum >= 1000) return `${(safeNum / 1000).toFixed(1)}K`;
+    return (safeNum || 0).toLocaleString();
   };
 
   // This part of the code determines status badge styling
@@ -126,7 +127,7 @@ export function CostCenterTableSection({ costCenters, isLoading, onViewAll }: Co
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {center.total_shipments.toLocaleString()}
+                  {(center.total_shipments || 0).toLocaleString()}
                 </td>
               </tr>
             ))}

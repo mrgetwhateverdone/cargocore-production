@@ -8,9 +8,10 @@ interface SupplierPerformanceSectionProps {
 export function SupplierPerformanceSection({ supplierPerformance, isLoading }: SupplierPerformanceSectionProps) {
   // This part of the code formats currency values
   const formatCurrency = (amount: number) => {
-    if (amount >= 1000000) return `$${(amount / 1000000).toFixed(1)}M`;
-    if (amount >= 1000) return `$${(amount / 1000).toFixed(1)}K`;
-    return `$${amount.toLocaleString()}`;
+    const safeAmount = amount || 0;
+    if (safeAmount >= 1000000) return `$${(safeAmount / 1000000).toFixed(1)}M`;
+    if (safeAmount >= 1000) return `$${(safeAmount / 1000).toFixed(1)}K`;
+    return `$${(safeAmount || 0).toLocaleString()}`;
   };
 
   // This part of the code determines status badge styling
@@ -112,12 +113,12 @@ export function SupplierPerformanceSection({ supplierPerformance, isLoading }: S
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-900">
-                      {supplier.shipment_count.toLocaleString()}
+                      {(supplier.shipment_count || 0).toLocaleString()}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-900">
-                      ${supplier.avg_cost_per_unit.toFixed(2)}
+                      ${(supplier.avg_cost_per_unit || 0).toFixed(2)}
                     </div>
                     {supplier.cost_variance !== 0 && (
                       <div className={`text-xs ${supplier.cost_variance > 0 ? 'text-red-600' : 'text-green-600'}`}>

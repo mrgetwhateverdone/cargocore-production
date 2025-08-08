@@ -8,9 +8,10 @@ interface HistoricalTrendsSectionProps {
 export function HistoricalTrendsSection({ historicalTrends, isLoading }: HistoricalTrendsSectionProps) {
   // This part of the code formats currency values
   const formatCurrency = (amount: number) => {
-    if (amount >= 1000000) return `$${(amount / 1000000).toFixed(1)}M`;
-    if (amount >= 1000) return `$${(amount / 1000).toFixed(1)}K`;
-    return `$${amount.toLocaleString()}`;
+    const safeAmount = amount || 0;
+    if (safeAmount >= 1000000) return `$${(safeAmount / 1000000).toFixed(1)}M`;
+    if (safeAmount >= 1000) return `$${(safeAmount / 1000).toFixed(1)}K`;
+    return `$${(safeAmount || 0).toLocaleString()}`;
   };
 
   // This part of the code formats month display
@@ -184,7 +185,7 @@ export function HistoricalTrendsSection({ historicalTrends, isLoading }: Histori
           </div>
           <div className="text-center">
             <div className="text-lg font-semibold text-gray-900">
-              {totalShipments.toLocaleString()}
+              {(totalShipments || 0).toLocaleString()}
             </div>
             <div className="text-gray-500">Total Shipments</div>
           </div>

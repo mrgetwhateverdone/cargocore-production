@@ -8,13 +8,14 @@ interface CostKPISectionProps {
 export function CostKPISection({ kpis, isLoading }: CostKPISectionProps) {
   // This part of the code formats numbers for display
   const formatNumber = (num: number) => {
-    if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
-    if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
-    return num.toLocaleString();
+    const safeNum = num || 0;
+    if (safeNum >= 1000000) return `${(safeNum / 1000000).toFixed(1)}M`;
+    if (safeNum >= 1000) return `${(safeNum / 1000).toFixed(1)}K`;
+    return (safeNum || 0).toLocaleString();
   };
 
   // This part of the code formats percentage values
-  const formatPercentage = (num: number) => `${num.toFixed(1)}%`;
+  const formatPercentage = (num: number) => `${(num || 0).toFixed(1)}%`;
 
   if (isLoading) {
     return (

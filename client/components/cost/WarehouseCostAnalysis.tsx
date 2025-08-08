@@ -12,9 +12,10 @@ export function WarehouseCostAnalysis({ costCenters, isLoading }: WarehouseCostA
 
   // This part of the code formats currency values
   const formatCurrency = (amount: number) => {
-    if (amount >= 1000000) return `$${(amount / 1000000).toFixed(1)}M`;
-    if (amount >= 1000) return `$${(amount / 1000).toFixed(1)}K`;
-    return `$${amount.toLocaleString()}`;
+    const safeAmount = amount || 0;
+    if (safeAmount >= 1000000) return `$${(safeAmount / 1000000).toFixed(1)}M`;
+    if (safeAmount >= 1000) return `$${(safeAmount / 1000).toFixed(1)}K`;
+    return `$${(safeAmount || 0).toLocaleString()}`;
   };
 
   // This part of the code determines status badge styling
@@ -130,25 +131,25 @@ export function WarehouseCostAnalysis({ costCenters, isLoading }: WarehouseCostA
                         <div className="flex justify-between">
                           <span className="text-sm text-gray-500">Operating Margin</span>
                           <span className={`text-sm font-medium ${center.cost_efficiency >= 90 ? 'text-green-600' : center.cost_efficiency >= 75 ? 'text-yellow-600' : 'text-red-600'}`}>
-                            {center.cost_efficiency.toFixed(1)}%
+                            {(center.cost_efficiency || 0).toFixed(1)}%
                           </span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-sm text-gray-500">SLA Performance</span>
                           <span className={`text-sm font-medium ${center.sla_performance >= 85 ? 'text-green-600' : center.sla_performance >= 70 ? 'text-yellow-600' : 'text-red-600'}`}>
-                            {center.sla_performance.toFixed(1)}%
+                            {(center.sla_performance || 0).toFixed(1)}%
                           </span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-sm text-gray-500">Utilization Rate</span>
                           <span className="text-sm font-medium text-gray-900">
-                            {center.utilization_rate.toFixed(1)}%
+                            {(center.utilization_rate || 0).toFixed(1)}%
                           </span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-sm text-gray-500">Monthly Throughput</span>
                           <span className="text-sm font-medium text-gray-900">
-                            {center.monthly_throughput.toLocaleString()} units
+                            {(center.monthly_throughput || 0).toLocaleString()} units
                           </span>
                         </div>
                       </div>
