@@ -42,19 +42,19 @@ interface ShipmentData {
  * This part of the code fetches shipment data from TinyBird API
  */
 async function fetchShipments(): Promise<ShipmentData[]> {
-  const baseUrl = process.env.TINYBIRD_BASE_URL || 'https://api.us-east.aws.tinybird.co/v0/pipes/inbound_shipments_details_mv.json';
-  const token = process.env.TINYBIRD_TOKEN;
+  const baseUrl = process.env.WAREHOUSE_BASE_URL;
+  const token = process.env.WAREHOUSE_TOKEN;
 
-  if (!token) {
-    console.error("❌ Vercel API: TINYBIRD_TOKEN not found in environment");
+  if (!baseUrl || !token) {
+    console.error("❌ Vercel API: WAREHOUSE_BASE_URL and WAREHOUSE_TOKEN environment variables are required");
     return [];
   }
 
   try {
     console.log("🔒 Phase 1: Fetching cost management data from TinyBird...");
     
-    // This part of the code uses the exact same URL pattern as working APIs
-    const url = `${baseUrl}?token=${token}&limit=1000&company_url=COMP002_packiyo`;
+    // This part of the code uses the exact same URL pattern as working dashboard API
+    const url = `${baseUrl}?token=${token}&limit=1000&company_url=COMP002_3PL`;
     console.log("🔒 Cost API: Fetching from:", url.replace(token, 'TOKEN_HIDDEN'));
 
     const response = await fetch(url);
