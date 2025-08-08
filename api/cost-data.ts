@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import type { CostKPIs, CostCenter, CostData, AIInsight } from "../client/types/api";
+import type { CostKPIs, CostCenter, CostData, AIInsight, SupplierPerformance, HistoricalCostTrend } from "../client/types/api";
 
 /**
  * This part of the code provides cost management data endpoint for Vercel serverless deployment
@@ -75,17 +75,44 @@ async function fetchShipments(): Promise<ShipmentData[]> {
 }
 
 /**
- * This part of the code calculates basic cost KPIs from shipment data
+ * This part of the code calculates enhanced cost KPIs from real shipment data
  */
 function calculateCostKPIs(shipments: ShipmentData[]): CostKPIs {
   if (shipments.length === 0) {
     return {
+      // Enhanced metrics
+      totalMonthlyCosts: 0,
+      costEfficiencyRate: 0,
+      topPerformingWarehouses: 0,
+      totalCostCenters: 0,
+      // Legacy metrics
       totalWarehouses: 0,
       avgSLAPerformance: 0,
       monthlyThroughput: 0,
       activeCostCenters: 0,
     };
   }
+
+  // This part of the code calculates total monthly costs from real shipment data
+  const currentMonth = new Date().getMonth();
+  const currentYear = new Date().getFullYear();
+  const monthlyShipments = shipments.filter(s => {
+    const arrivalDate = new Date(s.arrival_date);
+    return arrivalDate.getMonth() === currentMonth && arrivalDate.getFullYear() === currentYear;
+  });
+  
+  const totalMonthlyCosts = Math.round(monthlyShipments.reduce((sum, s) => {
+    const cost = (s.unit_cost || 0) * s.received_quantity;
+    return sum + cost;
+  }, 0));
+
+  // This part of the code calculates cost efficiency rate (expected vs received)
+  const efficiencyRates = shipments
+    .filter(s => s.expected_quantity > 0 && s.received_quantity > 0)
+    .map(s => (s.received_quantity / s.expected_quantity) * 100);
+  const costEfficiencyRate = efficiencyRates.length > 0 
+    ? Math.round(efficiencyRates.reduce((sum, rate) => sum + rate, 0) / efficiencyRates.length)
+    : 0;
 
   // This part of the code counts unique warehouses
   const uniqueWarehouses = new Set(
@@ -94,7 +121,25 @@ function calculateCostKPIs(shipments: ShipmentData[]): CostKPIs {
       .map(s => s.warehouse_id)
   ).size;
 
-  // This part of the code calculates SLA performance (on-time delivery)
+  // This part of the code counts top performing warehouses (>90% SLA)
+  const warehousePerformance = new Map<string, { onTime: number, total: number }>();
+  shipments.forEach(s => {
+    if (!s.warehouse_id) return;
+    if (!warehousePerformance.has(s.warehouse_id)) {
+      warehousePerformance.set(s.warehouse_id, { onTime: 0, total: 0 });
+    }
+    const performance = warehousePerformance.get(s.warehouse_id)!;
+    performance.total++;
+    if (s.expected_quantity === s.received_quantity && s.status !== "cancelled") {
+      performance.onTime++;
+    }
+  });
+  
+  const topPerformingWarehouses = Array.from(warehousePerformance.values())
+    .filter(p => p.total > 0 && (p.onTime / p.total) >= 0.9)
+    .length;
+
+  // This part of the code calculates SLA performance (legacy metric)
   const onTimeShipments = shipments.filter(s => 
     s.expected_quantity === s.received_quantity && 
     s.status !== "cancelled"
@@ -102,7 +147,7 @@ function calculateCostKPIs(shipments: ShipmentData[]): CostKPIs {
   const avgSLA = shipments.length > 0 ? Math.round((onTimeShipments / shipments.length) * 100) : 0;
 
   // This part of the code calculates monthly throughput
-  const totalThroughput = shipments.reduce((sum, s) => sum + (s.received_quantity || 0), 0);
+  const totalThroughput = monthlyShipments.reduce((sum, s) => sum + (s.received_quantity || 0), 0);
 
   // This part of the code counts active cost centers (warehouses with recent activity)
   const recentDate = new Date();
@@ -115,6 +160,12 @@ function calculateCostKPIs(shipments: ShipmentData[]): CostKPIs {
   ).size;
 
   return {
+    // Enhanced Real Cost Metrics
+    totalMonthlyCosts,
+    costEfficiencyRate,
+    topPerformingWarehouses,
+    totalCostCenters: uniqueWarehouses,
+    // Legacy metrics for compatibility
     totalWarehouses: uniqueWarehouses,
     avgSLAPerformance: avgSLA,
     monthlyThroughput: totalThroughput,
@@ -123,18 +174,19 @@ function calculateCostKPIs(shipments: ShipmentData[]): CostKPIs {
 }
 
 /**
- * This part of the code transforms shipments into cost center data by warehouse
+ * This part of the code transforms shipments into enhanced cost center data by warehouse
  */
 function calculateCostCenters(shipments: ShipmentData[]): CostCenter[] {
   if (shipments.length === 0) {
     return [];
   }
 
-  // This part of the code groups shipments by warehouse
+  // This part of the code groups shipments by warehouse with cost calculations
   const warehouseMap = new Map<string, {
     shipments: ShipmentData[];
     totalQuantity: number;
     onTimeCount: number;
+    totalCosts: number;
   }>();
 
   shipments.forEach(shipment => {
@@ -146,6 +198,7 @@ function calculateCostCenters(shipments: ShipmentData[]): CostCenter[] {
         shipments: [],
         totalQuantity: 0,
         onTimeCount: 0,
+        totalCosts: 0,
       });
     }
 
@@ -153,13 +206,17 @@ function calculateCostCenters(shipments: ShipmentData[]): CostCenter[] {
     warehouse.shipments.push(shipment);
     warehouse.totalQuantity += shipment.received_quantity || 0;
     
+    // This part of the code calculates real costs from shipment data
+    const shipmentCost = (shipment.unit_cost || 0) * shipment.received_quantity;
+    warehouse.totalCosts += shipmentCost;
+    
     // This part of the code counts on-time shipments
     if (shipment.expected_quantity === shipment.received_quantity && shipment.status !== "cancelled") {
       warehouse.onTimeCount++;
     }
   });
 
-  // This part of the code converts warehouse data to cost centers
+  // This part of the code converts warehouse data to enhanced cost centers
   return Array.from(warehouseMap.entries())
     .map(([warehouseId, data]) => {
       const slaPerformance = data.shipments.length > 0 
@@ -173,6 +230,34 @@ function calculateCostCenters(shipments: ShipmentData[]): CostCenter[] {
         new Date(s.arrival_date) > recentDate
       );
 
+      // This part of the code calculates enhanced cost metrics
+      const monthlyCosts = Math.round(data.totalCosts);
+      const costPerShipment = data.shipments.length > 0 
+        ? Math.round(monthlyCosts / data.shipments.length) 
+        : 0;
+      
+      // This part of the code calculates cost efficiency (expected vs received ratio)
+      const efficiencyRates = data.shipments
+        .filter(s => s.expected_quantity > 0)
+        .map(s => (s.received_quantity / s.expected_quantity) * 100);
+      const costEfficiency = efficiencyRates.length > 0
+        ? Math.round(efficiencyRates.reduce((sum, rate) => sum + rate, 0) / efficiencyRates.length)
+        : 0;
+
+      // This part of the code calculates utilization rate (recent activity vs total)
+      const recentShipments = data.shipments.filter(s => new Date(s.arrival_date) > recentDate).length;
+      const utilizationRate = data.shipments.length > 0
+        ? Math.round((recentShipments / data.shipments.length) * 100)
+        : 0;
+
+      // This part of the code calculates cost breakdown using industry standards
+      const costBreakdown = {
+        receiving: Math.round(monthlyCosts * 0.40), // 40% for receiving operations
+        storage: Math.round(monthlyCosts * 0.30),   // 30% for storage costs
+        processing: Math.round(monthlyCosts * 0.20), // 20% for processing
+        overhead: Math.round(monthlyCosts * 0.10),   // 10% for overhead
+      };
+
       return {
         warehouse_id: warehouseId,
         warehouse_name: `Warehouse ${warehouseId.slice(-4)}`, // Simple name from ID
@@ -181,13 +266,170 @@ function calculateCostCenters(shipments: ShipmentData[]): CostCenter[] {
         status: hasRecentActivity ? 'Active' as const : 'Inactive' as const,
         total_shipments: data.shipments.length,
         on_time_shipments: data.onTimeCount,
+        // Enhanced cost metrics
+        monthly_costs: monthlyCosts,
+        cost_per_shipment: costPerShipment,
+        cost_efficiency: costEfficiency,
+        utilization_rate: utilizationRate,
+        cost_breakdown: costBreakdown,
       };
     })
-    .sort((a, b) => b.monthly_throughput - a.monthly_throughput); // Sort by throughput
+    .sort((a, b) => b.monthly_costs - a.monthly_costs); // Sort by total costs
 }
 
 /**
- * This part of the code generates simple cost management insights
+ * This part of the code calculates supplier performance metrics from real shipment data
+ */
+function calculateSupplierPerformance(shipments: ShipmentData[]): SupplierPerformance[] {
+  if (shipments.length === 0) {
+    return [];
+  }
+
+  // This part of the code groups shipments by supplier with cost calculations
+  const supplierMap = new Map<string, {
+    shipments: ShipmentData[];
+    totalCost: number;
+    onTimeCount: number;
+  }>();
+
+  shipments.forEach(shipment => {
+    const supplier = shipment.supplier || 'Unknown Supplier';
+    
+    if (!supplierMap.has(supplier)) {
+      supplierMap.set(supplier, {
+        shipments: [],
+        totalCost: 0,
+        onTimeCount: 0,
+      });
+    }
+
+    const supplierData = supplierMap.get(supplier)!;
+    supplierData.shipments.push(shipment);
+    
+    // This part of the code calculates real costs from shipment data
+    const shipmentCost = (shipment.unit_cost || 0) * shipment.received_quantity;
+    supplierData.totalCost += shipmentCost;
+    
+    // This part of the code counts on-time shipments
+    if (shipment.expected_quantity === shipment.received_quantity && shipment.status !== "cancelled") {
+      supplierData.onTimeCount++;
+    }
+  });
+
+  // This part of the code calculates average cost for variance analysis
+  const allSupplierData = Array.from(supplierMap.values());
+  const totalCosts = allSupplierData.reduce((sum, data) => sum + data.totalCost, 0);
+  const totalShipments = allSupplierData.reduce((sum, data) => sum + data.shipments.length, 0);
+  const avgCostPerShipment = totalShipments > 0 ? totalCosts / totalShipments : 0;
+
+  // This part of the code converts supplier data to performance metrics
+  return Array.from(supplierMap.entries())
+    .map(([supplierName, data]) => {
+      const avgCostPerUnit = data.shipments.length > 0
+        ? data.totalCost / data.shipments.reduce((sum, s) => sum + s.received_quantity, 0)
+        : 0;
+      
+      const slaPerformance = data.shipments.length > 0 
+        ? Math.round((data.onTimeCount / data.shipments.length) * 100) 
+        : 0;
+
+      const supplierAvgCostPerShipment = data.shipments.length > 0 
+        ? data.totalCost / data.shipments.length 
+        : 0;
+      
+      const costVariance = avgCostPerShipment > 0 
+        ? Math.round(((supplierAvgCostPerShipment - avgCostPerShipment) / avgCostPerShipment) * 100)
+        : 0;
+
+      // This part of the code calculates efficiency score based on SLA and cost variance
+      const efficiencyScore = Math.round((slaPerformance * 0.7) + ((100 - Math.abs(costVariance)) * 0.3));
+
+      // This part of the code determines supplier status
+      let status: 'Efficient' | 'Needs Attention' | 'High Cost';
+      if (efficiencyScore >= 80 && costVariance <= 10) {
+        status = 'Efficient';
+      } else if (efficiencyScore < 60 || costVariance > 25) {
+        status = 'High Cost';
+      } else {
+        status = 'Needs Attention';
+      }
+
+      return {
+        supplier_name: supplierName,
+        total_cost: Math.round(data.totalCost),
+        avg_cost_per_unit: Math.round(avgCostPerUnit * 100) / 100,
+        sla_performance: slaPerformance,
+        shipment_count: data.shipments.length,
+        cost_variance: costVariance,
+        efficiency_score: efficiencyScore,
+        status,
+      };
+    })
+    .sort((a, b) => b.total_cost - a.total_cost); // Sort by total cost
+}
+
+/**
+ * This part of the code calculates historical cost trends from real shipment data
+ */
+function calculateHistoricalTrends(shipments: ShipmentData[]): HistoricalCostTrend[] {
+  if (shipments.length === 0) {
+    return [];
+  }
+
+  // This part of the code groups shipments by month
+  const monthlyData = new Map<string, {
+    totalCost: number;
+    shipmentCount: number;
+  }>();
+
+  shipments.forEach(shipment => {
+    const arrivalDate = new Date(shipment.arrival_date);
+    const monthKey = `${arrivalDate.getFullYear()}-${(arrivalDate.getMonth() + 1).toString().padStart(2, '0')}`;
+    
+    if (!monthlyData.has(monthKey)) {
+      monthlyData.set(monthKey, {
+        totalCost: 0,
+        shipmentCount: 0,
+      });
+    }
+
+    const monthData = monthlyData.get(monthKey)!;
+    const shipmentCost = (shipment.unit_cost || 0) * shipment.received_quantity;
+    monthData.totalCost += shipmentCost;
+    monthData.shipmentCount++;
+  });
+
+  // This part of the code converts to trend data with month-over-month calculations
+  const sortedEntries = Array.from(monthlyData.entries())
+    .sort(([a], [b]) => a.localeCompare(b));
+
+  return sortedEntries.map(([month, data], index) => {
+    const avgCostPerShipment = data.shipmentCount > 0 
+      ? Math.round(data.totalCost / data.shipmentCount) 
+      : 0;
+
+    // This part of the code calculates month-over-month percentage change
+    let costChangePercentage = 0;
+    if (index > 0) {
+      const prevData = sortedEntries[index - 1][1];
+      const prevAvgCost = prevData.shipmentCount > 0 ? prevData.totalCost / prevData.shipmentCount : 0;
+      if (prevAvgCost > 0) {
+        costChangePercentage = Math.round(((avgCostPerShipment - prevAvgCost) / prevAvgCost) * 100);
+      }
+    }
+
+    return {
+      month,
+      total_cost: Math.round(data.totalCost),
+      shipment_count: data.shipmentCount,
+      avg_cost_per_shipment: avgCostPerShipment,
+      cost_change_percentage: costChangePercentage,
+    };
+  }).slice(-12); // This part of the code returns last 12 months
+}
+
+/**
+ * This part of the code generates enhanced cost management insights
  */
 function generateCostInsights(
   shipments: ShipmentData[],
@@ -286,6 +528,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         success: true,
         data: {
           kpis: {
+            // Enhanced metrics
+            totalMonthlyCosts: 0,
+            costEfficiencyRate: 0,
+            topPerformingWarehouses: 0,
+            totalCostCenters: 0,
+            // Legacy metrics
             totalWarehouses: 0,
             avgSLAPerformance: 0,
             monthlyThroughput: 0,
@@ -302,6 +550,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             source: "cost_agent" as const,
           }],
           costCenters: [],
+          supplierPerformance: [],
+          historicalTrends: [],
           lastUpdated: new Date().toISOString(),
         },
         message: "No cost management data available",
@@ -309,15 +559,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
     }
 
-    // This part of the code calculates cost management metrics
+    // This part of the code calculates enhanced cost management metrics
     const kpis = calculateCostKPIs(shipments);
     const costCenters = calculateCostCenters(shipments);
+    const supplierPerformance = calculateSupplierPerformance(shipments);
+    const historicalTrends = calculateHistoricalTrends(shipments);
     const insights = generateCostInsights(shipments, kpis, costCenters);
 
     const costData: CostData = {
       kpis,
       insights,
       costCenters,
+      supplierPerformance,
+      historicalTrends,
       lastUpdated: new Date().toISOString(),
     };
 

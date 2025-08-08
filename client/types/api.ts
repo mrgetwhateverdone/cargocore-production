@@ -97,7 +97,7 @@ export interface AIInsight {
   dollarImpact: number;
   suggestedActions: string[];
   createdAt: string;
-  source: "dashboard_agent" | "warehouse_agent" | "inventory_agent";
+  source: "dashboard_agent" | "warehouse_agent" | "inventory_agent" | "cost_agent" | "analytics_agent" | "orders_agent";
 }
 
 // Anomaly Detection
@@ -467,8 +467,15 @@ export interface InventoryData {
   lastUpdated: string;
 }
 
-// Cost Management Interfaces
+// Cost Management Interfaces (Enhanced for Phase 2A)
 export interface CostKPIs {
+  // Enhanced Real Cost Metrics
+  totalMonthlyCosts: number;
+  costEfficiencyRate: number;
+  topPerformingWarehouses: number;
+  totalCostCenters: number;
+  
+  // Legacy metrics for compatibility
   totalWarehouses: number;
   avgSLAPerformance: number;
   monthlyThroughput: number;
@@ -483,12 +490,45 @@ export interface CostCenter {
   status: 'Active' | 'Inactive';
   total_shipments: number;
   on_time_shipments: number;
+  
+  // Enhanced cost metrics
+  monthly_costs: number;
+  cost_per_shipment: number;
+  cost_efficiency: number;
+  utilization_rate: number;
+  cost_breakdown: {
+    receiving: number;
+    storage: number;
+    processing: number;
+    overhead: number;
+  };
+}
+
+export interface SupplierPerformance {
+  supplier_name: string;
+  total_cost: number;
+  avg_cost_per_unit: number;
+  sla_performance: number;
+  shipment_count: number;
+  cost_variance: number; // percentage above/below average
+  efficiency_score: number;
+  status: 'Efficient' | 'Needs Attention' | 'High Cost';
+}
+
+export interface HistoricalCostTrend {
+  month: string;
+  total_cost: number;
+  shipment_count: number;
+  avg_cost_per_shipment: number;
+  cost_change_percentage: number;
 }
 
 export interface CostData {
   kpis: CostKPIs;
   insights: AIInsight[]; // Reuse existing type but from "cost_agent"
   costCenters: CostCenter[];
+  supplierPerformance: SupplierPerformance[];
+  historicalTrends: HistoricalCostTrend[];
   lastUpdated: string;
 }
 
