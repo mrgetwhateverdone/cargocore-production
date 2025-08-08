@@ -467,6 +467,31 @@ export interface InventoryData {
   lastUpdated: string;
 }
 
+// Cost Management Interfaces
+export interface CostKPIs {
+  totalWarehouses: number;
+  avgSLAPerformance: number;
+  monthlyThroughput: number;
+  activeCostCenters: number;
+}
+
+export interface CostCenter {
+  warehouse_id: string;
+  warehouse_name: string;
+  monthly_throughput: number;
+  sla_performance: number;
+  status: 'Active' | 'Inactive';
+  total_shipments: number;
+  on_time_shipments: number;
+}
+
+export interface CostData {
+  kpis: CostKPIs;
+  insights: AIInsight[]; // Reuse existing type but from "cost_agent"
+  costCenters: CostCenter[];
+  lastUpdated: string;
+}
+
 // API Error Types
 export interface APIError {
   message: string;

@@ -15,6 +15,7 @@ import type {
   OrdersData,
   OrderSuggestion,
   InventoryData,
+  CostData,
 } from "@/types/api";
 
 interface APIResponse<T> {
@@ -321,6 +322,37 @@ class InternalApiService {
       console.error("❌ Client: Order suggestion API call failed:", error);
       throw new Error(
         `Unable to generate order suggestion: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
+    }
+  }
+
+  /**
+   * This part of the code fetches cost management data with warehouse metrics
+   */
+  async getCostData(): Promise<CostData> {
+    try {
+      console.log("🔒 Client: Fetching cost data from secure server...");
+
+      const response = await fetch(`${this.baseUrl}/api/cost-data`);
+
+      if (!response.ok) {
+        throw new Error(
+          `Internal API Error: ${response.status} ${response.statusText}`,
+        );
+      }
+
+      const result: APIResponse<CostData> = await response.json();
+
+      if (!result.success || !result.data) {
+        throw new Error(result.message || "Failed to fetch cost data");
+      }
+
+      console.log("✅ Client: Cost data received securely from server");
+      return result.data;
+    } catch (error) {
+      console.error("❌ Client: Cost API call failed:", error);
+      throw new Error(
+        `Unable to load cost data: ${error instanceof Error ? error.message : "Unknown error"}`,
       );
     }
   }
