@@ -91,13 +91,11 @@ async function fetchEconomicDataWithWebSearch(): Promise<GlobalEconomicMetrics> 
 
   if (!openaiApiKey) {
     console.error("❌ Vercel API: OPENAI_API_KEY environment variable is required");
-    console.log("🔧 Vercel API: Using fallback economic data for testing...");
-    // This part of the code provides realistic test data when OpenAI is not configured
     return {
-      portCongestionIndex: 68, // December holiday shipping surge
-      freightCostTrend: 12.5,  // Seasonal increase in freight costs
-      fuelPriceIndex: 8.2,     // Winter fuel price impact
-      globalTradeIndex: 74,    // Healthy but stressed by volume
+      portCongestionIndex: null,
+      freightCostTrend: null,
+      fuelPriceIndex: null,
+      globalTradeIndex: null,
       lastUpdated: new Date().toISOString(),
     };
   }
@@ -172,13 +170,11 @@ Provide realistic values reflecting actual market conditions and seasonal factor
     
   } catch (error) {
     console.error("❌ Vercel API: Failed to fetch economic intelligence:", error);
-    console.log("🔧 Vercel API: Returning test economic data due to API error...");
-    // This part of the code provides realistic test data when OpenAI API fails
     return {
-      portCongestionIndex: 68, // December holiday shipping surge
-      freightCostTrend: 12.5,  // Seasonal increase in freight costs  
-      fuelPriceIndex: 8.2,     // Winter fuel price impact
-      globalTradeIndex: 74,    // Healthy but stressed by volume
+      portCongestionIndex: null,
+      freightCostTrend: null,
+      fuelPriceIndex: null,
+      globalTradeIndex: null,
       lastUpdated: new Date().toISOString(),
     };
   }
