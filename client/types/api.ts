@@ -532,6 +532,75 @@ export interface CostData {
   lastUpdated: string;
 }
 
+// Economic Intelligence Types
+export interface EconomicKPIs {
+  supplierPerformance: number; // Port congestion index 0-100
+  shippingCostImpact: number; // Freight cost trend percentage
+  transportationCosts: number; // Fuel price index impact percentage  
+  supplyChainHealth: number; // Global trade index 0-100
+}
+
+export interface GlobalEconomicMetrics {
+  portCongestionIndex: number;
+  freightCostTrend: number;
+  fuelPriceIndex: number;
+  globalTradeIndex: number;
+  lastUpdated: string;
+}
+
+export interface BusinessImpactAnalysis {
+  executiveSummary: string;
+  impactCards: BusinessImpactCard[];
+}
+
+export interface BusinessImpactCard {
+  title: string;
+  impact: 'High' | 'Medium' | 'Low';
+  costImpact: number; // Dollar amount
+  timeframe: string;
+  description: string;
+  recommendations: string[];
+}
+
+export interface EconomicForecast {
+  id: string;
+  title: string;
+  forecast: string;
+  confidence: 'High' | 'Medium' | 'Low';
+  timeframe: string;
+  impactLevel: 'High' | 'Medium' | 'Low';
+  contextualActions: string[];
+}
+
+export interface RiskOpportunityAnalysis {
+  risks: RiskItem[];
+  opportunities: OpportunityItem[];
+}
+
+export interface RiskItem {
+  title: string;
+  description: string;
+  severity: 'High' | 'Medium' | 'Low';
+  mitigation: string[];
+}
+
+export interface OpportunityItem {
+  title: string;
+  description: string;
+  potential: 'High' | 'Medium' | 'Low';
+  strategies: string[];
+}
+
+export interface EconomicData {
+  kpis: EconomicKPIs;
+  insights: AIInsight[]; // Reuse existing type but from "economic_agent"
+  globalMetrics: GlobalEconomicMetrics;
+  businessImpact: BusinessImpactAnalysis;
+  forecasts: EconomicForecast[];
+  risksOpportunities: RiskOpportunityAnalysis;
+  lastUpdated: string;
+}
+
 // API Error Types
 export interface APIError {
   message: string;
