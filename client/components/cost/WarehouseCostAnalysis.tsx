@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { CostCenter } from "@/types/api";
+import { ViewAllWarehousesModal } from "./ViewAllWarehousesModal";
 
 interface WarehouseCostAnalysisProps {
   costCenters: CostCenter[];
@@ -9,6 +10,9 @@ interface WarehouseCostAnalysisProps {
 export function WarehouseCostAnalysis({ costCenters, isLoading }: WarehouseCostAnalysisProps) {
   // This part of the code manages expanded warehouse details
   const [expandedWarehouse, setExpandedWarehouse] = useState<string | null>(null);
+  
+  // This part of the code manages the View All modal state
+  const [showViewAllModal, setShowViewAllModal] = useState(false);
 
   // This part of the code formats currency values
   const formatCurrency = (amount: number) => {
@@ -54,7 +58,7 @@ export function WarehouseCostAnalysis({ costCenters, isLoading }: WarehouseCostA
     return (
       <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6 mb-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-3">
-          Cost Center Analysis by Warehouse (Real TinyBird Data)
+          Cost Center Analysis by Warehouse
         </h3>
         <div className="text-center py-8">
           <div className="text-gray-500">No warehouse cost data available</div>
@@ -63,14 +67,20 @@ export function WarehouseCostAnalysis({ costCenters, isLoading }: WarehouseCostA
     );
   }
 
+  // This part of the code sorts warehouses by monthly cost and limits to 10
+  const sortedCostCenters = [...costCenters]
+    .sort((a, b) => (b.monthly_costs || 0) - (a.monthly_costs || 0));
+  const displayCostCenters = sortedCostCenters.slice(0, 10);
+
   return (
-    <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6 mb-6">
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">
-        Cost Center Analysis by Warehouse (Real TinyBird Data)
-      </h3>
-      
-      <div className="space-y-4">
-        {costCenters.map((center) => {
+    <>
+      <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6 mb-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">
+          Cost Center Analysis by Warehouse
+        </h3>
+        
+        <div className="space-y-4">
+          {displayCostCenters.map((center) => {
           const statusBadge = getStatusBadge(center);
           const isExpanded = expandedWarehouse === center.warehouse_id;
           
@@ -207,13 +217,40 @@ export function WarehouseCostAnalysis({ costCenters, isLoading }: WarehouseCostA
               )}
             </div>
           );
-        })}
+          })}
+        </div>
+        
+        {/* This part of the code displays summary footer with View All button */}
+        <div className="mt-4 pt-4 border-t border-gray-200">
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-gray-500">
+              Showing {displayCostCenters.length} of {costCenters.length} warehouses ranked by monthly cost
+            </span>
+            
+            {/* This part of the code displays the View All button when there are more than 10 warehouses */}
+            {costCenters.length > 10 && (
+              <button
+                onClick={() => setShowViewAllModal(true)}
+                className="inline-flex items-center px-6 py-3 bg-blue-50 text-blue-700 text-sm font-medium rounded-full hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors border border-blue-200"
+              >
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+                View All {costCenters.length} Warehouses
+              </button>
+            )}
+          </div>
+        </div>
       </div>
-      
-      {/* This part of the code displays summary footer */}
-      <div className="mt-4 pt-4 border-t border-gray-200 text-sm text-gray-500">
-        Showing {costCenters.length} warehouse cost centers with real-time cost analysis
-      </div>
-    </div>
+
+      {/* This part of the code displays the View All Warehouses modal */}
+      {showViewAllModal && (
+        <ViewAllWarehousesModal
+          costCenters={sortedCostCenters}
+          isOpen={showViewAllModal}
+          onClose={() => setShowViewAllModal(false)}
+        />
+      )}
+    </>
   );
 }

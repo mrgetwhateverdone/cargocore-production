@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { useCostData } from "@/hooks/useCostData";
 import { LoadingState } from "@/components/ui/loading-spinner";
@@ -11,14 +12,17 @@ import { WarehouseCostAnalysis } from "@/components/cost/WarehouseCostAnalysis";
 import { SupplierPerformanceSection } from "@/components/cost/SupplierPerformanceSection";
 import { HistoricalTrendsSection } from "@/components/cost/HistoricalTrendsSection";
 import { CostCenterTableSection } from "@/components/cost/CostCenterTableSection";
+import { ViewAllCostCentersModal } from "@/components/cost/ViewAllCostCentersModal";
 
 export default function CostManagement() {
   const { data, isLoading, error, refetch } = useCostData();
+  
+  // This part of the code manages the View All Cost Centers modal state
+  const [showViewAllModal, setShowViewAllModal] = useState(false);
 
-  // This part of the code handles opening view all modal (placeholder for Phase 2)
+  // This part of the code handles opening view all modal
   const handleViewAll = () => {
-    console.log("View All Cost Centers - Phase 2 feature");
-    // TODO: Implement ViewAllCostCentersModal in Phase 2
+    setShowViewAllModal(true);
   };
 
   if (isLoading) {
@@ -76,6 +80,12 @@ export default function CostManagement() {
           loadingMessage="Cost Management Agent is analyzing warehouse performance and identifying cost optimization opportunities..."
         />
 
+        {/* This part of the code displays historical cost trends */}
+        <HistoricalTrendsSection
+          historicalTrends={data.historicalTrends || []}
+          isLoading={isLoading}
+        />
+
         {/* This part of the code displays detailed warehouse cost analysis */}
         <WarehouseCostAnalysis
           costCenters={data.costCenters || []}
@@ -88,12 +98,6 @@ export default function CostManagement() {
           isLoading={isLoading}
         />
 
-        {/* This part of the code displays historical cost trends */}
-        <HistoricalTrendsSection
-          historicalTrends={data.historicalTrends || []}
-          isLoading={isLoading}
-        />
-
         {/* This part of the code displays the basic cost center table for legacy compatibility */}
         <CostCenterTableSection
           costCenters={data.costCenters || []}
@@ -101,6 +105,15 @@ export default function CostManagement() {
           onViewAll={handleViewAll}
         />
       </div>
+
+      {/* This part of the code displays the View All Cost Centers modal */}
+      {showViewAllModal && (
+        <ViewAllCostCentersModal
+          costCenters={data.costCenters || []}
+          isOpen={showViewAllModal}
+          onClose={() => setShowViewAllModal(false)}
+        />
+      )}
     </Layout>
   );
 }
