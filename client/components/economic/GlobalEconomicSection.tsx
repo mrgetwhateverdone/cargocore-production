@@ -51,7 +51,7 @@ export function GlobalEconomicSection({ metrics, isLoading }: GlobalEconomicSect
             <span className="text-xl">🚢</span>
           </div>
           <div className="text-2xl font-bold text-gray-900">
-            {(metrics.portCongestionIndex || 0)}/100
+            {metrics.portCongestionIndex !== null ? `${metrics.portCongestionIndex}/100` : "N/A"}
           </div>
           <div className="text-xs text-gray-500">Shipping delay index</div>
         </div>
@@ -62,10 +62,15 @@ export function GlobalEconomicSection({ metrics, isLoading }: GlobalEconomicSect
             <span className="text-xl">📈</span>
           </div>
           <div className={`text-2xl font-bold ${
-            (metrics.freightCostTrend || 0) > 0 ? 'text-red-600' : 
-            (metrics.freightCostTrend || 0) < 0 ? 'text-green-600' : 'text-gray-900'
+            metrics.freightCostTrend !== null ? (
+              metrics.freightCostTrend > 0 ? 'text-red-600' : 
+              metrics.freightCostTrend < 0 ? 'text-green-600' : 'text-gray-900'
+            ) : 'text-gray-900'
           }`}>
-            {(metrics.freightCostTrend || 0) > 0 ? '+' : ''}{(metrics.freightCostTrend || 0).toFixed(1)}%
+            {metrics.freightCostTrend !== null ? 
+              `${metrics.freightCostTrend > 0 ? '+' : ''}${metrics.freightCostTrend.toFixed(1)}%` : 
+              "N/A"
+            }
           </div>
           <div className="text-xs text-gray-500">Cost trend</div>
         </div>
@@ -76,10 +81,15 @@ export function GlobalEconomicSection({ metrics, isLoading }: GlobalEconomicSect
             <span className="text-xl">⛽</span>
           </div>
           <div className={`text-2xl font-bold ${
-            (metrics.fuelPriceIndex || 0) > 0 ? 'text-red-600' : 
-            (metrics.fuelPriceIndex || 0) < 0 ? 'text-green-600' : 'text-gray-900'
+            metrics.fuelPriceIndex !== null ? (
+              metrics.fuelPriceIndex > 0 ? 'text-red-600' : 
+              metrics.fuelPriceIndex < 0 ? 'text-green-600' : 'text-gray-900'
+            ) : 'text-gray-900'
           }`}>
-            {(metrics.fuelPriceIndex || 0) > 0 ? '+' : ''}{(metrics.fuelPriceIndex || 0).toFixed(1)}%
+            {metrics.fuelPriceIndex !== null ? 
+              `${metrics.fuelPriceIndex > 0 ? '+' : ''}${metrics.fuelPriceIndex.toFixed(1)}%` : 
+              "N/A"
+            }
           </div>
           <div className="text-xs text-gray-500">Transport impact</div>
         </div>
@@ -90,7 +100,7 @@ export function GlobalEconomicSection({ metrics, isLoading }: GlobalEconomicSect
             <span className="text-xl">🌍</span>
           </div>
           <div className="text-2xl font-bold text-gray-900">
-            {(metrics.globalTradeIndex || 0)}/100
+            {metrics.globalTradeIndex !== null ? `${metrics.globalTradeIndex}/100` : "N/A"}
           </div>
           <div className="text-xs text-gray-500">Supply chain health</div>
         </div>

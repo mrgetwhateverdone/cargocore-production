@@ -534,17 +534,17 @@ export interface CostData {
 
 // Economic Intelligence Types
 export interface EconomicKPIs {
-  supplierPerformance: number; // Port congestion index 0-100
-  shippingCostImpact: number; // Freight cost trend percentage
-  transportationCosts: number; // Fuel price index impact percentage  
-  supplyChainHealth: number; // Global trade index 0-100
+  supplierPerformance: number | null; // Port congestion index 0-100
+  shippingCostImpact: number | null; // Freight cost trend percentage
+  transportationCosts: number | null; // Fuel price index impact percentage  
+  supplyChainHealth: number | null; // Global trade index 0-100
 }
 
 export interface GlobalEconomicMetrics {
-  portCongestionIndex: number;
-  freightCostTrend: number;
-  fuelPriceIndex: number;
-  globalTradeIndex: number;
+  portCongestionIndex: number | null;
+  freightCostTrend: number | null;
+  fuelPriceIndex: number | null;
+  globalTradeIndex: number | null;
   lastUpdated: string;
 }
 

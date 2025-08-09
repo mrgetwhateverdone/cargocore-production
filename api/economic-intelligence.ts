@@ -92,12 +92,12 @@ async function fetchEconomicDataWithWebSearch(): Promise<GlobalEconomicMetrics> 
 
   if (!openaiApiKey) {
     console.error("❌ Vercel API: OPENAI_API_KEY environment variable is required");
-    // Return realistic simulated data instead of zeros
+    // Return null values to indicate no data available
     return {
-      portCongestionIndex: 45,
-      freightCostTrend: 2.3,
-      fuelPriceIndex: 1.8,
-      globalTradeIndex: 72,
+      portCongestionIndex: null,
+      freightCostTrend: null,
+      fuelPriceIndex: null,
+      globalTradeIndex: null,
       lastUpdated: new Date().toISOString(),
     };
   }
@@ -160,12 +160,12 @@ async function fetchEconomicDataWithWebSearch(): Promise<GlobalEconomicMetrics> 
     
   } catch (error) {
     console.error("❌ Vercel API: Failed to fetch economic data:", error);
-    // Return realistic simulated data instead of zeros
+    // Return null values to indicate data unavailable
     return {
-      portCongestionIndex: 45,
-      freightCostTrend: 2.3,
-      fuelPriceIndex: 1.8,
-      globalTradeIndex: 72,
+      portCongestionIndex: null,
+      freightCostTrend: null,
+      fuelPriceIndex: null,
+      globalTradeIndex: null,
       lastUpdated: new Date().toISOString(),
     };
   }
@@ -190,10 +190,10 @@ function parseEconomicDataFromAI(aiResponse: string): GlobalEconomicMetrics {
   const tradeHealthMatch = aiResponse.match(/trade.*health[^:]*[:\s]+(\d+(?:\.\d+)?)/i) || 
                           aiResponse.match(/health[^:]*[:\s]+(\d+(?:\.\d+)?)/i);
 
-  const portCongestion = portCongestionMatch ? parseFloat(portCongestionMatch[1]) : 45;
-  const freightCost = freightCostMatch ? parseFloat(freightCostMatch[1]) : 2.3;
-  const fuelPrice = fuelPriceMatch ? parseFloat(fuelPriceMatch[1]) : 1.8;
-  const tradeHealth = tradeHealthMatch ? parseFloat(tradeHealthMatch[1]) : 72;
+  const portCongestion = portCongestionMatch ? parseFloat(portCongestionMatch[1]) : null;
+  const freightCost = freightCostMatch ? parseFloat(freightCostMatch[1]) : null;
+  const fuelPrice = fuelPriceMatch ? parseFloat(fuelPriceMatch[1]) : null;
+  const tradeHealth = tradeHealthMatch ? parseFloat(tradeHealthMatch[1]) : null;
 
   console.log("📊 Vercel API: Parsed economic metrics:", {
     portCongestion,
@@ -203,10 +203,10 @@ function parseEconomicDataFromAI(aiResponse: string): GlobalEconomicMetrics {
   });
 
   return {
-    portCongestionIndex: Math.min(100, Math.max(0, portCongestion)),
-    freightCostTrend: Math.min(50, Math.max(-50, freightCost)),
-    fuelPriceIndex: Math.min(50, Math.max(-50, fuelPrice)),
-    globalTradeIndex: Math.min(100, Math.max(0, tradeHealth)),
+    portCongestionIndex: portCongestion !== null ? Math.min(100, Math.max(0, portCongestion)) : null,
+    freightCostTrend: freightCost !== null ? Math.min(50, Math.max(-50, freightCost)) : null,
+    fuelPriceIndex: fuelPrice !== null ? Math.min(50, Math.max(-50, fuelPrice)) : null,
+    globalTradeIndex: tradeHealth !== null ? Math.min(100, Math.max(0, tradeHealth)) : null,
     lastUpdated: new Date().toISOString(),
   };
 }
@@ -445,18 +445,23 @@ async function generateEconomicInsights(
 }
 
 /**
- * This part of the code generates placeholder forecasts and risk analysis
+ * This part of the code generates forecasts and risk analysis only when real data is available
  */
 function generateForecastsAndRisks(globalMetrics: GlobalEconomicMetrics): {
   forecasts: EconomicForecast[];
   risksOpportunities: RiskOpportunityAnalysis;
 } {
-  const forecasts: EconomicForecast[] = [
-    {
+  const forecasts: EconomicForecast[] = [];
+  const risks: RiskItem[] = [];
+  const opportunities: OpportunityItem[] = [];
+
+  // Only generate forecasts if we have real economic data
+  if (globalMetrics.freightCostTrend !== null) {
+    forecasts.push({
       id: "forecast_1",
       title: "Freight Cost Projection",
       forecast: `Based on current ${globalMetrics.freightCostTrend}% freight cost trend, expect continued pressure on shipping rates through Q1 2025.`,
-      confidence: globalMetrics.freightCostTrend > 5 ? "High" : "Medium",
+      confidence: Math.abs(globalMetrics.freightCostTrend) > 5 ? "High" : "Medium",
       timeframe: "Next 3 months",
       impactLevel: Math.abs(globalMetrics.freightCostTrend) > 10 ? "High" : "Medium",
       contextualActions: [
@@ -464,8 +469,11 @@ function generateForecastsAndRisks(globalMetrics: GlobalEconomicMetrics): {
         "Evaluate alternative shipping routes",
         "Consider freight consolidation strategies"
       ]
-    },
-    {
+    });
+  }
+
+  if (globalMetrics.portCongestionIndex !== null) {
+    forecasts.push({
       id: "forecast_2", 
       title: "Port Congestion Outlook",
       forecast: `Current congestion index of ${globalMetrics.portCongestionIndex}/100 suggests ${globalMetrics.portCongestionIndex > 70 ? 'continued delays' : 'improving conditions'} at major ports.`,
@@ -477,14 +485,11 @@ function generateForecastsAndRisks(globalMetrics: GlobalEconomicMetrics): {
         "Adjust inventory planning for delays",
         "Communicate timeline changes to customers"
       ]
-    }
-  ];
+    });
+  }
 
-  const risks: RiskItem[] = [];
-  const opportunities: OpportunityItem[] = [];
-
-  // This part of the code adds dynamic risks based on economic conditions
-  if (globalMetrics.portCongestionIndex > 60) {
+  // This part of the code adds dynamic risks based on real economic conditions
+  if (globalMetrics.portCongestionIndex !== null && globalMetrics.portCongestionIndex > 60) {
     risks.push({
       title: "Port Congestion Impact",
       description: `High port congestion (${globalMetrics.portCongestionIndex}/100) may cause significant shipping delays`,
@@ -497,7 +502,7 @@ function generateForecastsAndRisks(globalMetrics: GlobalEconomicMetrics): {
     });
   }
 
-  if (globalMetrics.freightCostTrend > 5) {
+  if (globalMetrics.freightCostTrend !== null && globalMetrics.freightCostTrend > 5) {
     risks.push({
       title: "Rising Freight Costs",
       description: `Freight costs trending up ${globalMetrics.freightCostTrend}% may impact margins`,
@@ -508,7 +513,7 @@ function generateForecastsAndRisks(globalMetrics: GlobalEconomicMetrics): {
         "Review pricing strategies"
       ]
     });
-  } else if (globalMetrics.freightCostTrend < -3) {
+  } else if (globalMetrics.freightCostTrend !== null && globalMetrics.freightCostTrend < -3) {
     opportunities.push({
       title: "Favorable Freight Rates",
       description: `Declining freight costs (${globalMetrics.freightCostTrend}%) create margin expansion opportunities`,
