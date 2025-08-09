@@ -8,9 +8,18 @@ import { BrainIcon } from "../ui/BrainIcon";
 interface InsightsSectionProps {
   insights: AIInsight[];
   isLoading?: boolean;
+  title?: string;
+  subtitle?: string;
+  loadingMessage?: string;
 }
 
-export function InsightsSection({ insights, isLoading }: InsightsSectionProps) {
+export function InsightsSection({ 
+  insights, 
+  isLoading, 
+  title = "Insights",
+  subtitle,
+  loadingMessage = "Analyzing data..."
+}: InsightsSectionProps) {
   const [selectedInsight, setSelectedInsight] = useState<AIInsight | null>(null);
   const { createWorkflow, creating } = useWorkflowCreation();
 
@@ -116,9 +125,9 @@ export function InsightsSection({ insights, isLoading }: InsightsSectionProps) {
   return (
     <div className="mb-6">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-medium text-gray-900">Insights</h2>
+        <h2 className="text-lg font-medium text-gray-900">{title}</h2>
         <p className="text-sm text-gray-500">
-          {insights.length} insights from Dashboard Agent
+          {subtitle || `${insights.length} insights from Dashboard Agent`}
         </p>
       </div>
 
@@ -182,7 +191,7 @@ export function InsightsSection({ insights, isLoading }: InsightsSectionProps) {
           isOpen={!!selectedInsight}
           onClose={() => setSelectedInsight(null)}
           insight={selectedInsight}
-          agentName="Dashboard Agent"
+          agentName="AI Agent"
         />
       )}
     </div>
