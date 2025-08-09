@@ -83,11 +83,10 @@ async function fetchShipments(): Promise<ShipmentData[]> {
 }
 
 /**
- * This part of the code fetches real-time economic data using OpenAI with simulated current data
- * For now, using chat completions to ensure functionality, can upgrade to web search later
+ * This part of the code fetches real-time economic data using OpenAI Web Search API
+ * Uses the correct responses.create endpoint with web_search_preview tool for current data
  */
 async function fetchEconomicDataWithWebSearch(): Promise<GlobalEconomicMetrics> {
-  const openaiApiUrl = process.env.OPENAI_API_URL || "https://api.openai.com/v1/chat/completions";
   const openaiApiKey = process.env.OPENAI_API_KEY;
 
   if (!openaiApiKey) {
@@ -103,63 +102,76 @@ async function fetchEconomicDataWithWebSearch(): Promise<GlobalEconomicMetrics> 
   }
 
   try {
-    console.log("🔒 Vercel API: Fetching economic intelligence data via OpenAI...");
-
-    // This part of the code creates a realistic economic analysis query
-    const economicQuery = `
-      As an Economic Intelligence Agent, provide current global economic indicators for logistics and supply chain operations in December 2024:
-      
-      1. Global port congestion index (0-100 scale): Assess current shipping delays at major ports
-      2. Freight shipping cost trend (percentage): Recent changes in freight rates
-      3. Fuel price impact on transportation (percentage): Current fuel cost impact
-      4. Global supply chain health index (0-100 scale): Overall trade flow health
-      
-      Respond with realistic numerical data based on current economic conditions. Format as:
-      Port Congestion: [number]
-      Freight Costs: [number]% 
-      Fuel Impact: [number]%
-      Trade Health: [number]
-    `;
-
-    const response = await fetch(openaiApiUrl, {
+    console.log("🌐 Vercel API: Fetching real-time economic data using OpenAI Web Search...");
+    
+    const response = await fetch("https://api.openai.com/v1/responses", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${openaiApiKey}`
+        "Authorization": `Bearer ${openaiApiKey}`,
       },
       body: JSON.stringify({
-        model: "gpt-3.5-turbo",
-        messages: [
-          {
-            role: "system",
-            content: "You are an Economic Intelligence Agent providing realistic current economic indicators for logistics operations. Provide specific numerical data."
-          },
-          {
-            role: "user",
-            content: economicQuery
+        model: "gpt-4.1",
+        tools: [
+          { 
+            type: "web_search_preview",
+            search_context_size: "medium"
           }
         ],
-        temperature: 0.3,
-        max_tokens: 500
-      })
+        input: `Search for current global economic indicators relevant to supply chain and logistics operations in December 2024. I need real-time data for:
+
+1. Global port congestion levels and shipping delays - provide as index score 0-100 based on current port conditions
+2. Current freight shipping cost trends - percentage change from last month  
+3. Fuel price impact on transportation costs - percentage impact on logistics operations
+4. Global trade health and supply chain disruption levels - index score 0-100 based on current trade flow
+
+Please search for the most recent data from shipping industry sources, logistics reports, economic indicators, and supply chain news. Provide specific numerical values for each metric based on current December 2024 conditions.
+
+Format response with clear numerical values:
+Port Congestion Index: [0-100 number]
+Freight Cost Trend: [percentage with + or -]
+Fuel Price Impact: [percentage with + or -] 
+Global Trade Index: [0-100 number]`
+      }),
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error(`❌ OpenAI API Error: ${response.status} ${response.statusText}`, errorText);
-      throw new Error(`OpenAI API Error: ${response.status} ${response.statusText}`);
+      console.error("❌ OpenAI Web Search API Error:", response.status, response.statusText, errorText);
+      throw new Error(`OpenAI Web Search API Error: ${response.status} ${response.statusText}`);
     }
 
-    const result = await response.json();
-    const economicData = result.choices?.[0]?.message?.content || "";
+    const data = await response.json();
+    console.log("🔍 Vercel API: OpenAI Web Search response received", typeof data, Array.isArray(data));
     
-    console.log("✅ Vercel API: Economic data received from OpenAI:", economicData);
+    // This part of the code extracts the response text from the web search results
+    let economicData = "";
+    if (data && Array.isArray(data)) {
+      for (const item of data) {
+        if (item.type === "message" && item.content && Array.isArray(item.content)) {
+          for (const content of item.content) {
+            if (content.type === "output_text" && content.text) {
+              economicData = content.text;
+              console.log("📊 Vercel API: Extracted web search text:", economicData.substring(0, 500) + "...");
+              break;
+            }
+          }
+          if (economicData) break;
+        }
+      }
+    }
     
-    // This part of the code parses economic data from AI response
+    if (!economicData) {
+      console.error("❌ Vercel API: No text content found in OpenAI Web Search response");
+      console.log("🔍 Full response structure:", JSON.stringify(data, null, 2));
+      throw new Error("No economic data found in web search response");
+    }
+    
+    console.log("✅ Vercel API: Economic data extracted from web search results");
     return parseEconomicDataFromAI(economicData);
     
   } catch (error) {
-    console.error("❌ Vercel API: Failed to fetch economic data:", error);
+    console.error("❌ Vercel API: Failed to fetch economic data with web search:", error);
     // Return null values to indicate data unavailable
     return {
       portCongestionIndex: null,
@@ -172,34 +184,44 @@ async function fetchEconomicDataWithWebSearch(): Promise<GlobalEconomicMetrics> 
 }
 
 /**
- * This part of the code parses economic metrics from AI response
+ * This part of the code parses economic metrics from AI web search response
  */
 function parseEconomicDataFromAI(aiResponse: string): GlobalEconomicMetrics {
-  console.log("🔍 Vercel API: Parsing AI response:", aiResponse);
+  console.log("🔍 Vercel API: Parsing web search response:", aiResponse.substring(0, 1000) + "...");
   
-  // This part of the code extracts numeric values from AI response using multiple patterns
-  const portCongestionMatch = aiResponse.match(/port\s+congestion[:\s]+(\d+(?:\.\d+)?)/i) || 
-                             aiResponse.match(/congestion[:\s]+(\d+(?:\.\d+)?)/i);
+  // This part of the code extracts numeric values from web search response using enhanced patterns
+  const portCongestionMatch = aiResponse.match(/port\s+congestion\s+(?:index|level)[:\s]+(\d+(?:\.\d+)?)/i) || 
+                             aiResponse.match(/congestion[:\s]+(\d+(?:\.\d+)?)/i) ||
+                             aiResponse.match(/port.*delay.*(\d+(?:\.\d+)?)/i);
   
-  const freightCostMatch = aiResponse.match(/freight[^:]*[:\s]+(\-?\d+(?:\.\d+)?)\%?/i) || 
-                          aiResponse.match(/shipping.*cost[^:]*[:\s]+(\-?\d+(?:\.\d+)?)\%?/i);
+  const freightCostMatch = aiResponse.match(/freight\s+cost\s+trend[:\s]+([+\-]?\d+(?:\.\d+)?)\%?/i) || 
+                          aiResponse.match(/shipping.*cost[^:]*[:\s]+([+\-]?\d+(?:\.\d+)?)\%?/i) ||
+                          aiResponse.match(/freight.*trend[:\s]+([+\-]?\d+(?:\.\d+)?)\%?/i);
   
-  const fuelPriceMatch = aiResponse.match(/fuel[^:]*[:\s]+(\-?\d+(?:\.\d+)?)\%?/i) || 
-                        aiResponse.match(/fuel.*impact[^:]*[:\s]+(\-?\d+(?:\.\d+)?)\%?/i);
+  const fuelPriceMatch = aiResponse.match(/fuel\s+price\s+impact[:\s]+([+\-]?\d+(?:\.\d+)?)\%?/i) || 
+                        aiResponse.match(/fuel.*impact[^:]*[:\s]+([+\-]?\d+(?:\.\d+)?)\%?/i) ||
+                        aiResponse.match(/transportation.*fuel[^:]*[:\s]+([+\-]?\d+(?:\.\d+)?)\%?/i);
   
-  const tradeHealthMatch = aiResponse.match(/trade.*health[^:]*[:\s]+(\d+(?:\.\d+)?)/i) || 
-                          aiResponse.match(/health[^:]*[:\s]+(\d+(?:\.\d+)?)/i);
+  const tradeHealthMatch = aiResponse.match(/global\s+trade\s+(?:index|health)[:\s]+(\d+(?:\.\d+)?)/i) || 
+                          aiResponse.match(/trade.*health[^:]*[:\s]+(\d+(?:\.\d+)?)/i) ||
+                          aiResponse.match(/supply.*chain.*health[^:]*[:\s]+(\d+(?:\.\d+)?)/i);
+
+  // This part of the code also looks for alternative number patterns in case formatted differently
+  const allNumbers = aiResponse.match(/\d+(?:\.\d+)?/g) || [];
+  const percentageNumbers = aiResponse.match(/[+\-]?\d+(?:\.\d+)?%/g) || [];
 
   const portCongestion = portCongestionMatch ? parseFloat(portCongestionMatch[1]) : null;
   const freightCost = freightCostMatch ? parseFloat(freightCostMatch[1]) : null;
   const fuelPrice = fuelPriceMatch ? parseFloat(fuelPriceMatch[1]) : null;
   const tradeHealth = tradeHealthMatch ? parseFloat(tradeHealthMatch[1]) : null;
 
-  console.log("📊 Vercel API: Parsed economic metrics:", {
+  console.log("📊 Vercel API: Parsed economic metrics from web search:", {
     portCongestion,
     freightCost,
     fuelPrice,
-    tradeHealth
+    tradeHealth,
+    totalNumbersFound: allNumbers.length,
+    percentagesFound: percentageNumbers.length
   });
 
   return {
