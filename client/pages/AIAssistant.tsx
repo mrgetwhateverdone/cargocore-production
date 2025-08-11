@@ -245,7 +245,7 @@ export default function AIAssistant() {
                       onChange={(e) => setInputMessage(e.target.value)}
                       onKeyDown={handleKeyDown}
                       disabled={isLoading}
-                      className="flex-1 min-h-[50px] max-h-32 resize-none bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                      className="flex-1 min-h-[50px] max-h-32 resize-none bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-black"
                       rows={2}
                     />
                     <Button
