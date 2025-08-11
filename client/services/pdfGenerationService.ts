@@ -35,13 +35,30 @@ export class PDFGenerationService {
    * This part of the code properly sets up autoTable functionality
    */
   private setupAutoTable(): void {
-    // Ensure autoTable is properly attached to the jsPDF instance
-    if (typeof autoTable === 'function') {
-      (this.doc as any).autoTable = autoTable;
-    } else if (autoTable && autoTable.default) {
-      (this.doc as any).autoTable = autoTable.default;
-    } else {
-      console.error('autoTable is not properly imported');
+    // This part of the code sets up autoTable with multiple fallback methods
+    try {
+      // Method 1: Direct assignment
+      if (typeof autoTable === 'function') {
+        (this.doc as any).autoTable = autoTable;
+        return;
+      }
+      
+      // Method 2: Default export
+      if (autoTable && (autoTable as any).default && typeof (autoTable as any).default === 'function') {
+        (this.doc as any).autoTable = (autoTable as any).default;
+        return;
+      }
+      
+      // Method 3: Call autoTable directly on the doc
+      if (typeof (autoTable as any).__esModule !== 'undefined') {
+        (this.doc as any).autoTable = (autoTable as any).default || autoTable;
+        return;
+      }
+      
+      console.error('autoTable setup failed - using fallback');
+      // Don't crash, just log error
+    } catch (error) {
+      console.error('Error setting up autoTable:', error);
     }
   }
 
@@ -820,25 +837,35 @@ export class PDFGenerationService {
     this.doc.setFontSize(14);
     this.doc.setFont('helvetica', 'bold');
     this.doc.text('Products (First 10)', this.margin, this.currentY);
-    this.currentY += 10;
+    this.currentY += 15;
 
-    const tableData = products.map(product => [
-      product.sku || 'N/A',
-      product.product_name || 'N/A',
-      product.brand_name || 'N/A',
-      `$${(product.unit_cost || 0).toFixed(2)}`
-    ]);
+    // This part of the code tries autoTable first, falls back to simple text if it fails
+    try {
+      if ((this.doc as any).autoTable && typeof (this.doc as any).autoTable === 'function') {
+        const tableData = products.map(product => [
+          product.sku || 'N/A',
+          product.product_name || 'N/A',
+          product.brand_name || 'N/A',
+          `$${(product.unit_cost || 0).toFixed(2)}`
+        ]);
 
-    (this.doc as any).autoTable({
-      startY: this.currentY,
-      head: [['SKU', 'Product Name', 'Brand', 'Unit Cost']],
-      body: tableData,
-      theme: 'striped',
-      styles: { fontSize: 10 },
-      margin: { left: this.margin, right: this.margin }
-    });
+        (this.doc as any).autoTable({
+          startY: this.currentY,
+          head: [['SKU', 'Product Name', 'Brand', 'Unit Cost']],
+          body: tableData,
+          theme: 'striped',
+          styles: { fontSize: 10 },
+          margin: { left: this.margin, right: this.margin }
+        });
 
-    this.currentY = (this.doc as any).lastAutoTable.finalY + 20;
+        this.currentY = (this.doc as any).lastAutoTable?.finalY + 20 || this.currentY + 100;
+      } else {
+        throw new Error('autoTable not available');
+      }
+    } catch (error) {
+      console.warn('autoTable failed, using simple text fallback:', error);
+      this.addSimpleProductsList(products);
+    }
   }
 
   /**
@@ -848,25 +875,67 @@ export class PDFGenerationService {
     this.doc.setFontSize(14);
     this.doc.setFont('helvetica', 'bold');
     this.doc.text('Shipments (First 10)', this.margin, this.currentY);
-    this.currentY += 10;
+    this.currentY += 15;
 
-    const tableData = shipments.map(shipment => [
-      shipment.shipment_id || 'N/A',
-      shipment.status || 'N/A',
-      shipment.supplier || 'N/A',
-      `${shipment.expected_quantity || 0}`
-    ]);
+    // This part of the code tries autoTable first, falls back to simple text if it fails
+    try {
+      if ((this.doc as any).autoTable && typeof (this.doc as any).autoTable === 'function') {
+        const tableData = shipments.map(shipment => [
+          shipment.shipment_id || 'N/A',
+          shipment.status || 'N/A',
+          shipment.supplier || 'N/A',
+          `${shipment.expected_quantity || 0}`
+        ]);
 
-    (this.doc as any).autoTable({
-      startY: this.currentY,
-      head: [['Shipment ID', 'Status', 'Supplier', 'Quantity']],
-      body: tableData,
-      theme: 'striped',
-      styles: { fontSize: 10 },
-      margin: { left: this.margin, right: this.margin }
+        (this.doc as any).autoTable({
+          startY: this.currentY,
+          head: [['Shipment ID', 'Status', 'Supplier', 'Quantity']],
+          body: tableData,
+          theme: 'striped',
+          styles: { fontSize: 10 },
+          margin: { left: this.margin, right: this.margin }
+        });
+
+        this.currentY = (this.doc as any).lastAutoTable?.finalY + 20 || this.currentY + 100;
+      } else {
+        throw new Error('autoTable not available');
+      }
+    } catch (error) {
+      console.warn('autoTable failed, using simple text fallback:', error);
+      this.addSimpleShipmentsList(shipments);
+    }
+  }
+
+  /**
+   * This part of the code adds a simple products list as fallback when autoTable fails
+   */
+  private addSimpleProductsList(products: any[]): void {
+    this.doc.setFontSize(10);
+    this.doc.setFont('helvetica', 'normal');
+    
+    products.slice(0, 10).forEach((product, index) => {
+      const text = `${index + 1}. ${product.sku || 'N/A'} - ${product.product_name || 'N/A'} (${product.brand_name || 'N/A'}) - $${(product.unit_cost || 0).toFixed(2)}`;
+      this.doc.text(text, this.margin, this.currentY);
+      this.currentY += 6;
     });
+    
+    this.currentY += 15;
+  }
 
-    this.currentY = (this.doc as any).lastAutoTable.finalY + 20;
+  /**
+   * This part of the code adds a simple shipments list as fallback when autoTable fails
+   */
+  private addSimpleShipmentsList(shipments: any[]): void {
+    this.doc.setFontSize(10);
+    this.doc.setFont('helvetica', 'normal');
+    
+    shipments.slice(0, 10).forEach((shipment, index) => {
+      const text = `${index + 1}. ${shipment.shipment_id || 'N/A'} - ${shipment.status || 'N/A'} - ${shipment.supplier || 'N/A'} (Qty: ${shipment.expected_quantity || 0})`;
+      this.doc.text(text, this.margin, this.currentY);
+      this.currentY += 6;
+    });
+    
+    this.currentY += 15;
   }
 }
 
