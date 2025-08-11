@@ -20,6 +20,9 @@ import type {
   ReportTemplatesResponse,
   ReportData,
   ReportFilters,
+  ChatRequest,
+  ChatResponse,
+  QuickAction,
 } from "@/types/api";
 
 interface APIResponse<T> {
@@ -430,6 +433,74 @@ class InternalApiService {
       console.error("❌ Client: Report generation API call failed:", error);
       throw new Error(
         `Unable to generate report: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
+    }
+  }
+
+  /**
+   * This part of the code sends chat messages to AI assistant with operational context
+   */
+  async sendChatMessage(request: ChatRequest): Promise<ChatResponse> {
+    try {
+      console.log("🔒 Client: Sending chat message to secure server...");
+
+      const response = await fetch(`${this.baseUrl}/api/ai-chat`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(request),
+      });
+
+      if (!response.ok) {
+        throw new Error(
+          `Internal API Error: ${response.status} ${response.statusText}`,
+        );
+      }
+
+      const result: APIResponse<ChatResponse> = await response.json();
+
+      if (!result.success || !result.data) {
+        throw new Error(result.message || "Failed to send chat message");
+      }
+
+      console.log("✅ Client: Chat response received securely from server");
+      return result.data;
+    } catch (error) {
+      console.error("❌ Client: Chat API call failed:", error);
+      throw new Error(
+        `Unable to send chat message: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
+    }
+  }
+
+  /**
+   * This part of the code gets available quick actions for AI assistant
+   */
+  async getQuickActions(): Promise<QuickAction[]> {
+    try {
+      console.log("🔒 Client: Fetching quick actions from secure server...");
+
+      const response = await fetch(`${this.baseUrl}/api/ai-chat/quick-actions`);
+
+      if (!response.ok) {
+        throw new Error(
+          `Internal API Error: ${response.status} ${response.statusText}`,
+        );
+      }
+
+      const result: APIResponse<QuickAction[]> = await response.json();
+
+      if (!result.success || !result.data) {
+        throw new Error(result.message || "Failed to fetch quick actions");
+      }
+
+      console.log("✅ Client: Quick actions received securely from server");
+      return result.data;
+    } catch (error) {
+      console.error("❌ Client: Quick actions API call failed:", error);
+      throw new Error(
+        `Unable to fetch quick actions: ${error instanceof Error ? error.message : "Unknown error"}`,
       );
     }
   }

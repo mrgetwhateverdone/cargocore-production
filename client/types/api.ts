@@ -606,6 +606,35 @@ export interface ReportTemplatesResponse {
   availableWarehouses: ReportWarehouseOption[];
 }
 
+// AI Chat Types
+export interface ChatMessage {
+  role: "user" | "assistant";
+  content: string;
+  timestamp?: string;
+}
+
+export interface ChatRequest {
+  message: string;
+  conversation?: ChatMessage[];
+  includeContext?: boolean;
+}
+
+export interface ChatResponse {
+  response: string;
+  conversationId: string;
+  timestamp: string;
+  context?: {
+    dataTimestamp: string;
+    sourcesUsed: string[];
+  };
+}
+
+export interface QuickAction {
+  id: string;
+  label: string;
+  prompt: string;
+}
+
 // API Error Types
 export interface APIError {
   message: string;

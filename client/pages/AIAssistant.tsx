@@ -1,10 +1,315 @@
-import { PlaceholderPage } from './PlaceholderPage'
+import { useState, useRef, useEffect } from "react";
+import { Layout } from "@/components/layout/Layout";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { ErrorDisplay } from "@/components/ui/error-display";
+import { internalApi } from "@/services/internalApi";
+import type { ChatMessage, ChatResponse } from "@/types/api";
+import { Send, MessageCircle, Zap, BarChart3, Package, AlertTriangle } from "lucide-react";
 
+/**
+ * This part of the code defines the AI Assistant page with real-time chat functionality
+ * Integrates with CargoCore operational data for contextual intelligence
+ */
 export default function AIAssistant() {
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [inputMessage, setInputMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  /**
+   * This part of the code defines quick action buttons for immediate operational insights
+   * Each action triggers specific prompts that leverage real app data
+   */
+  const quickActions = [
+    {
+      id: "top-brands",
+      label: "Name my top brands",
+      prompt: "Based on my current operational data, name my top 5 brands by total activity (SKUs + shipments). Include specific metrics for each brand and their operational performance.",
+      icon: <BarChart3 className="h-4 w-4" />,
+      color: "bg-blue-500"
+    },
+    {
+      id: "warehouse-status", 
+      label: "List my warehouses",
+      prompt: "List all my active warehouses with their current SLA performance, shipment volume, and operational status. Rank them by performance and identify any that need attention.",
+      icon: <Package className="h-4 w-4" />,
+      color: "bg-green-500"
+    },
+    {
+      id: "daily-priorities",
+      label: "What should I act on today?",
+      prompt: "Analyze my current operations and identify the top 3-5 most critical issues I should address today. Focus on at-risk shipments, processing problems, and financial impact.",
+      icon: <AlertTriangle className="h-4 w-4" />,
+      color: "bg-amber-500"
+    },
+    {
+      id: "at-risk-orders",
+      label: "Show at-risk orders",
+      prompt: "Identify all shipments and orders that are currently at-risk. Include quantity discrepancies, cancelled orders, and delayed shipments with their potential financial impact.",
+      icon: <Zap className="h-4 w-4" />,
+      color: "bg-red-500"
+    }
+  ];
+
+  /**
+   * This part of the code handles sending messages to the AI assistant
+   * Includes real operational context for intelligent responses
+   */
+  const sendMessage = async (messageText: string) => {
+    if (!messageText.trim() || isLoading) return;
+
+    const newUserMessage: ChatMessage = {
+      role: "user",
+      content: messageText.trim(),
+      timestamp: new Date().toISOString()
+    };
+
+    // This part of the code adds user message and shows loading state
+    setMessages(prev => [...prev, newUserMessage]);
+    setInputMessage("");
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      // This part of the code sends chat request with conversation history
+      const response: ChatResponse = await internalApi.sendChatMessage({
+        message: messageText.trim(),
+        conversation: messages,
+        includeContext: true
+      });
+
+      // This part of the code adds AI response to conversation
+      const aiMessage: ChatMessage = {
+        role: "assistant",
+        content: response.response,
+        timestamp: response.timestamp
+      };
+
+      setMessages(prev => [...prev, aiMessage]);
+    } catch (err) {
+      console.error("Chat error:", err);
+      setError(err instanceof Error ? err.message : "Failed to send message");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  /**
+   * This part of the code handles quick action button clicks
+   * Sends predefined prompts with real operational context
+   */
+  const handleQuickAction = (action: typeof quickActions[0]) => {
+    sendMessage(action.prompt);
+  };
+
+  /**
+   * This part of the code handles keyboard shortcuts for better UX
+   * Enter to send, Shift+Enter for new line
+   */
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage(inputMessage);
+    }
+  };
+
+  /**
+   * This part of the code auto-scrolls to newest messages
+   * Ensures user always sees the latest conversation
+   */
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  /**
+   * This part of the code auto-focuses input when not loading
+   * Improves user experience for continuous conversation
+   */
+  useEffect(() => {
+    if (!isLoading && textareaRef.current) {
+      textareaRef.current.focus();
+    }
+  }, [isLoading]);
+
   return (
-    <PlaceholderPage
-      title="AI Assistant"
-      description="Conversational AI interface for natural language queries, contextual business intelligence, proactive recommendations, and interactive data exploration."
-    />
-  )
+    <Layout>
+      <div className="max-w-7xl mx-auto h-[calc(100vh-8rem)] flex flex-col space-y-4">
+        {/* This part of the code creates the main chat interface header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+              <MessageCircle className="h-6 w-6 text-blue-600" />
+              AI Assistant
+            </h1>
+            <p className="text-gray-600 text-sm">
+              Your intelligent 3PL operations assistant with real-time data access
+            </p>
+          </div>
+          
+          {/* This part of the code shows connection status */}
+          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+            <div className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></div>
+            Connected to CargoCore
+          </Badge>
+        </div>
+
+        {/* This part of the code creates the main chat container */}
+        <div className="flex-1 grid grid-cols-1 lg:grid-cols-4 gap-4 min-h-0">
+          
+          {/* This part of the code creates the chat messages area */}
+          <div className="lg:col-span-3 flex flex-col">
+            <Card className="flex-1 flex flex-col min-h-0">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg">Conversation</CardTitle>
+              </CardHeader>
+              <CardContent className="flex-1 flex flex-col min-h-0">
+                
+                {/* This part of the code displays the message history */}
+                <div className="flex-1 overflow-y-auto space-y-4 mb-4 min-h-0">
+                  {messages.length === 0 ? (
+                    <div className="flex items-center justify-center h-full text-center">
+                      <div className="space-y-3">
+                        <MessageCircle className="h-12 w-12 text-gray-400 mx-auto" />
+                        <div>
+                          <p className="text-gray-500 font-medium">Welcome to CargoCore AI</p>
+                          <p className="text-sm text-gray-400">
+                            Ask me anything about your operations, or use the quick actions below
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    messages.map((message, index) => (
+                      <div
+                        key={index}
+                        className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                      >
+                        <div
+                          className={`max-w-[80%] p-3 rounded-lg ${
+                            message.role === 'user'
+                              ? 'bg-blue-600 text-white'
+                              : 'bg-gray-100 text-gray-900'
+                          }`}
+                        >
+                          <p className="whitespace-pre-wrap text-sm leading-relaxed">
+                            {message.content}
+                          </p>
+                          {message.timestamp && (
+                            <p className={`text-xs mt-2 ${
+                              message.role === 'user' ? 'text-blue-100' : 'text-gray-500'
+                            }`}>
+                              {new Date(message.timestamp).toLocaleTimeString()}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    ))
+                  )}
+                  
+                  {/* This part of the code shows loading indicator when AI is responding */}
+                  {isLoading && (
+                    <div className="flex justify-start">
+                      <div className="bg-gray-100 p-3 rounded-lg flex items-center space-x-2">
+                        <LoadingSpinner size="sm" />
+                        <span className="text-sm text-gray-600">CargoCore AI is thinking...</span>
+                      </div>
+                    </div>
+                  )}
+                  
+                  <div ref={messagesEndRef} />
+                </div>
+
+                {/* This part of the code shows error messages if they occur */}
+                {error && (
+                  <div className="mb-4">
+                    <ErrorDisplay 
+                      message={error} 
+                      onRetry={() => setError(null)}
+                    />
+                  </div>
+                )}
+
+                {/* This part of the code creates the message input area */}
+                <div className="border-t pt-4">
+                  <div className="flex space-x-2">
+                    <Textarea
+                      ref={textareaRef}
+                      placeholder="Ask me about your operations, inventory, costs, or any business insights..."
+                      value={inputMessage}
+                      onChange={(e) => setInputMessage(e.target.value)}
+                      onKeyDown={handleKeyDown}
+                      disabled={isLoading}
+                      className="flex-1 min-h-[60px] max-h-32 resize-none"
+                      rows={2}
+                    />
+                    <Button
+                      onClick={() => sendMessage(inputMessage)}
+                      disabled={!inputMessage.trim() || isLoading}
+                      className="px-4 py-2 h-auto"
+                    >
+                      <Send className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-2">
+                    Press Enter to send, Shift + Enter for new line
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* This part of the code creates the quick actions sidebar */}
+          <div className="lg:col-span-1">
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg">Quick Actions</CardTitle>
+                <p className="text-sm text-gray-600">
+                  Get instant insights about your operations
+                </p>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {quickActions.map((action) => (
+                  <Button
+                    key={action.id}
+                    variant="outline"
+                    className="w-full justify-start text-left h-auto p-3 hover:bg-gray-50"
+                    onClick={() => handleQuickAction(action)}
+                    disabled={isLoading}
+                  >
+                    <div className={`p-1.5 rounded ${action.color} text-white mr-3 flex-shrink-0`}>
+                      {action.icon}
+                    </div>
+                    <span className="text-sm font-medium leading-tight">
+                      {action.label}
+                    </span>
+                  </Button>
+                ))}
+                
+                {/* This part of the code shows operational context indicator */}
+                <div className="mt-6 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                  <div className="flex items-start space-x-2">
+                    <div className="p-1 bg-blue-500 rounded text-white">
+                      <BarChart3 className="h-3 w-3" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-xs font-medium text-blue-900">Real-Time Context</p>
+                      <p className="text-xs text-blue-700 mt-1">
+                        AI has access to your live products, shipments, warehouse performance, and brand analytics
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+    </Layout>
+  );
 }
