@@ -10,6 +10,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ThemeProvider } from "next-themes";
+import { SettingsProvider } from "@/contexts/SettingsContext";
 
 console.log("🚀 CargoCore: App.tsx loading...");
 
@@ -47,7 +48,8 @@ const App = () => {
     <ErrorBoundary>
       <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
         <QueryClientProvider client={queryClient}>
-          <TooltipProvider>
+          <SettingsProvider>
+            <TooltipProvider>
             <Toaster />
             <Sonner />
             <WorkflowToastListener />
@@ -75,7 +77,8 @@ const App = () => {
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>
-          </TooltipProvider>
+            </TooltipProvider>
+          </SettingsProvider>
         </QueryClientProvider>
       </ThemeProvider>
     </ErrorBoundary>
