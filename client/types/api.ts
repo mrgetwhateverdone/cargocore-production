@@ -635,6 +635,47 @@ export interface QuickAction {
   prompt: string;
 }
 
+// Economic Intelligence Types
+export interface EconomicKPIs {
+  supplierPerformance: number;
+  shippingCostImpact: number;
+  transportationCosts: number;
+  supplyChainHealth: number;
+  logisticsCostEfficiency: number;
+  supplierDelayRate: number;
+}
+
+export interface EconomicInsight {
+  id: string;
+  title: string;
+  description: string;
+  dollarImpact: number;
+  severity: "critical" | "warning" | "info";
+  type: string;
+}
+
+export interface BusinessImpactAnalysis {
+  executiveSummary: string;
+  keyRisks: string[];
+  opportunityAreas: string[];
+}
+
+export interface FinancialImpacts {
+  quantityDiscrepancyImpact: number;
+  cancelledShipmentsImpact: number;
+  brandConcentrationRisk: number;
+  totalFinancialRisk: number;
+  top3BrandPercentage: number;
+}
+
+export interface EconomicIntelligenceData {
+  kpis: EconomicKPIs;
+  insights: EconomicInsight[];
+  businessImpact: BusinessImpactAnalysis;
+  financialImpacts: FinancialImpacts;
+  lastUpdated: string;
+}
+
 // API Error Types
 export interface APIError {
   message: string;
