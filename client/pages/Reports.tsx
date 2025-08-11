@@ -92,22 +92,39 @@ export default function Reports() {
     return `$${value.toLocaleString()}`;
   };
 
-  // This part of the code formats brand display text using rich data
-  const formatBrandLabel = (brand: ReportBrandOption) => brand.brand_name;
-  const formatBrandSubtext = (brand: ReportBrandOption) => 
-    `${formatCurrency(brand.total_value)} • ${brand.sku_count} SKUs • ${brand.portfolio_percentage}%`;
+  // This part of the code formats brand display text using rich data with defensive programming
+  const formatBrandLabel = (brand: ReportBrandOption) => {
+    if (!brand) return "Unknown Brand";
+    return brand.brand_name || "Unknown Brand";
+  };
+  
+  const formatBrandSubtext = (brand: ReportBrandOption) => {
+    if (!brand) return "No data available";
+    const value = brand.total_value || 0;
+    const count = brand.sku_count || 0;
+    const percentage = brand.portfolio_percentage || 0;
+    return `${formatCurrency(value)} • ${count} SKUs • ${percentage}%`;
+  };
 
-  // This part of the code formats warehouse display text using rich data  
-  const formatWarehouseLabel = (warehouse: ReportWarehouseOption) => 
-    warehouse.warehouse_name || warehouse.warehouse_id;
-  const formatWarehouseSubtext = (warehouse: ReportWarehouseOption) => 
-    `${formatCurrency(warehouse.total_cost)} • ${warehouse.total_shipments} shipments • ${warehouse.efficiency_rate}%`;
+  // This part of the code formats warehouse display text using rich data with defensive programming
+  const formatWarehouseLabel = (warehouse: ReportWarehouseOption) => {
+    if (!warehouse) return "Unknown Warehouse";
+    return warehouse.warehouse_name || warehouse.warehouse_id || "Unknown Warehouse";
+  };
+  
+  const formatWarehouseSubtext = (warehouse: ReportWarehouseOption) => {
+    if (!warehouse) return "No data available";
+    const cost = warehouse.total_cost || 0;
+    const shipments = warehouse.total_shipments || 0;
+    const efficiency = warehouse.efficiency_rate || 0;
+    return `${formatCurrency(cost)} • ${shipments} shipments • ${efficiency}%`;
+  };
 
   // This part of the code handles PDF download
   const handleDownloadPDF = () => {
     if (reportData) {
       try {
-        new pdfGenerationService().generateReport(reportData);
+        pdfGenerationService.generateReport(reportData);
       } catch (error) {
         console.error("Error generating PDF:", error);
         alert("Error generating PDF. Please try again.");
