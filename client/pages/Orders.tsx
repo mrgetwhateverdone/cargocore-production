@@ -4,6 +4,7 @@ import { useOrdersData, useOrdersTable } from "@/hooks/useOrdersData";
 import { LoadingState } from "@/components/ui/loading-spinner";
 import { ErrorDisplay } from "@/components/ui/error-display";
 import type { OrderData } from "@/types/api";
+import { useSettingsIntegration } from "@/hooks/useSettingsIntegration";
 
 // Orders Components
 import { OrdersKPISection } from "@/components/orders/OrdersKPISection";
@@ -17,7 +18,8 @@ import { OrderAIExplanationModal } from "@/components/orders/OrderAIExplanationM
 
 export default function Orders() {
   const { data, isLoading, error, refetch } = useOrdersData();
-  const { orders, totalCount, hasMore } = useOrdersTable(15);
+  const { getTablePageSize } = useSettingsIntegration();
+  const { orders, totalCount, hasMore } = useOrdersTable(getTablePageSize());
   const [showViewAllModal, setShowViewAllModal] = useState(false);
   const [showViewAllShipmentsModal, setShowViewAllShipmentsModal] = useState(false);
   const [showAIExplanationModal, setShowAIExplanationModal] = useState(false);

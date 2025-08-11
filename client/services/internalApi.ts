@@ -440,15 +440,30 @@ class InternalApiService {
   /**
    * This part of the code sends chat messages to AI assistant with operational context
    */
-  async sendChatMessage(request: ChatRequest): Promise<ChatResponse> {
+  async sendChatMessage(request: ChatRequest, aiSettings?: {
+    model: string;
+    maxTokens: number;
+    contextLevel: string;
+  }): Promise<ChatResponse> {
     try {
       console.log("🔒 Client: Sending chat message to secure server...");
 
+      // This part of the code prepares headers with optional AI settings
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+
+      // This part of the code adds AI settings to headers if provided
+      if (aiSettings) {
+        headers["x-ai-model"] = aiSettings.model;
+        headers["x-max-tokens"] = aiSettings.maxTokens.toString();
+        headers["x-context-level"] = aiSettings.contextLevel;
+        console.log(`🎯 Client: Sending AI settings - Model: ${aiSettings.model}, Tokens: ${aiSettings.maxTokens}`);
+      }
+
       const response = await fetch(`${this.baseUrl}/api/ai-chat`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers,
         body: JSON.stringify(request),
       });
 

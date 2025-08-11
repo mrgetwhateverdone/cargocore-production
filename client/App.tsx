@@ -27,6 +27,7 @@ import Reports from "./pages/Reports";
 import AIAssistant from "./pages/AIAssistant";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
+import { SmartRouter } from "./components/SmartRouter";
 
 // Configure TanStack Query for real-time data
 const queryClient = new QueryClient({
@@ -54,6 +55,7 @@ const App = () => {
             <Sonner />
             <WorkflowToastListener />
             <BrowserRouter>
+              <SmartRouter />
               <Routes>
                 {/* Main Dashboard */}
                 <Route path="/" element={<Index />} />

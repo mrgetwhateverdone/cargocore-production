@@ -1,4 +1,6 @@
 import type { DashboardKPIs } from "@/types/api";
+import { useSettingsIntegration } from "@/hooks/useSettingsIntegration";
+import { FormattedNumber } from "@/components/ui/formatted-value";
 
 interface KPISectionProps {
   kpis: DashboardKPIs;
@@ -6,6 +8,7 @@ interface KPISectionProps {
 }
 
 export function KPISection({ kpis, isLoading }: KPISectionProps) {
+  const { formatNumber } = useSettingsIntegration();
   const kpiCards = [
     {
       title: "Total Orders Today",
@@ -43,7 +46,7 @@ export function KPISection({ kpis, isLoading }: KPISectionProps) {
             {isLoading ? (
               <div className="h-8 w-16 bg-gray-200 rounded animate-pulse" />
             ) : (
-              (kpi.value ?? "N/A")
+              formatNumber(kpi.value)
             )}
           </div>
         </div>

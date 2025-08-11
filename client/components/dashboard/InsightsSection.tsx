@@ -4,6 +4,8 @@ import type { AIInsight } from "@/types/api";
 import { InsightOverlay } from "../InsightOverlay";
 import { useWorkflowCreation } from "../../hooks/useWorkflows";
 import { BrainIcon } from "../ui/BrainIcon";
+import { useSettingsIntegration } from "@/hooks/useSettingsIntegration";
+import { FormattedCurrency } from "../ui/formatted-value";
 
 interface InsightsSectionProps {
   insights: AIInsight[];
@@ -22,6 +24,31 @@ export function InsightsSection({
 }: InsightsSectionProps) {
   const [selectedInsight, setSelectedInsight] = useState<AIInsight | null>(null);
   const { createWorkflow, creating } = useWorkflowCreation();
+  const { isPageAIEnabled, formatCurrency, getAgentSettings } = useSettingsIntegration();
+
+  // This part of the code checks if AI insights should be shown on dashboard
+  if (!isPageAIEnabled('dashboard')) {
+    return null;
+  }
+
+  // This part of the code filters insights based on agent settings
+  const agentSettings = getAgentSettings();
+  const filteredInsights = insights.filter(insight => {
+    // Only show insights if the corresponding agent is enabled
+    if (insight.source === 'dashboard_agent' && !agentSettings.dashboard.enabled) {
+      return false;
+    }
+    if (insight.source === 'orders_agent' && !agentSettings.orders.enabled) {
+      return false;
+    }
+    if (insight.source === 'analytics_agent' && !agentSettings.analytics.enabled) {
+      return false;
+    }
+    if (insight.source === 'inventory_agent' && !agentSettings.inventory.enabled) {
+      return false;
+    }
+    return true;
+  });
 
   // This part of the code handles quick workflow creation from the + button without opening overlay (your exact pattern)
   const handleQuickAdd = async (e: React.MouseEvent, insight: AIInsight) => {
@@ -127,12 +154,12 @@ export function InsightsSection({
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-medium text-gray-900">{title}</h2>
         <p className="text-sm text-gray-500">
-          {subtitle || `${insights.length} insights from Dashboard Agent`}
+          {subtitle || `${filteredInsights.length} insights from Dashboard Agent`}
         </p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {insights?.map((insight) => (
+        {filteredInsights?.map((insight) => (
           <div
             key={insight.id}
             onClick={() => handleCardClick(insight)}
@@ -162,8 +189,8 @@ export function InsightsSection({
 
             {insight.dollarImpact > 0 && (
               <div className="flex items-center text-sm font-medium mb-3">
-                <DollarSign className="h-4 w-4 mr-1" />$
-                {(insight.dollarImpact || 0).toLocaleString()} impact
+                <DollarSign className="h-4 w-4 mr-1" />
+                <FormattedCurrency value={insight.dollarImpact} /> impact
               </div>
             )}
 
@@ -175,7 +202,7 @@ export function InsightsSection({
         ))}
       </div>
 
-      {insights.length === 0 && (
+      {filteredInsights.length === 0 && (
         <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 text-center">
           <Info className="h-8 w-8 text-gray-400 mx-auto mb-2" />
           <p className="text-sm text-gray-500">

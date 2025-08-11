@@ -44,13 +44,13 @@ export const useInventoryData = () => {
  * Inventory table hook for pagination and view management
  * 🔒 SECURE: Client-side data management for table display
  */
-export const useInventoryTable = (inventory: any[] = []) => {
+export const useInventoryTable = (inventory: any[] = [], pageSize: number = 15) => {
   return useQuery({
-    queryKey: ["inventory-table", inventory.length],
+    queryKey: ["inventory-table", inventory.length, pageSize],
     queryFn: () => {
       // This part of the code processes inventory data for table display
-      const displayInventory = inventory.slice(0, 15);
-      const hasMore = inventory.length > 15;
+      const displayInventory = inventory.slice(0, pageSize);
+      const hasMore = inventory.length > pageSize;
 
       console.log(
         `🔒 Client: Inventory table prepared - showing ${displayInventory.length} of ${inventory.length} SKUs`,

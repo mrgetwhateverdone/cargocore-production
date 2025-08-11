@@ -211,10 +211,17 @@ const QUICK_ACTIONS = {
  * This part of the code handles AI conversation with real operational context
  * Integrates with OpenAI API while maintaining data security
  */
-async function generateAIResponse(
+interface AISettings {
+  model: string;
+  maxTokens: number;
+  contextLevel: string;
+}
+
+async function generateAIResponseWithSettings(
   userMessage: string, 
   operationalContext: string,
-  conversation: ChatMessage[] = []
+  conversation: ChatMessage[] = [],
+  settings: AISettings
 ): Promise<string> {
   const apiKey = process.env.OPENAI_API_KEY;
   
@@ -263,9 +270,9 @@ You have access to live data about products, shipments, warehouses, brands, and 
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        model: "gpt-4",
+        model: settings.model,
         messages,
-        max_tokens: 500,
+        max_tokens: settings.maxTokens,
         temperature: 0.3,
         presence_penalty: 0.1,
         frequency_penalty: 0.1
@@ -302,6 +309,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     console.log("🤖 AI Chat API: Processing chat request...");
     
+    // This part of the code reads AI settings from request headers
+    const aiModel = req.headers['x-ai-model'] as string || "gpt-4";
+    const maxTokens = parseInt(req.headers['x-max-tokens'] as string) || 500;
+    const contextLevel = req.headers['x-context-level'] as string || "full";
+    
+    console.log(`🎯 AI Settings: Model=${aiModel}, Tokens=${maxTokens}, Context=${contextLevel}`);
+    
     const { message, conversation = [], includeContext = true }: ChatRequest = req.body;
     
     if (!message || typeof message !== "string") {
@@ -334,7 +348,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // This part of the code generates AI response with operational intelligence
     console.log("🧠 AI Chat API: Generating AI response...");
     
-    const aiResponse = await generateAIResponse(message, operationalContext, conversation);
+    // This part of the code passes user settings to the AI generation
+    const aiResponse = await generateAIResponseWithSettings(
+      message, 
+      operationalContext, 
+      conversation,
+      { model: aiModel, maxTokens, contextLevel }
+    );
     
     const response: ChatResponse = {
       response: aiResponse,

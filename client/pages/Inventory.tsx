@@ -3,6 +3,7 @@ import { Layout } from "@/components/layout/Layout";
 import { useInventoryData, useInventoryTable } from "@/hooks/useInventoryData";
 import { LoadingState } from "@/components/ui/loading-spinner";
 import { ErrorDisplay } from "@/components/ui/error-display";
+import { useSettingsIntegration } from "@/hooks/useSettingsIntegration";
 
 // Inventory Components
 import { InventoryKPISection } from "@/components/inventory/InventoryKPISection";
@@ -15,12 +16,13 @@ import { ViewAllBrandsModal } from "@/components/inventory/ViewAllBrandsModal";
 
 export default function Inventory() {
   const { data, isLoading, error, refetch } = useInventoryData();
+  const { isPageAIEnabled, getTablePageSize } = useSettingsIntegration();
   const [showViewAllModal, setShowViewAllModal] = useState(false);
   const [showViewAllBrandsModal, setShowViewAllBrandsModal] = useState(false);
 
   // This part of the code processes inventory data for table display
   const inventory = data?.inventory || [];
-  const tableData = useInventoryTable(inventory);
+  const tableData = useInventoryTable(inventory, getTablePageSize());
   const displayInventory = tableData.data?.displayInventory || [];
   const hasMore = tableData.data?.hasMore || false;
   const totalCount = tableData.data?.totalCount || 0;
@@ -85,13 +87,15 @@ export default function Inventory() {
         <InventoryKPISection kpis={data.kpis} isLoading={isLoading} />
 
         {/* This part of the code displays AI insights for inventory management */}
-        <InsightsSection
-          insights={data.insights}
-          isLoading={isLoading}
-          title="Inventory Agent Insights"
-          subtitle={`${data.insights.length} insights from Inventory Agent`}
-          loadingMessage="Inventory Agent is analyzing stock levels and identifying critical issues..."
-        />
+        {isPageAIEnabled('inventory') && (
+          <InsightsSection
+            insights={data.insights}
+            isLoading={isLoading}
+            title="Inventory Agent Insights"
+            subtitle={`${data.insights.length} insights from Inventory Agent`}
+            loadingMessage="Inventory Agent is analyzing stock levels and identifying critical issues..."
+          />
+        )}
 
         {/* This part of the code displays the main inventory table */}
         <InventoryTableSection

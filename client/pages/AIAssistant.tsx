@@ -9,6 +9,7 @@ import { ErrorDisplay } from "@/components/ui/error-display";
 import { internalApi } from "@/services/internalApi";
 import type { ChatMessage, ChatResponse } from "@/types/api";
 import { Send, MessageCircle, Zap, BarChart3, Package, AlertTriangle } from "lucide-react";
+import { useSettingsIntegration } from "@/hooks/useSettingsIntegration";
 
 /**
  * This part of the code defines the AI Assistant page with real-time chat functionality
@@ -21,6 +22,7 @@ export default function AIAssistant() {
   const [error, setError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const { getAISettings } = useSettingsIntegration();
 
   /**
    * This part of the code defines quick action buttons for immediate operational insights
@@ -77,12 +79,13 @@ export default function AIAssistant() {
     setError(null);
 
     try {
-      // This part of the code sends chat request with conversation history
+      // This part of the code gets user's AI settings and sends chat request
+      const aiSettings = getAISettings();
       const response: ChatResponse = await internalApi.sendChatMessage({
         message: messageText.trim(),
         conversation: messages,
         includeContext: true
-      });
+      }, aiSettings);
 
       // This part of the code adds AI response to conversation
       const aiMessage: ChatMessage = {

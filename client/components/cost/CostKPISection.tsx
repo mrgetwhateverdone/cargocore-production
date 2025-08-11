@@ -1,4 +1,6 @@
 import type { CostKPIs } from "@/types/api";
+import { useSettingsIntegration } from "@/hooks/useSettingsIntegration";
+import { FormattedCurrency, FormattedPercentage } from "@/components/ui/formatted-value";
 
 interface CostKPISectionProps {
   kpis: CostKPIs;
@@ -6,16 +8,15 @@ interface CostKPISectionProps {
 }
 
 export function CostKPISection({ kpis, isLoading }: CostKPISectionProps) {
-  // This part of the code formats numbers for display
-  const formatNumber = (num: number) => {
+  const { formatCurrency, formatPercentage: formatPercent } = useSettingsIntegration();
+
+  // This part of the code formats large numbers with M/K suffixes for display
+  const formatLargeNumber = (num: number) => {
     const safeNum = num || 0;
     if (safeNum >= 1000000) return `${(safeNum / 1000000).toFixed(1)}M`;
     if (safeNum >= 1000) return `${(safeNum / 1000).toFixed(1)}K`;
-    return (safeNum || 0).toLocaleString();
+    return formatCurrency(safeNum);
   };
-
-  // This part of the code formats percentage values
-  const formatPercentage = (num: number) => `${(num || 0).toFixed(1)}%`;
 
   if (isLoading) {
     return (
@@ -46,7 +47,7 @@ export function CostKPISection({ kpis, isLoading }: CostKPISectionProps) {
           <div className="ml-4">
             <p className="text-sm font-medium text-gray-500">Total Monthly Costs</p>
             <p className="text-2xl font-semibold text-gray-900">
-              ${kpis.totalMonthlyCosts ? formatNumber(kpis.totalMonthlyCosts) : "—"}
+              <FormattedCurrency value={kpis.totalMonthlyCosts} />
             </p>
             <p className="text-xs text-gray-500">Current month operations</p>
           </div>
@@ -64,7 +65,7 @@ export function CostKPISection({ kpis, isLoading }: CostKPISectionProps) {
           <div className="ml-4">
             <p className="text-sm font-medium text-gray-500">Cost Efficiency Rate</p>
             <p className="text-2xl font-semibold text-gray-900">
-              {kpis.costEfficiencyRate ? formatPercentage(kpis.costEfficiencyRate) : "—"}
+              <FormattedPercentage value={kpis.costEfficiencyRate} />
             </p>
             <p className="text-xs text-gray-500">Expected vs received ratio</p>
           </div>
