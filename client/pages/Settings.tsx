@@ -71,7 +71,7 @@ export default function Settings() {
 
   return (
     <Layout>
-      <div className="max-w-7xl mx-auto space-y-6">
+      <div className="max-w-7xl mx-auto space-y-6 bg-gray-50 min-h-screen p-6">
         {/* This part of the code creates the main settings header */}
         <div className="flex items-center justify-between">
           <div>
@@ -95,10 +95,10 @@ export default function Settings() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           
           {/* PHASE 1: Agent Configuration */}
-          <Card>
+          <Card className="bg-white shadow-sm border border-gray-200">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Brain className="h-5 w-5 text-blue-600" />
@@ -263,7 +263,7 @@ export default function Settings() {
           </Card>
 
           {/* PHASE 1: AI Configuration */}
-          <Card>
+          <Card className="bg-white shadow-sm border border-gray-200">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Cpu className="h-5 w-5 text-purple-600" />
@@ -414,7 +414,7 @@ export default function Settings() {
           </Card>
 
           {/* PHASE 2: Dashboard & Display Settings */}
-          <Card>
+          <Card className="bg-white shadow-sm border border-gray-200">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Monitor className="h-5 w-5 text-green-600" />
@@ -538,7 +538,7 @@ export default function Settings() {
           </Card>
 
           {/* PHASE 2: Operational Preferences */}
-          <Card>
+          <Card className="bg-white shadow-sm border border-gray-200">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Building2 className="h-5 w-5 text-orange-600" />
@@ -638,7 +638,7 @@ export default function Settings() {
           </Card>
 
           {/* PHASE 1: Page-Specific Controls */}
-          <Card>
+          <Card className="bg-white shadow-sm border border-gray-200">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <FileText className="h-5 w-5 text-indigo-600" />
@@ -664,7 +664,7 @@ export default function Settings() {
           </Card>
 
           {/* PHASE 1: Cache Management */}
-          <Card>
+          <Card className="bg-white shadow-sm border border-gray-200">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Database className="h-5 w-5 text-red-600" />
