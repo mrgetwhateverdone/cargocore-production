@@ -307,14 +307,95 @@ function parseEconomicDataFromAI(aiResponse: string): GlobalEconomicMetrics {
 }
 
 /**
- * This part of the code calculates economic KPIs based on web search data
+ * This part of the code calculates real economic KPIs from actual shipment data
  */
-function calculateEconomicKPIs(globalMetrics: GlobalEconomicMetrics): EconomicKPIs {
+function calculateRealEconomicKPIs(shipments: ShipmentData[]): EconomicKPIs {
+  console.log("📊 Vercel API: Calculating real economic KPIs from shipment data...");
+  
+  if (!shipments || shipments.length === 0) {
+    console.log("⚠️ Vercel API: No shipment data available for economic calculations");
+    return {
+      supplierPerformance: null,
+      shippingCostImpact: null,
+      transportationCosts: null,
+      supplyChainHealth: null,
+    };
+  }
+
+  // This part of the code calculates supplier performance based on delivery metrics
+  const totalShipments = shipments.length;
+  const delayedShipments = shipments.filter(s => {
+    if (!s.expected_arrival_date || !s.arrival_date) return false;
+    return new Date(s.arrival_date) > new Date(s.expected_arrival_date);
+  }).length;
+  
+  const onTimeRate = totalShipments > 0 ? ((totalShipments - delayedShipments) / totalShipments) * 100 : null;
+  const supplierPerformance = onTimeRate !== null ? Math.round(onTimeRate) : null;
+
+  // This part of the code calculates shipping cost trends from recent vs older shipments
+  const now = new Date();
+  const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+  const sixtyDaysAgo = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
+  
+  const recentShipments = shipments.filter(s => new Date(s.created_date) >= thirtyDaysAgo);
+  const olderShipments = shipments.filter(s => {
+    const date = new Date(s.created_date);
+    return date >= sixtyDaysAgo && date < thirtyDaysAgo;
+  });
+
+  let shippingCostImpact = null;
+  if (recentShipments.length > 0 && olderShipments.length > 0) {
+    const recentAvgCost = recentShipments.reduce((sum, s) => sum + (s.unit_cost || 0), 0) / recentShipments.length;
+    const olderAvgCost = olderShipments.reduce((sum, s) => sum + (s.unit_cost || 0), 0) / olderShipments.length;
+    
+    if (olderAvgCost > 0) {
+      shippingCostImpact = Math.round(((recentAvgCost - olderAvgCost) / olderAvgCost) * 100 * 10) / 10;
+    }
+  }
+
+  // This part of the code calculates transportation costs based on cost variance
+  const costsWithData = shipments.filter(s => s.unit_cost && s.unit_cost > 0);
+  let transportationCosts = null;
+  
+  if (costsWithData.length > 10) {
+    const costs = costsWithData.map(s => s.unit_cost || 0);
+    const avgCost = costs.reduce((sum, cost) => sum + cost, 0) / costs.length;
+    const variance = costs.reduce((sum, cost) => sum + Math.pow(cost - avgCost, 2), 0) / costs.length;
+    const stdDev = Math.sqrt(variance);
+    const coefficientOfVariation = avgCost > 0 ? (stdDev / avgCost) * 100 : 0;
+    transportationCosts = Math.round(coefficientOfVariation * 10) / 10;
+  }
+
+  // This part of the code calculates supply chain health based on fulfillment success
+  const fulfilledShipments = shipments.filter(s => s.received_quantity >= s.expected_quantity);
+  const fulfillmentRate = totalShipments > 0 ? (fulfilledShipments.length / totalShipments) * 100 : null;
+  const supplyChainHealth = fulfillmentRate !== null ? Math.round(fulfillmentRate) : null;
+
+  console.log("✅ Vercel API: Real economic KPIs calculated:", {
+    supplierPerformance: `${supplierPerformance}% (${totalShipments - delayedShipments}/${totalShipments} on-time)`,
+    shippingCostImpact: `${shippingCostImpact}% (recent vs older costs)`,
+    transportationCosts: `${transportationCosts}% (cost variability)`,
+    supplyChainHealth: `${supplyChainHealth}% (fulfillment rate)`
+  });
+
   return {
-    supplierPerformance: globalMetrics.portCongestionIndex,
-    shippingCostImpact: globalMetrics.freightCostTrend,
-    transportationCosts: globalMetrics.fuelPriceIndex,
-    supplyChainHealth: globalMetrics.globalTradeIndex,
+    supplierPerformance,
+    shippingCostImpact,
+    transportationCosts,
+    supplyChainHealth,
+  };
+}
+
+/**
+ * This part of the code combines real KPIs with web search data when available
+ */
+function combineEconomicKPIs(realKPIs: EconomicKPIs, webKPIs: GlobalEconomicMetrics): EconomicKPIs {
+  // This part of the code prioritizes real calculated data over web search data
+  return {
+    supplierPerformance: realKPIs.supplierPerformance ?? webKPIs.portCongestionIndex,
+    shippingCostImpact: realKPIs.shippingCostImpact ?? webKPIs.freightCostTrend,
+    transportationCosts: realKPIs.transportationCosts ?? webKPIs.fuelPriceIndex,
+    supplyChainHealth: realKPIs.supplyChainHealth ?? webKPIs.globalTradeIndex,
   };
 }
 
@@ -345,35 +426,38 @@ async function generateBusinessImpactAnalysis(
     }).length;
     const delayRate = (delayedShipments / Math.max(totalShipments, 1)) * 100;
 
-    const businessAnalysisPrompt = `
-    As an Economic Intelligence Agent, analyze current economic conditions and their business impact:
+    // This part of the code calculates real KPIs for business impact analysis
+    const realKPIs = calculateRealEconomicKPIs(shipments);
     
-    Economic Data:
-    - Port Congestion Index: ${globalMetrics.portCongestionIndex}/100
-    - Freight Cost Trend: ${globalMetrics.freightCostTrend}%
-    - Fuel Price Impact: ${globalMetrics.fuelPriceIndex}%
-    - Global Trade Health: ${globalMetrics.globalTradeIndex}/100
+    const businessAnalysisPrompt = `
+    As an Economic Intelligence Agent, analyze business performance based on REAL operational data:
+    
+    Calculated Performance Metrics (from actual data):
+    - Supplier Performance: ${realKPIs.supplierPerformance || 'N/A'}% on-time delivery
+    - Shipping Cost Trend: ${realKPIs.shippingCostImpact || 'N/A'}% recent cost change
+    - Transportation Variability: ${realKPIs.transportationCosts || 'N/A'}% cost variance
+    - Supply Chain Health: ${realKPIs.supplyChainHealth || 'N/A'}% fulfillment rate
     
     Operational Context:
-    - Total Shipments: ${totalShipments}
+    - Total Shipments Analyzed: ${totalShipments}
     - Average Unit Cost: $${avgCost.toFixed(2)}
-    - Delayed Shipments: ${delayedShipments} (${delayRate.toFixed(1)}%)
+    - Delayed Shipments: ${delayedShipments} (${delayRate.toFixed(1)}% of total)
     
-    Provide:
-    1. Executive Summary (2-3 sentences on overall economic impact)
-    2. 2-3 Business Impact Cards with specific dollar amounts and timeframes
+    Based on these REAL metrics, provide:
+    1. Executive Summary explaining what the operational data reveals about business performance
+    2. 2-3 Business Impact Cards with realistic cost implications based on actual performance
     
     Format as JSON:
     {
-      "executiveSummary": "string",
+      "executiveSummary": "string (focus on what the real data shows about business health)",
       "impactCards": [
         {
-          "title": "string",
+          "title": "string (based on actual performance metrics)",
           "impact": "High|Medium|Low",
           "costImpact": number,
-          "timeframe": "string",
-          "description": "string",
-          "recommendations": ["string", "string"]
+          "timeframe": "string", 
+          "description": "string (explain the business implication of the real data)",
+          "recommendations": ["actionable step based on data", "another specific action"]
         }
       ]
     }
@@ -460,27 +544,32 @@ async function generateEconomicInsights(
     const totalShipments = shipments.length;
     const avgCost = shipments.reduce((sum, s) => sum + (s.unit_cost || 0), 0) / Math.max(totalShipments, 1);
 
+    // This part of the code calculates real KPIs for AI context
+    const realKPIs = calculateRealEconomicKPIs(shipments);
+    
     const insightPrompt = `
-    As an Economic Intelligence Agent, generate 2-3 strategic insights based on:
+    As an Economic Intelligence Agent, generate 2-3 strategic insights based on REAL operational data:
     
-    Economic Conditions:
-    - Port Congestion: ${globalMetrics.portCongestionIndex}/100
-    - Freight Costs: ${globalMetrics.freightCostTrend}% trend
-    - Fuel Prices: ${globalMetrics.fuelPriceIndex}% impact
-    - Trade Health: ${globalMetrics.globalTradeIndex}/100
+    Calculated Performance Metrics (from actual shipment data):
+    - Supplier Performance: ${realKPIs.supplierPerformance || 'N/A'}% (on-time delivery rate)
+    - Shipping Cost Impact: ${realKPIs.shippingCostImpact || 'N/A'}% (recent vs historical costs)
+    - Transportation Costs: ${realKPIs.transportationCosts || 'N/A'}% (cost variability)
+    - Supply Chain Health: ${realKPIs.supplyChainHealth || 'N/A'}% (fulfillment success rate)
     
-    Operational Data:
-    - Shipments: ${totalShipments}
-    - Avg Cost: $${avgCost.toFixed(2)}
+    Operational Context:
+    - Total Shipments: ${totalShipments}
+    - Average Unit Cost: $${avgCost.toFixed(2)}
+    
+    Generate insights that explain what these REAL metrics mean for business operations and provide specific actionable recommendations based on the actual performance data.
     
     Format as JSON array:
     [
       {
         "title": "string",
-        "description": "string", 
+        "description": "string (explain what the metric means and why it matters)", 
         "severity": "high|medium|low",
         "dollarImpact": number,
-        "suggestedActions": ["action1", "action2", "action3"]
+        "suggestedActions": ["specific action based on the data", "another specific action", "third action"]
       }
     ]
     `;
@@ -657,8 +746,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       fetchEconomicDataWithWebSearch()
     ]);
 
-    // This part of the code calculates economic KPIs
-    const kpis = calculateEconomicKPIs(globalMetrics);
+    // This part of the code calculates real economic KPIs from shipment data
+    const realKPIs = calculateRealEconomicKPIs(shipments);
+    const combinedKPIs = combineEconomicKPIs(realKPIs, globalMetrics);
 
     // This part of the code generates AI analysis
     const [businessImpact, insights] = await Promise.all([
@@ -671,7 +761,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // This part of the code assembles the complete economic data response
     const economicData: EconomicData = {
-      kpis,
+      kpis: combinedKPIs,
       insights,
       globalMetrics,
       businessImpact,
