@@ -5,13 +5,22 @@ import { LoadingState } from "@/components/ui/loading-spinner";
 import { ErrorDisplay } from "@/components/ui/error-display";
 import { InsightsSection } from "@/components/dashboard/InsightsSection";
 import { Button } from "@/components/ui/button";
+import { DateRangePicker } from "@/components/ui/date-picker";
+import { MultiSelect } from "@/components/ui/multi-select";
 import { Calendar, Download, FileText, Clock, TrendingUp, Package, Truck, Building, Tag, RotateCcw, Users, BarChart3 } from "lucide-react";
+import { pdfGenerationService } from "@/services/pdfGenerationService";
 import type { ReportFilters, ReportTemplate } from "@/types/api";
 
 export default function Reports() {
   const { data: templatesData, isLoading: templatesLoading, error: templatesError } = useReportTemplates();
   const [selectedFilters, setSelectedFilters] = useState<ReportFilters | null>(null);
   const [showFilters, setShowFilters] = useState(false);
+  
+  // This part of the code manages individual filter states
+  const [startDate, setStartDate] = useState<Date | undefined>();
+  const [endDate, setEndDate] = useState<Date | undefined>();
+  const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
+  const [selectedWarehouses, setSelectedWarehouses] = useState<string[]>([]);
   
   const { 
     data: reportData, 
@@ -54,16 +63,37 @@ export default function Reports() {
   // This part of the code handles report generation
   const handleGenerateReport = () => {
     if (selectedFilters) {
-      generateReport();
+      const updatedFilters: ReportFilters = {
+        ...selectedFilters,
+        startDate: startDate?.toISOString().split('T')[0],
+        endDate: endDate?.toISOString().split('T')[0],
+        brands: selectedBrands.length > 0 ? selectedBrands : undefined,
+        warehouses: selectedWarehouses.length > 0 ? selectedWarehouses : undefined,
+      };
+      
+      setSelectedFilters(updatedFilters);
     }
+  };
+
+  // This part of the code handles quick date range selection
+  const handleQuickDateRange = (days: number) => {
+    const end = new Date();
+    const start = new Date();
+    start.setDate(end.getDate() - days);
+    
+    setStartDate(start);
+    setEndDate(end);
   };
 
   // This part of the code handles PDF download
   const handleDownloadPDF = () => {
     if (reportData) {
-      // TODO: Implement PDF generation
-      console.log("Generating PDF for report:", reportData);
-      alert("PDF generation will be implemented next!");
+      try {
+        pdfGenerationService.generateReport(reportData);
+      } catch (error) {
+        console.error("Error generating PDF:", error);
+        alert("Error generating PDF. Please try again.");
+      }
     }
   };
 
@@ -239,65 +269,67 @@ export default function Reports() {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
               {/* Date Range */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Date Range
                 </label>
                 <div className="space-y-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="w-full justify-start text-xs"
-                    onClick={() => {
-                      const endDate = new Date().toISOString().split('T')[0];
-                      const startDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-                      setSelectedFilters(prev => prev ? {...prev, startDate, endDate} : null);
-                    }}
-                  >
-                    <Calendar className="w-3 h-3 mr-2" />
-                    Last 7 days
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="w-full justify-start text-xs"
-                    onClick={() => {
-                      const endDate = new Date().toISOString().split('T')[0];
-                      const startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-                      setSelectedFilters(prev => prev ? {...prev, startDate, endDate} : null);
-                    }}
-                  >
-                    <Calendar className="w-3 h-3 mr-2" />
-                    Last 30 days
-                  </Button>
+                  <div className="flex gap-1">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="flex-1 text-xs"
+                      onClick={() => handleQuickDateRange(7)}
+                    >
+                      Last 7 days
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="flex-1 text-xs"
+                      onClick={() => handleQuickDateRange(30)}
+                    >
+                      Last 30 days
+                    </Button>
+                  </div>
+                  <DateRangePicker
+                    startDate={startDate}
+                    endDate={endDate}
+                    onStartDateChange={setStartDate}
+                    onEndDateChange={setEndDate}
+                    disabled={reportLoading}
+                  />
                 </div>
-                {selectedFilters.startDate && selectedFilters.endDate && (
-                  <p className="text-xs text-gray-500 mt-2">
-                    {selectedFilters.startDate} to {selectedFilters.endDate}
-                  </p>
-                )}
               </div>
 
               {/* Brand Filter */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Brand
+                  Brands
                 </label>
-                <Button variant="outline" size="sm" className="w-full justify-start text-xs">
-                  All Brands
-                </Button>
+                <MultiSelect
+                  options={templatesData?.availableBrands || []}
+                  selected={selectedBrands}
+                  onSelectionChange={setSelectedBrands}
+                  placeholder="All Brands"
+                  disabled={reportLoading}
+                />
               </div>
 
               {/* Warehouse Filter */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Warehouse
+                  Warehouses
                 </label>
-                <Button variant="outline" size="sm" className="w-full justify-start text-xs">
-                  All Warehouses
-                </Button>
+                <MultiSelect
+                  options={templatesData?.availableWarehouses || []}
+                  selected={selectedWarehouses}
+                  onSelectionChange={setSelectedWarehouses}
+                  placeholder="All Warehouses"
+                  disabled={reportLoading}
+                />
               </div>
 
               {/* Generate Button */}

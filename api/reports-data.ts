@@ -90,6 +90,8 @@ interface ReportData {
     kpis: any;
     insights: any[];
   };
+  availableBrands: string[];
+  availableWarehouses: string[];
   generatedAt: string;
   reportPeriod: string;
 }
@@ -387,6 +389,32 @@ async function generateReportInsights(
 }
 
 /**
+ * This part of the code extracts available brands from products data
+ */
+function extractAvailableBrands(products: ProductData[]): string[] {
+  const brands = new Set<string>();
+  products.forEach(product => {
+    if (product.brand_name && product.brand_name !== 'Unknown Brand') {
+      brands.add(product.brand_name);
+    }
+  });
+  return Array.from(brands).sort();
+}
+
+/**
+ * This part of the code extracts available warehouses from shipments data
+ */
+function extractAvailableWarehouses(shipments: ShipmentData[]): string[] {
+  const warehouses = new Set<string>();
+  shipments.forEach(shipment => {
+    if (shipment.warehouse_id && shipment.warehouse_id !== 'Unknown Warehouse') {
+      warehouses.add(shipment.warehouse_id);
+    }
+  });
+  return Array.from(warehouses).sort();
+}
+
+/**
  * This part of the code defines available report templates
  */
 function getReportTemplates(): ReportTemplate[] {
@@ -493,13 +521,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // This part of the code extracts query parameters with validation
     const { template, startDate, endDate, brands, warehouses } = req.query;
 
-    // If no template specified, return available templates
+    // If no template specified, return available templates with filter options
     if (!template) {
       const templates = getReportTemplates();
+      
+      // This part of the code fetches data to get available brands and warehouses
+      const [products, shipments] = await Promise.all([
+        fetchProducts(),
+        fetchShipments(),
+      ]);
+      
+      const availableBrands = extractAvailableBrands(products);
+      const availableWarehouses = extractAvailableWarehouses(shipments);
+      
       return res.status(200).json({
         success: true,
-        data: { templates },
-        message: "Available report templates",
+        data: { templates, availableBrands, availableWarehouses },
+        message: "Available report templates and filter options",
         timestamp: new Date().toISOString(),
       });
     }
@@ -553,6 +591,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       ? `${filters.startDate} to ${filters.endDate}`
       : "All available data";
 
+    const availableBrands = extractAvailableBrands(products);
+    const availableWarehouses = extractAvailableWarehouses(shipments);
+
     const reportData: ReportData = {
       template: selectedTemplate,
       filters,
@@ -562,6 +603,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         kpis,
         insights,
       },
+      availableBrands,
+      availableWarehouses,
       generatedAt: new Date().toISOString(),
       reportPeriod,
     };

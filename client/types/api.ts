@@ -573,12 +573,16 @@ export interface ReportData {
     kpis: ReportKPIs;
     insights: AIInsight[];
   };
+  availableBrands: string[];
+  availableWarehouses: string[];
   generatedAt: string;
   reportPeriod: string;
 }
 
 export interface ReportTemplatesResponse {
   templates: ReportTemplate[];
+  availableBrands: string[];
+  availableWarehouses: string[];
 }
 
 // API Error Types
