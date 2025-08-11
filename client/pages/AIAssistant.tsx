@@ -278,16 +278,18 @@ export default function AIAssistant() {
                   <Button
                     key={action.id}
                     variant="outline"
-                    className="w-full justify-start text-left h-auto p-3 hover:bg-gray-50 border-gray-200 bg-white min-h-[60px]"
+                    className="w-full h-auto p-3 hover:bg-gray-50 border-gray-200 bg-white min-h-[60px]"
                     onClick={() => handleQuickAction(action)}
                     disabled={isLoading}
                   >
-                    <div className={`p-1.5 rounded ${action.color} text-white mr-3 flex-shrink-0 self-start`}>
-                      {action.icon}
+                    <div className="flex items-start gap-3 w-full text-left">
+                      <div className={`p-1.5 rounded ${action.color} text-white flex-shrink-0`}>
+                        {action.icon}
+                      </div>
+                      <span className="text-sm font-medium leading-relaxed text-gray-900 flex-1 whitespace-normal">
+                        {action.label}
+                      </span>
                     </div>
-                    <span className="text-sm font-medium leading-tight text-gray-900 break-words">
-                      {action.label}
-                    </span>
                   </Button>
                 ))}
                 
