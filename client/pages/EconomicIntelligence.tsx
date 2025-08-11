@@ -193,6 +193,173 @@ export default function EconomicIntelligence() {
               </Card>
             )}
 
+            {/* Global Economic Intelligence Grid */}
+            <Card className="mb-6">
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <span>Global Economic Intelligence</span>
+                  <span className="text-sm font-normal text-gray-500">
+                    Last updated: {data.lastUpdated ? new Date(data.lastUpdated).toLocaleTimeString() : 'N/A'}
+                  </span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <Card className="bg-red-50 border-red-200">
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <h3 className="font-semibold text-sm text-gray-900">Supplier Performance Index</h3>
+                        <Badge className="bg-red-100 text-red-800">CRITICAL</Badge>
+                      </div>
+                      <div className="text-2xl font-bold text-red-600 mb-1">
+                        {data.kpis.supplierPerformance}/100
+                      </div>
+                      <p className="text-xs text-gray-600 mb-3">
+                        Your supplier delivery performance and reliability metrics
+                      </p>
+                      <div className="w-full bg-red-200 rounded-full h-2 mb-2">
+                        <div 
+                          className="bg-red-600 h-2 rounded-full" 
+                          style={{ width: `${data.kpis.supplierPerformance}%` }}
+                        ></div>
+                      </div>
+                      <button className="text-xs text-red-600 hover:underline">
+                        Click for details
+                      </button>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="bg-red-50 border-red-200">
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <h3 className="font-semibold text-sm text-gray-900">Shipping Cost Impact</h3>
+                        <Badge className={getStatusColor(data.kpis.shippingCostImpact, 'cost')}>
+                          {getStatusText(data.kpis.shippingCostImpact, 'cost')}
+                        </Badge>
+                      </div>
+                      <div className="text-2xl font-bold text-gray-900 mb-1">
+                        {data.kpis.shippingCostImpact}%
+                      </div>
+                      <p className="text-xs text-gray-600 mb-3">
+                        Impact of shipping costs on your operational expenses
+                      </p>
+                      <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
+                        <div 
+                          className="bg-blue-600 h-2 rounded-full" 
+                          style={{ width: `${Math.min(data.kpis.shippingCostImpact, 200) / 2}%` }}
+                        ></div>
+                      </div>
+                      <button className="text-xs text-blue-600 hover:underline">
+                        Click for details
+                      </button>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="bg-yellow-50 border-yellow-200">
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <h3 className="font-semibold text-sm text-gray-900">Transportation Cost Index</h3>
+                        <Badge className={getStatusColor(data.kpis.transportationCosts, 'cost')}>
+                          {getStatusText(data.kpis.transportationCosts, 'cost')}
+                        </Badge>
+                      </div>
+                      <div className="text-2xl font-bold text-gray-900 mb-1">
+                        {data.kpis.transportationCosts}%
+                      </div>
+                      <p className="text-xs text-gray-600 mb-3">
+                        Transportation cost trends affecting your deliveries
+                      </p>
+                      <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
+                        <div 
+                          className="bg-blue-600 h-2 rounded-full" 
+                          style={{ width: `${Math.min(data.kpis.transportationCosts, 200) / 2}%` }}
+                        ></div>
+                      </div>
+                      <button className="text-xs text-blue-600 hover:underline">
+                        Click for details
+                      </button>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="bg-green-50 border-green-200">
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <h3 className="font-semibold text-sm text-gray-900">Supply Chain Health</h3>
+                        <Badge className={getStatusColor(data.kpis.supplyChainHealth, 'health')}>
+                          {getStatusText(data.kpis.supplyChainHealth, 'health')}
+                        </Badge>
+                      </div>
+                      <div className="text-2xl font-bold text-gray-900 mb-1">
+                        {data.kpis.supplyChainHealth}/100
+                      </div>
+                      <p className="text-xs text-gray-600 mb-3">
+                        Overall health of your supply chain operations
+                      </p>
+                      <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
+                        <div 
+                          className="bg-blue-600 h-2 rounded-full" 
+                          style={{ width: `${data.kpis.supplyChainHealth}%` }}
+                        ></div>
+                      </div>
+                      <button className="text-xs text-blue-600 hover:underline">
+                        Click for details
+                      </button>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="bg-yellow-50 border-yellow-200">
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <h3 className="font-semibold text-sm text-gray-900">Logistics Cost Efficiency</h3>
+                        <Badge className={getStatusColor(data.kpis.logisticsCostEfficiency, 'cost')}>
+                          {getStatusText(data.kpis.logisticsCostEfficiency, 'cost')}
+                        </Badge>
+                      </div>
+                      <div className="text-2xl font-bold text-gray-900 mb-1">
+                        {data.kpis.logisticsCostEfficiency}%
+                      </div>
+                      <p className="text-xs text-gray-600 mb-3">
+                        Efficiency of your logistics and shipping operations
+                      </p>
+                      <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
+                        <div 
+                          className="bg-blue-600 h-2 rounded-full" 
+                          style={{ width: `${Math.min(data.kpis.logisticsCostEfficiency, 200) / 2}%` }}
+                        ></div>
+                      </div>
+                      <button className="text-xs text-blue-600 hover:underline">
+                        Click for details
+                      </button>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="bg-red-50 border-red-200">
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <h3 className="font-semibold text-sm text-gray-900">Supplier Delay Rate</h3>
+                        <Badge className="bg-red-100 text-red-800">CRITICAL</Badge>
+                      </div>
+                      <div className="text-2xl font-bold text-red-600 mb-1">
+                        {data.kpis.supplierDelayRate}%
+                      </div>
+                      <p className="text-xs text-gray-600 mb-3">
+                        Percentage of suppliers experiencing delays
+                      </p>
+                      <div className="w-full bg-red-200 rounded-full h-2 mb-2">
+                        <div 
+                          className="bg-red-600 h-2 rounded-full" 
+                          style={{ width: `${data.kpis.supplierDelayRate}%` }}
+                        ></div>
+                      </div>
+                      <button className="text-xs text-red-600 hover:underline">
+                        Click for details
+                      </button>
+                    </CardContent>
+                  </Card>
+                </div>
+              </CardContent>
+            </Card>
+
             {/* How This Affects Your Business Section */}
             <Card>
               <CardHeader>
