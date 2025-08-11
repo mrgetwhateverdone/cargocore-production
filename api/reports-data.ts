@@ -392,6 +392,7 @@ async function generateReportInsights(
  * This part of the code calculates brand performance using proven logic from inventory-data.ts
  */
 function calculateAvailableBrands(products: ProductData[]) {
+  console.log("🔧 Brand calc: Starting with", products.length, "products");
   const brandMap = new Map<string, {skuCount: number, totalValue: number, totalQuantity: number}>();
   
   products.forEach(p => {
@@ -414,7 +415,7 @@ function calculateAvailableBrands(products: ProductData[]) {
   
   const totalPortfolioValue = Array.from(brandMap.values()).reduce((sum, data) => sum + data.totalValue, 0);
   
-  return Array.from(brandMap.entries())
+  const result = Array.from(brandMap.entries())
     .map(([brand, data]) => ({
       brand_name: brand,
       sku_count: data.skuCount,
@@ -425,6 +426,9 @@ function calculateAvailableBrands(products: ProductData[]) {
       efficiency_score: Math.round((data.totalValue / data.skuCount) * (data.totalQuantity / data.skuCount))
     }))
     .sort((a, b) => b.total_value - a.total_value);
+  
+  console.log("🔧 Brand calc: Finished with", result.length, "brands");
+  return result;
 }
 
 /**
@@ -586,7 +590,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // If no template specified, return available templates with filter options
     if (!template) {
+      console.log("🎯 REPORTS API: Fetching templates and filter options...");
       const templates = getReportTemplates();
+      console.log("🎯 REPORTS API: Templates ready, fetching data...");
       
       // This part of the code fetches data to get available brands and warehouses
       const [products, shipments] = await Promise.all([
@@ -594,16 +600,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         fetchShipments(),
       ]);
       
-      console.log("🔍 Debug: Fetched products count:", products.length);
-      console.log("🔍 Debug: Fetched shipments count:", shipments.length);
-      console.log("🔍 Debug: Sample product brands:", products.slice(0, 3).map(p => p.brand_name));
-      console.log("🔍 Debug: Sample shipment warehouses:", shipments.slice(0, 3).map(s => s.warehouse_id));
+      console.log("🔍 REPORTS API DEBUG: Fetched products count:", products.length);
+      console.log("🔍 REPORTS API DEBUG: Fetched shipments count:", shipments.length);
+      console.log("🔍 REPORTS API DEBUG: Sample product brands:", products.slice(0, 3).map(p => p.brand_name));
+      console.log("🔍 REPORTS API DEBUG: Sample shipment warehouses:", shipments.slice(0, 3).map(s => s.warehouse_id));
       
+      console.log("🎯 REPORTS API: Starting brand calculation...");
       const availableBrands = calculateAvailableBrands(products);
+      console.log("🎯 REPORTS API: Starting warehouse calculation...");
       const availableWarehouses = calculateAvailableWarehouses(shipments);
       
-      console.log("🔍 Debug: Calculated brands:", availableBrands.length, availableBrands.slice(0, 3).map(b => `${b.brand_name} ($${b.total_value})`));
-      console.log("🔍 Debug: Calculated warehouses:", availableWarehouses.length, availableWarehouses.slice(0, 3).map(w => `${w.warehouse_id} ($${w.total_cost})`));
+      console.log("🔍 REPORTS API FINAL: Calculated brands:", availableBrands.length, availableBrands.slice(0, 3).map(b => `${b.brand_name} ($${b.total_value})`));
+      console.log("🔍 REPORTS API FINAL: Calculated warehouses:", availableWarehouses.length, availableWarehouses.slice(0, 3).map(w => `${w.warehouse_id} ($${w.total_cost})`));
       
       return res.status(200).json({
         success: true,

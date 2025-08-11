@@ -28,7 +28,21 @@ export class PDFGenerationService {
   constructor() {
     this.doc = new jsPDF();
     // This part of the code ensures autoTable is properly attached to the jsPDF instance
-    (this.doc as any).autoTable = autoTable.__esModule ? autoTable.default : autoTable;
+    this.setupAutoTable();
+  }
+
+  /**
+   * This part of the code properly sets up autoTable functionality
+   */
+  private setupAutoTable(): void {
+    // Ensure autoTable is properly attached to the jsPDF instance
+    if (typeof autoTable === 'function') {
+      (this.doc as any).autoTable = autoTable;
+    } else if (autoTable && autoTable.default) {
+      (this.doc as any).autoTable = autoTable.default;
+    } else {
+      console.error('autoTable is not properly imported');
+    }
   }
 
   /**
@@ -37,7 +51,7 @@ export class PDFGenerationService {
   public generateReport(reportData: ReportData): void {
     this.doc = new jsPDF();
     // This part of the code ensures autoTable is properly attached to the new jsPDF instance
-    (this.doc as any).autoTable = autoTable.__esModule ? autoTable.default : autoTable;
+    this.setupAutoTable();
     this.currentY = 20;
 
     // Add header with CargoCore branding

@@ -17,6 +17,9 @@ import type {
   InventoryData,
   CostData,
   EconomicData,
+  ReportTemplatesResponse,
+  ReportData,
+  ReportFilters,
 } from "@/types/api";
 
 interface APIResponse<T> {
