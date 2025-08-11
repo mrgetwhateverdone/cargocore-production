@@ -358,36 +358,7 @@ class InternalApiService {
     }
   }
 
-  /**
-   * This part of the code fetches economic intelligence data with global economic metrics
-   */
-  async getEconomicData(): Promise<EconomicData> {
-    try {
-      console.log("🔒 Client: Fetching economic intelligence data from secure server...");
 
-      const response = await fetch(`${this.baseUrl}/api/economic-intelligence`);
-
-      if (!response.ok) {
-        throw new Error(
-          `Internal API Error: ${response.status} ${response.statusText}`,
-        );
-      }
-
-      const result: APIResponse<EconomicData> = await response.json();
-
-      if (!result.success || !result.data) {
-        throw new Error(result.message || "Failed to fetch economic intelligence data");
-      }
-
-      console.log("✅ Client: Economic intelligence data received securely from server");
-      return result.data;
-    } catch (error) {
-      console.error("❌ Client: Economic intelligence API call failed:", error);
-      throw new Error(
-        `Unable to load economic intelligence data: ${error instanceof Error ? error.message : "Unknown error"}`,
-      );
-    }
-  }
 
   /**
    * Health check - verify server is responding
