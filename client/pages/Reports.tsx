@@ -107,7 +107,7 @@ export default function Reports() {
   const handleDownloadPDF = () => {
     if (reportData) {
       try {
-        pdfGenerationService.generateReport(reportData);
+        new pdfGenerationService().generateReport(reportData);
       } catch (error) {
         console.error("Error generating PDF:", error);
         alert("Error generating PDF. Please try again.");

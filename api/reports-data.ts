@@ -121,18 +121,18 @@ interface ReportData {
  * This part of the code fetches products data using the proven working pattern from inventory-data.ts
  */
 async function fetchProducts(): Promise<ProductData[]> {
-  const baseUrl = process.env.WAREHOUSE_BASE_URL;
-  const token = process.env.WAREHOUSE_TOKEN;
+  const baseUrl = process.env.TINYBIRD_BASE_URL;
+  const token = process.env.TINYBIRD_TOKEN;
 
   if (!baseUrl || !token) {
-    console.error("❌ Vercel API: WAREHOUSE_BASE_URL and WAREHOUSE_TOKEN environment variables are required");
+    console.error("❌ Vercel API: TINYBIRD_BASE_URL and TINYBIRD_TOKEN environment variables are required");
     return [];
   }
 
   try {
     console.log("🔒 Vercel API: Fetching products data from TinyBird...");
     
-    const url = `${baseUrl}/v0/pipes/product_details_mv.json?token=${token}&company_url=COMP002_3PL&limit=1000`;
+    const url = `${baseUrl}?token=${token}&limit=1000&company_url=COMP002_packiyo`;
     
     const response = await fetch(url);
     if (!response.ok) {
@@ -165,7 +165,7 @@ async function fetchShipments(): Promise<ShipmentData[]> {
   try {
     console.log("🔒 Vercel API: Fetching shipments data from TinyBird...");
     
-    const url = `${baseUrl}/v0/pipes/inbound_shipments_details_mv.json?token=${token}&company_url=COMP002_3PL&limit=1000`;
+    const url = `${baseUrl}?token=${token}&limit=1000&company_url=COMP002_3PL`;
     
     const response = await fetch(url);
     if (!response.ok) {
