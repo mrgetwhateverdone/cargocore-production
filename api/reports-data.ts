@@ -389,29 +389,92 @@ async function generateReportInsights(
 }
 
 /**
- * This part of the code extracts available brands from products data
+ * This part of the code calculates brand performance using proven logic from inventory-data.ts
  */
-function extractAvailableBrands(products: ProductData[]): string[] {
-  const brands = new Set<string>();
-  products.forEach(product => {
-    if (product.brand_name && product.brand_name !== 'Unknown Brand') {
-      brands.add(product.brand_name);
+function calculateAvailableBrands(products: ProductData[]) {
+  const brandMap = new Map<string, {skuCount: number, totalValue: number, totalQuantity: number}>();
+  
+  products.forEach(p => {
+    const cost = p.unit_cost || 0;
+    const value = p.unit_quantity * cost;
+    
+    if (brandMap.has(p.brand_name)) {
+      const existing = brandMap.get(p.brand_name)!;
+      existing.skuCount += 1;
+      existing.totalValue += value;
+      existing.totalQuantity += p.unit_quantity;
+    } else {
+      brandMap.set(p.brand_name, {
+        skuCount: 1,
+        totalValue: value,
+        totalQuantity: p.unit_quantity
+      });
     }
   });
-  return Array.from(brands).sort();
+  
+  const totalPortfolioValue = Array.from(brandMap.values()).reduce((sum, data) => sum + data.totalValue, 0);
+  
+  return Array.from(brandMap.entries())
+    .map(([brand, data]) => ({
+      brand_name: brand,
+      sku_count: data.skuCount,
+      total_value: Math.round(data.totalValue),
+      total_quantity: data.totalQuantity,
+      avg_value_per_sku: Math.round(data.totalValue / data.skuCount),
+      portfolio_percentage: totalPortfolioValue > 0 ? Math.round((data.totalValue / totalPortfolioValue) * 100) : 0,
+      efficiency_score: Math.round((data.totalValue / data.skuCount) * (data.totalQuantity / data.skuCount))
+    }))
+    .sort((a, b) => b.total_value - a.total_value);
 }
 
 /**
- * This part of the code extracts available warehouses from shipments data
+ * This part of the code calculates warehouse performance using proven logic from cost-data.ts
  */
-function extractAvailableWarehouses(shipments: ShipmentData[]): string[] {
-  const warehouses = new Set<string>();
+function calculateAvailableWarehouses(shipments: ShipmentData[]) {
+  const warehouseMap = new Map<string, {
+    totalShipments: number;
+    completedShipments: number;
+    totalCost: number;
+    totalQuantity: number;
+  }>();
+
   shipments.forEach(shipment => {
-    if (shipment.warehouse_id && shipment.warehouse_id !== 'Unknown Warehouse') {
-      warehouses.add(shipment.warehouse_id);
+    if (!shipment.warehouse_id) return;
+    
+    const warehouseId = shipment.warehouse_id;
+    const cost = (shipment.unit_cost || 0) * (shipment.expected_quantity || 0);
+    
+    if (!warehouseMap.has(warehouseId)) {
+      warehouseMap.set(warehouseId, {
+        totalShipments: 0,
+        completedShipments: 0,
+        totalCost: 0,
+        totalQuantity: 0
+      });
+    }
+    
+    const data = warehouseMap.get(warehouseId)!;
+    data.totalShipments++;
+    data.totalCost += cost;
+    data.totalQuantity += shipment.expected_quantity || 0;
+    
+    if (shipment.status === 'completed' || shipment.status === 'receiving') {
+      data.completedShipments++;
     }
   });
-  return Array.from(warehouses).sort();
+
+  return Array.from(warehouseMap.entries())
+    .map(([warehouseId, data]) => ({
+      warehouse_id: warehouseId,
+      warehouse_name: warehouseId, // Use ID as name for now
+      total_shipments: data.totalShipments,
+      completed_shipments: data.completedShipments,
+      total_cost: Math.round(data.totalCost),
+      total_quantity: data.totalQuantity,
+      efficiency_rate: data.totalShipments > 0 ? Math.round((data.completedShipments / data.totalShipments) * 100) : 0,
+      avg_cost_per_shipment: data.totalShipments > 0 ? Math.round(data.totalCost / data.totalShipments) : 0
+    }))
+    .sort((a, b) => b.total_cost - a.total_cost);
 }
 
 /**
@@ -536,11 +599,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       console.log("🔍 Debug: Sample product brands:", products.slice(0, 3).map(p => p.brand_name));
       console.log("🔍 Debug: Sample shipment warehouses:", shipments.slice(0, 3).map(s => s.warehouse_id));
       
-      const availableBrands = extractAvailableBrands(products);
-      const availableWarehouses = extractAvailableWarehouses(shipments);
+      const availableBrands = calculateAvailableBrands(products);
+      const availableWarehouses = calculateAvailableWarehouses(shipments);
       
-      console.log("🔍 Debug: Extracted brands:", availableBrands.length, availableBrands.slice(0, 5));
-      console.log("🔍 Debug: Extracted warehouses:", availableWarehouses.length, availableWarehouses.slice(0, 5));
+      console.log("🔍 Debug: Calculated brands:", availableBrands.length, availableBrands.slice(0, 3).map(b => `${b.brand_name} ($${b.total_value})`));
+      console.log("🔍 Debug: Calculated warehouses:", availableWarehouses.length, availableWarehouses.slice(0, 3).map(w => `${w.warehouse_id} ($${w.total_cost})`));
       
       return res.status(200).json({
         success: true,
@@ -599,8 +662,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       ? `${filters.startDate} to ${filters.endDate}`
       : "All available data";
 
-    const availableBrands = extractAvailableBrands(products);
-    const availableWarehouses = extractAvailableWarehouses(shipments);
+    const availableBrands = calculateAvailableBrands(products);
+    const availableWarehouses = calculateAvailableWarehouses(shipments);
 
     const reportData: ReportData = {
       template: selectedTemplate,

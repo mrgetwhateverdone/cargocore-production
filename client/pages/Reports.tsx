@@ -9,7 +9,7 @@ import { DateRangePicker } from "@/components/ui/date-picker";
 import { MultiSelect } from "@/components/ui/multi-select";
 import { Calendar, Download, FileText, Clock, TrendingUp, Package, Truck, Building, Tag, RotateCcw, Users, BarChart3 } from "lucide-react";
 import { pdfGenerationService } from "@/services/pdfGenerationService";
-import type { ReportFilters, ReportTemplate } from "@/types/api";
+import type { ReportFilters, ReportTemplate, ReportBrandOption, ReportWarehouseOption } from "@/types/api";
 
 export default function Reports() {
   const { data: templatesData, isLoading: templatesLoading, error: templatesError } = useReportTemplates();
@@ -84,6 +84,24 @@ export default function Reports() {
     setStartDate(start);
     setEndDate(end);
   };
+
+  // This part of the code formats currency values using the proven pattern from working pages
+  const formatCurrency = (value: number) => {
+    if (value >= 1000000) return `$${(value / 1000000).toFixed(1)}M`;
+    if (value >= 1000) return `$${(value / 1000).toFixed(1)}K`;
+    return `$${value.toLocaleString()}`;
+  };
+
+  // This part of the code formats brand display text using rich data
+  const formatBrandLabel = (brand: ReportBrandOption) => brand.brand_name;
+  const formatBrandSubtext = (brand: ReportBrandOption) => 
+    `${formatCurrency(brand.total_value)} • ${brand.sku_count} SKUs • ${brand.portfolio_percentage}%`;
+
+  // This part of the code formats warehouse display text using rich data  
+  const formatWarehouseLabel = (warehouse: ReportWarehouseOption) => 
+    warehouse.warehouse_name || warehouse.warehouse_id;
+  const formatWarehouseSubtext = (warehouse: ReportWarehouseOption) => 
+    `${formatCurrency(warehouse.total_cost)} • ${warehouse.total_shipments} shipments • ${warehouse.efficiency_rate}%`;
 
   // This part of the code handles PDF download
   const handleDownloadPDF = () => {
@@ -313,12 +331,15 @@ export default function Reports() {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Brands
                 </label>
-                <MultiSelect
+                <MultiSelect<ReportBrandOption>
                   options={templatesData?.availableBrands || []}
                   selected={selectedBrands}
                   onSelectionChange={setSelectedBrands}
                   placeholder="All Brands"
                   disabled={reportLoading}
+                  getOptionValue={(brand) => brand.brand_name}
+                  getOptionLabel={formatBrandLabel}
+                  getOptionSubtext={formatBrandSubtext}
                 />
               </div>
 
@@ -327,12 +348,15 @@ export default function Reports() {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Warehouses
                 </label>
-                <MultiSelect
+                <MultiSelect<ReportWarehouseOption>
                   options={templatesData?.availableWarehouses || []}
                   selected={selectedWarehouses}
                   onSelectionChange={setSelectedWarehouses}
                   placeholder="All Warehouses"
                   disabled={reportLoading}
+                  getOptionValue={(warehouse) => warehouse.warehouse_id}
+                  getOptionLabel={formatWarehouseLabel}
+                  getOptionSubtext={formatWarehouseSubtext}
                 />
               </div>
 
