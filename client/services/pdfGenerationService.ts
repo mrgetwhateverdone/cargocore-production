@@ -1,10 +1,14 @@
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 import type { ReportData, ReportKPIs } from '@/types/api';
 
+// This part of the code extends jsPDF with autoTable functionality
 declare module 'jspdf' {
   interface jsPDF {
     autoTable: (options: any) => jsPDF;
+    lastAutoTable: {
+      finalY: number;
+    };
   }
 }
 
@@ -23,6 +27,8 @@ export class PDFGenerationService {
 
   constructor() {
     this.doc = new jsPDF();
+    // This part of the code ensures autoTable is properly attached to the jsPDF instance
+    (this.doc as any).autoTable = autoTable.__esModule ? autoTable.default : autoTable;
   }
 
   /**
@@ -30,6 +36,8 @@ export class PDFGenerationService {
    */
   public generateReport(reportData: ReportData): void {
     this.doc = new jsPDF();
+    // This part of the code ensures autoTable is properly attached to the new jsPDF instance
+    (this.doc as any).autoTable = autoTable.__esModule ? autoTable.default : autoTable;
     this.currentY = 20;
 
     // Add header with CargoCore branding

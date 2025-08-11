@@ -119,6 +119,10 @@ export default function Reports() {
   const templates = templatesData?.templates || [];
   const availableTemplates = templates.filter(t => t.available);
   const comingSoonTemplates = templates.filter(t => !t.available);
+  
+  // This part of the code debugs the available filter data
+  console.log("🔍 Debug: Available brands:", templatesData?.availableBrands);
+  console.log("🔍 Debug: Available warehouses:", templatesData?.availableWarehouses);
 
   return (
     <Layout>

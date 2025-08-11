@@ -382,6 +382,7 @@ class InternalApiService {
       }
 
       console.log("✅ Client: Report templates received securely from server");
+      console.log("🔍 Debug: Templates data structure:", result.data);
       return result.data;
     } catch (error) {
       console.error("❌ Client: Report templates API call failed:", error);

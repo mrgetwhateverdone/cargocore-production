@@ -531,8 +531,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         fetchShipments(),
       ]);
       
+      console.log("🔍 Debug: Fetched products count:", products.length);
+      console.log("🔍 Debug: Fetched shipments count:", shipments.length);
+      console.log("🔍 Debug: Sample product brands:", products.slice(0, 3).map(p => p.brand_name));
+      console.log("🔍 Debug: Sample shipment warehouses:", shipments.slice(0, 3).map(s => s.warehouse_id));
+      
       const availableBrands = extractAvailableBrands(products);
       const availableWarehouses = extractAvailableWarehouses(shipments);
+      
+      console.log("🔍 Debug: Extracted brands:", availableBrands.length, availableBrands.slice(0, 5));
+      console.log("🔍 Debug: Extracted warehouses:", availableWarehouses.length, availableWarehouses.slice(0, 5));
       
       return res.status(200).json({
         success: true,
