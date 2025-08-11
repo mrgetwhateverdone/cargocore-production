@@ -368,10 +368,10 @@ export default function EconomicIntelligence() {
               {/* Executive Summary */}
               <Card className="bg-blue-50 border-blue-200 mb-6">
                 <CardHeader>
-                  <CardTitle className="text-lg">Executive Summary</CardTitle>
+                  <CardTitle className="text-lg text-gray-900 font-semibold">Executive Summary</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-gray-700 leading-relaxed">
+                  <p className="text-gray-900 leading-relaxed font-medium">
                     {data.businessImpact.executiveSummary}
                   </p>
                 </CardContent>
@@ -381,14 +381,14 @@ export default function EconomicIntelligence() {
                 {/* Key Risks */}
                 <Card className="bg-red-50 border-red-200">
                   <CardHeader>
-                    <CardTitle className="text-lg text-red-800">Key Risks</CardTitle>
+                    <CardTitle className="text-lg text-gray-900 font-semibold">Key Risks</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-3">
                       {data.businessImpact.keyRisks.map((risk, index) => (
                         <div key={index} className="flex items-start">
                           <AlertTriangle className="h-4 w-4 text-red-600 mt-1 mr-2 flex-shrink-0" />
-                          <span className="text-sm text-gray-700">{risk}</span>
+                          <span className="text-sm text-gray-900 font-medium">{risk}</span>
                         </div>
                       ))}
                     </div>
@@ -398,14 +398,14 @@ export default function EconomicIntelligence() {
                 {/* Opportunity Areas */}
                 <Card className="bg-green-50 border-green-200">
                   <CardHeader>
-                    <CardTitle className="text-lg text-green-800">Opportunity Areas</CardTitle>
+                    <CardTitle className="text-lg text-gray-900 font-semibold">Opportunity Areas</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-3">
                       {data.businessImpact.opportunityAreas.map((opportunity, index) => (
                         <div key={index} className="flex items-start">
                           <Target className="h-4 w-4 text-green-600 mt-1 mr-2 flex-shrink-0" />
-                          <span className="text-sm text-gray-700">{opportunity}</span>
+                          <span className="text-sm text-gray-900 font-medium">{opportunity}</span>
                         </div>
                       ))}
                     </div>
