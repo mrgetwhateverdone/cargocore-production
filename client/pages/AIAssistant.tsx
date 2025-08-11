@@ -278,7 +278,7 @@ export default function AIAssistant() {
                   <Button
                     key={action.id}
                     variant="outline"
-                    className="w-full justify-start text-left h-auto p-3 hover:bg-gray-50 border-gray-200"
+                    className="w-full justify-start text-left h-auto p-3 hover:bg-gray-50 border-gray-200 bg-white"
                     onClick={() => handleQuickAction(action)}
                     disabled={isLoading}
                   >
