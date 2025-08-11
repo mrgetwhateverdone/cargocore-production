@@ -46,9 +46,9 @@ export class PDFGenerationService {
   }
 
   /**
-   * This part of the code generates a complete PDF report
+   * This part of the code generates a simple PDF report
    */
-  public generateReport(reportData: ReportData): void {
+  public generateReport(reportData: any): void {
     this.doc = new jsPDF();
     // This part of the code ensures autoTable is properly attached to the new jsPDF instance
     this.setupAutoTable();
@@ -57,23 +57,20 @@ export class PDFGenerationService {
     // Add header with CargoCore branding
     this.addHeader();
     
-    // Add report title and metadata
-    this.addReportTitle(reportData);
+    // Add simple report title
+    this.addSimpleTitle(reportData);
     
-    // Add KPIs section
-    this.addKPIsSection(reportData.data.kpis);
+    // Add simple data summary
+    this.addSimpleDataSummary(reportData);
     
-    // Add data tables based on template type
-    this.addDataTables(reportData);
-    
-    // Add AI insights at the bottom
-    this.addAIInsights(reportData.data.insights);
+    // Add simple data tables
+    this.addSimpleDataTables(reportData);
     
     // Add footer
     this.addFooter();
     
     // Download the PDF
-    const filename = `${reportData.template.name.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
+    const filename = `CargoCore_Report_${new Date().toISOString().split('T')[0]}.pdf`;
     this.doc.save(filename);
   }
 
@@ -749,6 +746,127 @@ export class PDFGenerationService {
     } catch {
       return 'Invalid Date';
     }
+  }
+
+  /**
+   * This part of the code adds a simple report title
+   */
+  private addSimpleTitle(reportData: any): void {
+    this.currentY += 10;
+    
+    // Report title
+    this.doc.setFontSize(20);
+    this.doc.setFont('helvetica', 'bold');
+    this.doc.text('CargoCore Data Report', this.margin, this.currentY);
+    
+    this.currentY += 15;
+    
+    // Generation date
+    this.doc.setFontSize(12);
+    this.doc.setFont('helvetica', 'normal');
+    this.doc.text(`Generated: ${new Date().toLocaleDateString()}`, this.margin, this.currentY);
+    
+    this.currentY += 20;
+  }
+
+  /**
+   * This part of the code adds a simple data summary
+   */
+  private addSimpleDataSummary(reportData: any): void {
+    this.doc.setFontSize(16);
+    this.doc.setFont('helvetica', 'bold');
+    this.doc.text('Data Summary', this.margin, this.currentY);
+    
+    this.currentY += 15;
+    
+    this.doc.setFontSize(12);
+    this.doc.setFont('helvetica', 'normal');
+    
+    const productsCount = reportData.data?.products?.length || 0;
+    const shipmentsCount = reportData.data?.shipments?.length || 0;
+    const insightsCount = reportData.data?.insights?.length || 0;
+    
+    this.doc.text(`• Products: ${productsCount}`, this.margin, this.currentY);
+    this.currentY += 8;
+    this.doc.text(`• Shipments: ${shipmentsCount}`, this.margin, this.currentY);
+    this.currentY += 8;
+    this.doc.text(`• AI Insights: ${insightsCount}`, this.margin, this.currentY);
+    
+    this.currentY += 20;
+  }
+
+  /**
+   * This part of the code adds simple data tables
+   */
+  private addSimpleDataTables(reportData: any): void {
+    const products = reportData.data?.products || [];
+    const shipments = reportData.data?.shipments || [];
+    
+    // Add products table if we have products
+    if (products.length > 0) {
+      this.addSimpleProductsTable(products.slice(0, 10)); // Only first 10
+    }
+    
+    // Add shipments table if we have shipments
+    if (shipments.length > 0) {
+      this.addSimpleShipmentsTable(shipments.slice(0, 10)); // Only first 10
+    }
+  }
+
+  /**
+   * This part of the code adds a simple products table
+   */
+  private addSimpleProductsTable(products: any[]): void {
+    this.doc.setFontSize(14);
+    this.doc.setFont('helvetica', 'bold');
+    this.doc.text('Products (First 10)', this.margin, this.currentY);
+    this.currentY += 10;
+
+    const tableData = products.map(product => [
+      product.sku || 'N/A',
+      product.product_name || 'N/A',
+      product.brand_name || 'N/A',
+      `$${(product.unit_cost || 0).toFixed(2)}`
+    ]);
+
+    (this.doc as any).autoTable({
+      startY: this.currentY,
+      head: [['SKU', 'Product Name', 'Brand', 'Unit Cost']],
+      body: tableData,
+      theme: 'striped',
+      styles: { fontSize: 10 },
+      margin: { left: this.margin, right: this.margin }
+    });
+
+    this.currentY = (this.doc as any).lastAutoTable.finalY + 20;
+  }
+
+  /**
+   * This part of the code adds a simple shipments table
+   */
+  private addSimpleShipmentsTable(shipments: any[]): void {
+    this.doc.setFontSize(14);
+    this.doc.setFont('helvetica', 'bold');
+    this.doc.text('Shipments (First 10)', this.margin, this.currentY);
+    this.currentY += 10;
+
+    const tableData = shipments.map(shipment => [
+      shipment.shipment_id || 'N/A',
+      shipment.status || 'N/A',
+      shipment.supplier || 'N/A',
+      `${shipment.expected_quantity || 0}`
+    ]);
+
+    (this.doc as any).autoTable({
+      startY: this.currentY,
+      head: [['Shipment ID', 'Status', 'Supplier', 'Quantity']],
+      body: tableData,
+      theme: 'striped',
+      styles: { fontSize: 10 },
+      margin: { left: this.margin, right: this.margin }
+    });
+
+    this.currentY = (this.doc as any).lastAutoTable.finalY + 20;
   }
 }
 
