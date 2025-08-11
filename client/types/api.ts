@@ -97,7 +97,7 @@ export interface AIInsight {
   dollarImpact: number;
   suggestedActions: string[];
   createdAt: string;
-  source: "dashboard_agent" | "warehouse_agent" | "inventory_agent" | "cost_agent" | "analytics_agent" | "orders_agent";
+  source: "dashboard_agent" | "warehouse_agent" | "inventory_agent" | "cost_agent" | "analytics_agent" | "orders_agent" | "reports_agent";
 }
 
 // Anomaly Detection
@@ -533,6 +533,53 @@ export interface CostData {
 }
 
 
+
+// Reports Types
+export interface ReportTemplate {
+  id: string;
+  name: string;
+  description: string;
+  estimatedReadTime: string;
+  metrics: string[];
+  available: boolean;
+  icon: string;
+}
+
+export interface ReportFilters {
+  startDate?: string;
+  endDate?: string;
+  brands?: string[];
+  warehouses?: string[];
+  template: string;
+}
+
+export interface ReportKPIs {
+  totalProducts: number;
+  totalShipments: number;
+  activeProducts: number;
+  totalInventoryValue: number;
+  completedShipments: number;
+  delayedShipments: number;
+  slaCompliance: number | null;
+  fulfillmentRate: number | null;
+}
+
+export interface ReportData {
+  template: ReportTemplate;
+  filters: ReportFilters;
+  data: {
+    products: any[];
+    shipments: any[];
+    kpis: ReportKPIs;
+    insights: AIInsight[];
+  };
+  generatedAt: string;
+  reportPeriod: string;
+}
+
+export interface ReportTemplatesResponse {
+  templates: ReportTemplate[];
+}
 
 // API Error Types
 export interface APIError {
