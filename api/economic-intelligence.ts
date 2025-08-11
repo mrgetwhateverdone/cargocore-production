@@ -125,29 +125,30 @@ async function fetchEconomicDataWithWebSearch(): Promise<GlobalEconomicMetrics> 
         },
         messages: [
           {
+            role: "system",
+            content: "You are an Economic Intelligence Agent that searches the web for current shipping and logistics data. You must return specific numeric values in JSON format. Always provide numbers based on current market conditions."
+          },
+          {
             role: "user",
-            content: `Search the web for current global logistics and shipping industry data for ${dateString}. I need real-time numerical values for:
+            content: `Search the web for current shipping industry data and return ONLY a JSON object with these exact numeric values:
 
-1. Port Congestion Index - Current shipping delays and port congestion levels at major global ports (convert to 0-100 scale where 100 = severe congestion)
-2. Freight Cost Trends - Recent percentage changes in global shipping rates and freight costs 
-3. Fuel Price Impact - Current marine fuel/bunker fuel price changes affecting transportation costs (percentage change)
-4. Global Trade Health - Current trade volumes, supply chain efficiency, and overall logistics performance (convert to 0-100 scale where 100 = excellent)
-
-Please search for the latest shipping industry reports, port authority updates, Baltic Dry Index, freight rate indices, and fuel price data from reliable sources like:
-- Port authorities and shipping associations
-- Freight rate reporting services
-- Maritime fuel price trackers  
-- Trade and logistics industry publications
-
-Return the current economic indicators in this exact JSON format:
+REQUIRED OUTPUT FORMAT:
 {
-  "portCongestionIndex": number,
-  "freightCostTrend": number,
-  "fuelPriceIndex": number,
-  "globalTradeIndex": number
+  "portCongestionIndex": [number 0-100],
+  "freightCostTrend": [percentage change, can be negative],
+  "fuelPriceIndex": [percentage change, can be negative], 
+  "globalTradeIndex": [number 0-100]
 }
 
-Base the numbers on actual current data you find from web searches of industry sources.`
+SEARCH FOR THESE SPECIFIC DATA POINTS:
+1. Port Congestion Index (0-100): Search for current port delays, shipping backlogs, container dwell times at major ports (Los Angeles, Long Beach, Shanghai, Rotterdam)
+2. Freight Cost Trend (%): Search for Baltic Dry Index changes, container shipping rates, freight cost percentage changes month-over-month
+3. Fuel Price Impact (%): Search for marine fuel prices, bunker fuel costs, fuel surcharge changes affecting transportation
+4. Global Trade Health (0-100): Search for global trade volumes, supply chain performance indices, logistics efficiency metrics
+
+RETURN ONLY THE JSON OBJECT - NO OTHER TEXT OR EXPLANATIONS.
+
+Current date: ${dateString}`
           }
         ],
         temperature: 0.1,
@@ -196,44 +197,68 @@ function parseEconomicDataFromAI(aiResponse: string): GlobalEconomicMetrics {
   
   // This part of the code first tries to parse as JSON, then falls back to text parsing
   try {
-    // Look for JSON in the response
-    const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
+    // Clean the response and look for JSON
+    const cleanedResponse = aiResponse.trim();
+    console.log("🧹 Vercel API: Cleaned response length:", cleanedResponse.length);
+    
+    // Try to find JSON object in the response (handle various formats)
+    let jsonMatch = cleanedResponse.match(/\{[\s\S]*?\}/);
+    if (!jsonMatch) {
+      // Look for JSON with line breaks
+      jsonMatch = cleanedResponse.match(/\{[^}]*"portCongestionIndex"[^}]*\}/s);
+    }
+    
     if (jsonMatch) {
+      console.log("🔍 Vercel API: Found JSON match:", jsonMatch[0]);
       const jsonData = JSON.parse(jsonMatch[0]);
-      console.log("✅ Vercel API: Successfully parsed JSON from web search response");
+      console.log("✅ Vercel API: Successfully parsed JSON from web search response:", jsonData);
       
-      return {
-        portCongestionIndex: jsonData.portCongestionIndex !== null ? 
-          Math.min(100, Math.max(0, jsonData.portCongestionIndex)) : null,
-        freightCostTrend: jsonData.freightCostTrend !== null ? 
-          Math.min(50, Math.max(-50, jsonData.freightCostTrend)) : null,
-        fuelPriceIndex: jsonData.fuelPriceIndex !== null ? 
-          Math.min(50, Math.max(-50, jsonData.fuelPriceIndex)) : null,
-        globalTradeIndex: jsonData.globalTradeIndex !== null ? 
-          Math.min(100, Math.max(0, jsonData.globalTradeIndex)) : null,
-        lastUpdated: new Date().toISOString(),
-      };
+      // Validate that we got the expected fields
+      if (typeof jsonData.portCongestionIndex === 'number' || 
+          typeof jsonData.freightCostTrend === 'number' ||
+          typeof jsonData.fuelPriceIndex === 'number' ||
+          typeof jsonData.globalTradeIndex === 'number') {
+        
+        return {
+          portCongestionIndex: typeof jsonData.portCongestionIndex === 'number' ? 
+            Math.min(100, Math.max(0, jsonData.portCongestionIndex)) : null,
+          freightCostTrend: typeof jsonData.freightCostTrend === 'number' ? 
+            Math.min(50, Math.max(-50, jsonData.freightCostTrend)) : null,
+          fuelPriceIndex: typeof jsonData.fuelPriceIndex === 'number' ? 
+            Math.min(50, Math.max(-50, jsonData.fuelPriceIndex)) : null,
+          globalTradeIndex: typeof jsonData.globalTradeIndex === 'number' ? 
+            Math.min(100, Math.max(0, jsonData.globalTradeIndex)) : null,
+          lastUpdated: new Date().toISOString(),
+        };
+      } else {
+        console.log("⚠️ Vercel API: JSON parsed but no valid numeric fields found");
+      }
+    } else {
+      console.log("⚠️ Vercel API: No JSON object found in response");
     }
   } catch (jsonError) {
-    console.log("🔄 Vercel API: JSON parsing failed, falling back to text pattern matching");
+    console.log("🔄 Vercel API: JSON parsing failed:", jsonError, "falling back to text pattern matching");
   }
   
   // This part of the code extracts numeric values from web search response using enhanced patterns
-  const portCongestionMatch = aiResponse.match(/port\s+congestion\s+(?:index|level)[:\s]+(\d+(?:\.\d+)?)/i) || 
-                             aiResponse.match(/congestion[:\s]+(\d+(?:\.\d+)?)/i) ||
-                             aiResponse.match(/port.*delay.*(\d+(?:\.\d+)?)/i);
+  console.log("🔍 Vercel API: Attempting text pattern matching on response...");
   
-  const freightCostMatch = aiResponse.match(/freight\s+cost\s+trend[:\s]+([+\-]?\d+(?:\.\d+)?)\%?/i) || 
-                          aiResponse.match(/shipping.*cost[^:]*[:\s]+([+\-]?\d+(?:\.\d+)?)\%?/i) ||
-                          aiResponse.match(/freight.*trend[:\s]+([+\-]?\d+(?:\.\d+)?)\%?/i);
+  // Enhanced pattern matching for various formats
+  const portCongestionMatch = aiResponse.match(/(?:port.*congestion.*?|congestion.*?index.*?)(?::|is|at|=)\s*(\d+(?:\.\d+)?)/i) || 
+                             aiResponse.match(/"portCongestionIndex"?\s*:?\s*(\d+(?:\.\d+)?)/i) ||
+                             aiResponse.match(/port.*delay.*?(\d+(?:\.\d+)?)/i);
   
-  const fuelPriceMatch = aiResponse.match(/fuel\s+price\s+impact[:\s]+([+\-]?\d+(?:\.\d+)?)\%?/i) || 
-                        aiResponse.match(/fuel.*impact[^:]*[:\s]+([+\-]?\d+(?:\.\d+)?)\%?/i) ||
-                        aiResponse.match(/transportation.*fuel[^:]*[:\s]+([+\-]?\d+(?:\.\d+)?)\%?/i);
+  const freightCostMatch = aiResponse.match(/(?:freight.*cost.*trend|shipping.*rate.*change|freight.*change).*?(?::|is|at|=)\s*([+\-]?\d+(?:\.\d+)?)\%?/i) || 
+                          aiResponse.match(/"freightCostTrend"?\s*:?\s*([+\-]?\d+(?:\.\d+)?)/i) ||
+                          aiResponse.match(/baltic.*dry.*index.*?([+\-]?\d+(?:\.\d+)?)\%?/i);
   
-  const tradeHealthMatch = aiResponse.match(/global\s+trade\s+(?:index|health)[:\s]+(\d+(?:\.\d+)?)/i) || 
-                          aiResponse.match(/trade.*health[^:]*[:\s]+(\d+(?:\.\d+)?)/i) ||
-                          aiResponse.match(/supply.*chain.*health[^:]*[:\s]+(\d+(?:\.\d+)?)/i);
+  const fuelPriceMatch = aiResponse.match(/(?:fuel.*price.*impact|bunker.*fuel|marine.*fuel).*?(?::|is|at|=)\s*([+\-]?\d+(?:\.\d+)?)\%?/i) || 
+                        aiResponse.match(/"fuelPriceIndex"?\s*:?\s*([+\-]?\d+(?:\.\d+)?)/i) ||
+                        aiResponse.match(/fuel.*cost.*?([+\-]?\d+(?:\.\d+)?)\%?/i);
+  
+  const tradeHealthMatch = aiResponse.match(/(?:global.*trade.*health|trade.*index|supply.*chain.*health).*?(?::|is|at|=)\s*(\d+(?:\.\d+)?)/i) || 
+                          aiResponse.match(/"globalTradeIndex"?\s*:?\s*(\d+(?:\.\d+)?)/i) ||
+                          aiResponse.match(/trade.*volume.*?(\d+(?:\.\d+)?)/i);
 
   // This part of the code also looks for alternative number patterns in case formatted differently
   const allNumbers = aiResponse.match(/\d+(?:\.\d+)?/g) || [];
@@ -250,8 +275,27 @@ function parseEconomicDataFromAI(aiResponse: string): GlobalEconomicMetrics {
     fuelPrice,
     tradeHealth,
     totalNumbersFound: allNumbers.length,
-    percentagesFound: percentageNumbers.length
+    percentagesFound: percentageNumbers.length,
+    rawMatches: {
+      portCongestionMatch: portCongestionMatch?.[0],
+      freightCostMatch: freightCostMatch?.[0],
+      fuelPriceMatch: fuelPriceMatch?.[0],
+      tradeHealthMatch: tradeHealthMatch?.[0]
+    }
   });
+
+  // If we still don't have data, try one more approach with basic number extraction
+  if (!portCongestion && !freightCost && !fuelPrice && !tradeHealth && allNumbers.length >= 4) {
+    console.log("🔄 Vercel API: Attempting fallback number extraction from found numbers:", allNumbers);
+    
+    return {
+      portCongestionIndex: allNumbers[0] ? Math.min(100, Math.max(0, parseFloat(allNumbers[0]))) : null,
+      freightCostTrend: allNumbers[1] ? Math.min(50, Math.max(-50, parseFloat(allNumbers[1]))) : null,
+      fuelPriceIndex: allNumbers[2] ? Math.min(50, Math.max(-50, parseFloat(allNumbers[2]))) : null,
+      globalTradeIndex: allNumbers[3] ? Math.min(100, Math.max(0, parseFloat(allNumbers[3]))) : null,
+      lastUpdated: new Date().toISOString(),
+    };
+  }
 
   return {
     portCongestionIndex: portCongestion !== null ? Math.min(100, Math.max(0, portCongestion)) : null,
