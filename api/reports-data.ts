@@ -81,6 +81,27 @@ interface ReportFilters {
   template: string;
 }
 
+interface ReportBrandOption {
+  brand_name: string;
+  sku_count: number;
+  total_value: number;
+  total_quantity: number;
+  avg_value_per_sku: number;
+  portfolio_percentage: number;
+  efficiency_score: number;
+}
+
+interface ReportWarehouseOption {
+  warehouse_id: string;
+  warehouse_name: string;
+  total_shipments: number;
+  completed_shipments: number;
+  total_cost: number;
+  total_quantity: number;
+  efficiency_rate: number;
+  avg_cost_per_shipment: number;
+}
+
 interface ReportData {
   template: ReportTemplate;
   filters: ReportFilters;
@@ -90,8 +111,8 @@ interface ReportData {
     kpis: any;
     insights: any[];
   };
-  availableBrands: string[];
-  availableWarehouses: string[];
+  availableBrands: ReportBrandOption[];
+  availableWarehouses: ReportWarehouseOption[];
   generatedAt: string;
   reportPeriod: string;
 }
