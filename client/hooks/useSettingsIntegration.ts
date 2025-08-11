@@ -134,6 +134,39 @@ export function useSettingsIntegration() {
   const getDefaultPage = () => settings.display.defaultPage;
   const getRefreshInterval = () => settings.display.refreshInterval;
 
+  // This part of the code provides TanStack Query configuration based on user settings
+  const getQueryConfig = () => {
+    const refreshInterval = settings.display.refreshInterval;
+    
+    // Convert refresh interval setting to milliseconds
+    const getRefetchInterval = () => {
+      switch (refreshInterval) {
+        case '30s': return 30 * 1000;
+        case '1min': return 60 * 1000;
+        case '5min': return 5 * 60 * 1000;
+        case 'manual': return false; // Disable auto-refetch
+        default: return 5 * 60 * 1000; // Default to 5 minutes
+      }
+    };
+
+    // This part of the code sets stale time to half of refetch interval for optimal caching
+    const getStaleTime = () => {
+      if (refreshInterval === 'manual') return 30 * 60 * 1000; // 30 minutes for manual
+      const refetchMs = getRefetchInterval();
+      return typeof refetchMs === 'number' ? Math.floor(refetchMs / 2) : 2 * 60 * 1000;
+    };
+
+    return {
+      staleTime: getStaleTime(),
+      refetchInterval: getRefetchInterval(),
+      refetchOnWindowFocus: refreshInterval !== 'manual', // Only refetch on focus if not manual
+      refetchOnMount: false, // NEVER refetch on mount - use cached data
+      retry: 3,
+      retryDelay: (attemptIndex: number) => Math.min(1000 * 2 ** attemptIndex, 30000),
+      gcTime: 10 * 60 * 1000, // 10 minutes garbage collection
+    };
+  };
+
   return {
     settings,
     formatCurrency,
@@ -145,6 +178,7 @@ export function useSettingsIntegration() {
     isPageAIEnabled,
     getTablePageSize,
     getDefaultPage,
-    getRefreshInterval
+    getRefreshInterval,
+    getQueryConfig
   };
 }

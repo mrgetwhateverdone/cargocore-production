@@ -17,6 +17,7 @@ import type {
   InventoryData,
   CostData,
   EconomicData,
+  WarehousesData,
   ReportTemplatesResponse,
   ReportData,
   ReportFilters,
@@ -516,6 +517,37 @@ class InternalApiService {
       console.error("❌ Client: Quick actions API call failed:", error);
       throw new Error(
         `Unable to fetch quick actions: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
+    }
+  }
+
+  /**
+   * This part of the code fetches warehouse data with performance metrics
+   */
+  async getWarehousesData(): Promise<WarehousesData> {
+    try {
+      console.log("🔒 Client: Fetching warehouses data from secure server...");
+
+      const response = await fetch(`${this.baseUrl}/api/warehouses-data`);
+
+      if (!response.ok) {
+        throw new Error(
+          `Internal API Error: ${response.status} ${response.statusText}`,
+        );
+      }
+
+      const result: APIResponse<WarehousesData> = await response.json();
+
+      if (!result.success || !result.data) {
+        throw new Error(result.message || "Failed to fetch warehouses data");
+      }
+
+      console.log("✅ Client: Warehouses data received securely from server");
+      return result.data;
+    } catch (error) {
+      console.error("❌ Client: Warehouses API call failed:", error);
+      throw new Error(
+        `Unable to load warehouses data: ${error instanceof Error ? error.message : "Unknown error"}`,
       );
     }
   }

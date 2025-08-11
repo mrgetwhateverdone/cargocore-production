@@ -1,13 +1,17 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { internalApi } from "@/services/internalApi";
 import type { AnalyticsData } from "@/types/api";
+import { useSettingsIntegration } from "./useSettingsIntegration";
 
 /**
- * Main analytics data hook with real-time updates
- * 5-minute auto-refresh, 2-minute stale time
+ * Main analytics data hook with settings-aware caching
+ * Respects user's refresh interval preferences and cache settings
  * 🔒 SECURE: Uses internal API - NO external keys exposed
  */
 export const useAnalyticsData = () => {
+  const { getQueryConfig } = useSettingsIntegration();
+  const queryConfig = getQueryConfig();
+
   return useQuery({
     queryKey: ["analytics-data"],
     queryFn: async (): Promise<AnalyticsData> => {
@@ -27,12 +31,7 @@ export const useAnalyticsData = () => {
 
       return analyticsData;
     },
-    staleTime: 2 * 60 * 1000, // This part of the code sets 2 minutes - data considered fresh
-    refetchInterval: 5 * 60 * 1000, // This part of the code sets 5 minutes - auto refresh
-    refetchOnWindowFocus: true,
-    refetchOnMount: true,
-    retry: 3,
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // This part of the code implements exponential backoff
+    ...queryConfig, // This part of the code applies user's cache and refresh settings
     meta: {
       errorMessage:
         "Unable to load analytics data - Refresh to retry or check API connection",

@@ -1,13 +1,17 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { internalApi } from "@/services/internalApi";
 import type { DashboardData } from "@/types/api";
+import { useSettingsIntegration } from "./useSettingsIntegration";
 
 /**
- * Main dashboard data hook with real-time updates
- * 5-minute auto-refresh, 2-minute stale time
+ * Main dashboard data hook with settings-aware caching
+ * Respects user's refresh interval preferences and cache settings
  * 🔒 SECURE: Uses internal API - NO external keys exposed
  */
 export const useDashboardData = () => {
+  const { getQueryConfig } = useSettingsIntegration();
+  const queryConfig = getQueryConfig();
+
   return useQuery({
     queryKey: ["dashboard-data"],
     queryFn: async (): Promise<DashboardData> => {
@@ -29,12 +33,7 @@ export const useDashboardData = () => {
 
       return dashboardData;
     },
-    staleTime: 2 * 60 * 1000, // 2 minutes - data considered fresh
-    refetchInterval: 5 * 60 * 1000, // 5 minutes - auto refresh
-    refetchOnWindowFocus: true,
-    refetchOnMount: true,
-    retry: 3,
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
+    ...queryConfig, // This part of the code applies user's cache and refresh settings
     meta: {
       errorMessage:
         "Unable to load dashboard data - Refresh to retry or check API connection",
@@ -47,12 +46,13 @@ export const useDashboardData = () => {
  * 🔒 SECURE: Uses internal API - NO external keys exposed
  */
 export const useProductData = () => {
+  const { getQueryConfig } = useSettingsIntegration();
+  const queryConfig = getQueryConfig();
+
   return useQuery({
     queryKey: ["products"],
     queryFn: () => internalApi.getProductsData(),
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    refetchInterval: 10 * 60 * 1000, // 10 minutes
-    retry: 3,
+    ...queryConfig, // This part of the code applies user's cache and refresh settings
     meta: {
       errorMessage:
         "Unable to load product data - Refresh to retry or check API connection",
@@ -65,12 +65,13 @@ export const useProductData = () => {
  * 🔒 SECURE: Uses internal API - NO external keys exposed
  */
 export const useShipmentData = () => {
+  const { getQueryConfig } = useSettingsIntegration();
+  const queryConfig = getQueryConfig();
+
   return useQuery({
     queryKey: ["shipments"],
     queryFn: () => internalApi.getShipmentsData(),
-    staleTime: 3 * 60 * 1000, // 3 minutes
-    refetchInterval: 5 * 60 * 1000, // 5 minutes
-    retry: 3,
+    ...queryConfig, // This part of the code applies user's cache and refresh settings
     meta: {
       errorMessage:
         "Unable to load shipment data - Refresh to retry or check API connection",

@@ -1,78 +1,37 @@
-import { useState, useEffect } from "react";
-import type { WarehousesData, APIError } from "@/types/api";
+import { useQuery } from "@tanstack/react-query";
+import { internalApi } from "@/services/internalApi";
+import type { WarehousesData } from "@/types/api";
+import { useSettingsIntegration } from "./useSettingsIntegration";
 
 /**
- * This part of the code creates a custom hook for warehouse data management
- * Following the same patterns as useAnalyticsData and useDashboardData for consistency
+ * This part of the code creates a TanStack Query hook for warehouse data management
+ * Now properly integrated with caching and settings like all other data hooks
  */
 
-interface UseWarehousesDataReturn {
-  data: WarehousesData | null;
-  isLoading: boolean;
-  error: APIError | null;
-  refetch: () => Promise<void>;
-}
+export function useWarehousesData() {
+  const { getQueryConfig } = useSettingsIntegration();
+  const queryConfig = getQueryConfig();
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
+  return useQuery<WarehousesData>({
+    queryKey: ["warehouses-data"],
+    queryFn: async (): Promise<WarehousesData> => {
+      console.log("🏭 Client: Fetching warehouse data from secure API...");
 
-export function useWarehousesData(): UseWarehousesDataReturn {
-  const [data, setData] = useState<WarehousesData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<APIError | null>(null);
+      // This part of the code fetches comprehensive warehouse data via internal API
+      const warehousesData = await internalApi.getWarehousesData();
 
-  const fetchWarehousesData = async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
-
-      console.log("🏭 Client: Fetching warehouse data from API...");
-
-      // This part of the code fetches comprehensive warehouse data from the API
-      const response = await fetch(`${API_BASE_URL}/api/warehouses-data`);
-
-      if (!response.ok) {
-        throw new Error(
-          `Failed to fetch warehouse data: ${response.status} ${response.statusText}`,
-        );
-      }
-
-      const result = await response.json();
-
-      if (!result.success) {
-        throw new Error(result.message || "API returned unsuccessful response");
-      }
-
-      console.log("✅ Client: Warehouse data loaded successfully");
-      console.log("📊 Warehouses:", result.data.warehouses.length);
-      console.log("🔍 Insights:", result.data.insights.length);
-      console.log("💡 Optimizations:", result.data.optimizations.length);
-
-      setData(result.data);
-    } catch (err) {
-      console.error("❌ Client: Warehouse data fetch failed:", err);
-      setError({
-        message: err instanceof Error ? err.message : "Unknown error occurred",
-        status: err instanceof Error && "status" in err ? (err as any).status : undefined,
-        endpoint: "/api/warehouses-data",
+      console.log("✅ Client: Warehouse data loaded successfully:", {
+        warehouses: warehousesData.warehouses?.length || 0,
+        insights: warehousesData.insights?.length || 0,
+        optimizations: warehousesData.optimizations?.length || 0,
       });
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
-  const refetch = async () => {
-    await fetchWarehousesData();
-  };
-
-  // This part of the code handles initial data loading on component mount
-  useEffect(() => {
-    fetchWarehousesData();
-  }, []);
-
-  return {
-    data,
-    isLoading,
-    error,
-    refetch,
-  };
+      return warehousesData;
+    },
+    ...queryConfig, // This part of the code applies user's cache and refresh settings
+    meta: {
+      errorMessage:
+        "Unable to load warehouse data - Refresh to retry or check API connection",
+    },
+  });
 }
