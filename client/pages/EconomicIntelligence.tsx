@@ -194,17 +194,14 @@ export default function EconomicIntelligence() {
             )}
 
             {/* Global Economic Intelligence Grid */}
-            <Card className="mb-6">
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  <span>Global Economic Intelligence</span>
-                  <span className="text-sm font-normal text-gray-500">
-                    Last updated: {data.lastUpdated ? new Date(data.lastUpdated).toLocaleTimeString() : 'N/A'}
-                  </span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="bg-gray-900 rounded-lg p-6 mb-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-bold text-white">Global Economic Intelligence</h2>
+                <span className="text-sm text-gray-400">
+                  Last updated: {data.lastUpdated ? new Date(data.lastUpdated).toLocaleTimeString() : 'N/A'}
+                </span>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   <Card className="bg-red-50 border-red-200">
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between mb-2">
@@ -357,15 +354,11 @@ export default function EconomicIntelligence() {
                     </CardContent>
                   </Card>
                 </div>
-              </CardContent>
-            </Card>
+            </div>
 
             {/* How This Affects Your Business Section */}
-            <Card>
-              <CardHeader>
-                <CardTitle>How This Affects Your Business</CardTitle>
-              </CardHeader>
-              <CardContent>
+            <div className="bg-gray-900 rounded-lg p-6">
+              <h2 className="text-xl font-bold text-white mb-6">How This Affects Your Business</h2>
                 {/* Executive Summary */}
                 <Card className="bg-blue-50 border-blue-200 mb-6">
                   <CardHeader>
@@ -413,8 +406,7 @@ export default function EconomicIntelligence() {
                     </CardContent>
                   </Card>
                 </div>
-              </CardContent>
-            </Card>
+            </div>
           </>
         )}
       </div>
