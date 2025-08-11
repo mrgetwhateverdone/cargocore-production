@@ -139,8 +139,8 @@ export default function AIAssistant() {
 
   return (
     <Layout>
-      <div className="max-w-7xl mx-auto h-[calc(100vh-8rem)] flex flex-col space-y-4">
-        {/* This part of the code creates the main chat interface header */}
+      <div className="max-w-7xl mx-auto space-y-4 md:space-y-6">
+        {/* This part of the code creates the clean header with connection status */}
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
@@ -159,27 +159,27 @@ export default function AIAssistant() {
           </Badge>
         </div>
 
-        {/* This part of the code creates the main chat container */}
-        <div className="flex-1 grid grid-cols-1 lg:grid-cols-4 gap-4 min-h-0">
+        {/* This part of the code creates the main chat layout - clean and accessible */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 md:gap-6">
           
-          {/* This part of the code creates the chat messages area */}
-          <div className="lg:col-span-3 flex flex-col">
-            <Card className="flex-1 flex flex-col min-h-0">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg">Conversation</CardTitle>
+          {/* This part of the code creates the chat conversation area */}
+          <div className="lg:col-span-3">
+            <Card className="bg-white shadow-sm">
+              <CardHeader className="border-b border-gray-200 pb-4">
+                <CardTitle className="text-lg font-semibold text-gray-900">Conversation</CardTitle>
               </CardHeader>
-              <CardContent className="flex-1 flex flex-col min-h-0">
+              <CardContent className="p-0">
                 
-                {/* This part of the code displays the message history */}
-                <div className="flex-1 overflow-y-auto space-y-4 mb-4 min-h-0">
+                {/* This part of the code creates the scrollable message area */}
+                <div className="h-96 overflow-y-auto p-4 space-y-4">
                   {messages.length === 0 ? (
                     <div className="flex items-center justify-center h-full text-center">
                       <div className="space-y-3">
                         <MessageCircle className="h-12 w-12 text-gray-400 mx-auto" />
                         <div>
-                          <p className="text-gray-500 font-medium">Welcome to CargoCore AI</p>
-                          <p className="text-sm text-gray-400">
-                            Ask me anything about your operations, or use the quick actions below
+                          <p className="text-gray-700 font-medium">Welcome to CargoCore AI</p>
+                          <p className="text-sm text-gray-500">
+                            Ask me anything about your operations, or use the quick actions
                           </p>
                         </div>
                       </div>
@@ -194,7 +194,7 @@ export default function AIAssistant() {
                           className={`max-w-[80%] p-3 rounded-lg ${
                             message.role === 'user'
                               ? 'bg-blue-600 text-white'
-                              : 'bg-gray-100 text-gray-900'
+                              : 'bg-gray-50 text-gray-900 border border-gray-200'
                           }`}
                         >
                           <p className="whitespace-pre-wrap text-sm leading-relaxed">
@@ -215,7 +215,7 @@ export default function AIAssistant() {
                   {/* This part of the code shows loading indicator when AI is responding */}
                   {isLoading && (
                     <div className="flex justify-start">
-                      <div className="bg-gray-100 p-3 rounded-lg flex items-center space-x-2">
+                      <div className="bg-gray-50 border border-gray-200 p-3 rounded-lg flex items-center space-x-2">
                         <LoadingSpinner size="sm" />
                         <span className="text-sm text-gray-600">CargoCore AI is thinking...</span>
                       </div>
@@ -227,7 +227,7 @@ export default function AIAssistant() {
 
                 {/* This part of the code shows error messages if they occur */}
                 {error && (
-                  <div className="mb-4">
+                  <div className="p-4 border-t border-gray-200">
                     <ErrorDisplay 
                       message={error} 
                       onRetry={() => setError(null)}
@@ -235,9 +235,9 @@ export default function AIAssistant() {
                   </div>
                 )}
 
-                {/* This part of the code creates the message input area */}
-                <div className="border-t pt-4">
-                  <div className="flex space-x-2">
+                {/* This part of the code creates the message input area - always visible */}
+                <div className="border-t border-gray-200 p-4 bg-gray-50">
+                  <div className="flex space-x-3">
                     <Textarea
                       ref={textareaRef}
                       placeholder="Ask me about your operations, inventory, costs, or any business insights..."
@@ -245,13 +245,13 @@ export default function AIAssistant() {
                       onChange={(e) => setInputMessage(e.target.value)}
                       onKeyDown={handleKeyDown}
                       disabled={isLoading}
-                      className="flex-1 min-h-[60px] max-h-32 resize-none"
+                      className="flex-1 min-h-[50px] max-h-32 resize-none bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                       rows={2}
                     />
                     <Button
                       onClick={() => sendMessage(inputMessage)}
                       disabled={!inputMessage.trim() || isLoading}
-                      className="px-4 py-2 h-auto"
+                      className="px-4 py-2 h-auto bg-blue-600 hover:bg-blue-700"
                     >
                       <Send className="h-4 w-4" />
                     </Button>
@@ -266,26 +266,26 @@ export default function AIAssistant() {
 
           {/* This part of the code creates the quick actions sidebar */}
           <div className="lg:col-span-1">
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg">Quick Actions</CardTitle>
+            <Card className="bg-white shadow-sm">
+              <CardHeader className="border-b border-gray-200 pb-4">
+                <CardTitle className="text-lg font-semibold text-gray-900">Quick Actions</CardTitle>
                 <p className="text-sm text-gray-600">
                   Get instant insights about your operations
                 </p>
               </CardHeader>
-              <CardContent className="space-y-3">
+              <CardContent className="p-4 space-y-3">
                 {quickActions.map((action) => (
                   <Button
                     key={action.id}
                     variant="outline"
-                    className="w-full justify-start text-left h-auto p-3 hover:bg-gray-50"
+                    className="w-full justify-start text-left h-auto p-3 hover:bg-gray-50 border-gray-200"
                     onClick={() => handleQuickAction(action)}
                     disabled={isLoading}
                   >
                     <div className={`p-1.5 rounded ${action.color} text-white mr-3 flex-shrink-0`}>
                       {action.icon}
                     </div>
-                    <span className="text-sm font-medium leading-tight">
+                    <span className="text-sm font-medium leading-tight text-gray-900">
                       {action.label}
                     </span>
                   </Button>
