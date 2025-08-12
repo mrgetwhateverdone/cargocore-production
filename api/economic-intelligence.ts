@@ -72,8 +72,8 @@ interface TinyBirdResponse<T> {
  * This part of the code fetches products data from TinyBird API
  */
 async function fetchProducts(): Promise<ProductData[]> {
-  const baseUrl = process.env.WAREHOUSE_BASE_URL;
-  const token = process.env.WAREHOUSE_TOKEN;
+  const baseUrl = process.env.TINYBIRD_BASE_URL;
+  const token = process.env.TINYBIRD_TOKEN;
 
   if (!baseUrl || !token) {
     console.error("❌ Missing TinyBird environment variables");
@@ -81,7 +81,7 @@ async function fetchProducts(): Promise<ProductData[]> {
   }
 
   try {
-    const response = await fetch(`${baseUrl}/v0/pipes/product_details_mv.json?token=${token}&limit=500`);
+    const response = await fetch(`${baseUrl}?token=${token}&limit=500&company_url=COMP002_packiyo`);
     
     if (!response.ok) {
       throw new Error(`TinyBird API error: ${response.status}`);
@@ -108,7 +108,7 @@ async function fetchShipments(): Promise<ShipmentData[]> {
   }
 
   try {
-    const response = await fetch(`${baseUrl}/v0/pipes/inbound_shipments_details_mv.json?token=${token}&limit=500`);
+    const response = await fetch(`${baseUrl}?token=${token}&limit=500&company_url=COMP002_3PL`);
     
     if (!response.ok) {
       throw new Error(`TinyBird API error: ${response.status}`);
