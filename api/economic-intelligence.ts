@@ -483,7 +483,8 @@ function generateKPIDetails(
 }
 
 /**
- * This part of the code generates business impact analysis
+ * This part of the code generates business impact analysis using real TinyBird data
+ * Dynamically analyzes operational data to provide actionable insights
  */
 function generateBusinessImpactAnalysis(
   products: ProductData[],
@@ -492,27 +493,98 @@ function generateBusinessImpactAnalysis(
   financialImpacts: any
 ) {
   const unfulfillableSkus = products.filter(p => !p.active).length;
+  const totalProducts = products.length;
+  const totalShipments = shipments.length;
+  
   const delayedShipments = shipments.filter(s => {
     if (!s.expected_arrival_date || !s.arrival_date) return false;
     return new Date(s.arrival_date) > new Date(s.expected_arrival_date);
   }).length;
 
+  // This part of the code analyzes supplier concentration risk
+  const supplierCounts = shipments.reduce((acc, s) => {
+    if (s.supplier) acc[s.supplier] = (acc[s.supplier] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+  const topSuppliers = Object.entries(supplierCounts)
+    .sort(([, a], [, b]) => b - a)
+    .slice(0, 3);
+  const top3SupplierPercentage = topSuppliers.reduce((sum, [, count]) => sum + count, 0) / totalShipments * 100;
+
+  // This part of the code analyzes brand concentration
+  const brandCounts = products.reduce((acc, p) => {
+    if (p.brand_name) acc[p.brand_name] = (acc[p.brand_name] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+  const totalBrands = Object.keys(brandCounts).length;
+  const topBrands = Object.entries(brandCounts)
+    .sort(([, a], [, b]) => b - a)
+    .slice(0, 3);
+  const top3BrandPercentage = topBrands.reduce((sum, [, count]) => sum + count, 0) / totalProducts * 100;
+
+  // This part of the code calculates average costs for optimization opportunities
+  const avgUnitCost = shipments.reduce((sum, s) => sum + (s.unit_cost || 0), 0) / totalShipments;
+  const highCostShipments = shipments.filter(s => (s.unit_cost || 0) > avgUnitCost * 1.2).length;
+  const highCostPercentage = (highCostShipments / totalShipments) * 100;
+
+  // This part of the code generates dynamic key risks based on actual data analysis
+  const keyRisks = [];
+  
+  if (kpis.shippingCostImpact > 120) {
+    keyRisks.push(`Inventory management challenges compound with ${kpis.shippingCostImpact}% shipping cost increases`);
+  }
+  
+  if (kpis.supplierPerformance < 80) {
+    keyRisks.push(`${kpis.supplierPerformance}% supplier performance creates operational inefficiencies with ${delayedShipments}/${totalShipments} delayed shipments`);
+  }
+  
+  if (top3SupplierPercentage > 60) {
+    keyRisks.push(`Supplier concentration risk: Top 3 suppliers represent ${top3SupplierPercentage.toFixed(1)}% of shipments with ${kpis.supplierDelayRate}% delay rates`);
+  }
+  
+  if (unfulfillableSkus > totalProducts * 0.1) {
+    keyRisks.push(`Product availability crisis: ${unfulfillableSkus}/${totalProducts} SKUs inactive, impacting fulfillment capacity`);
+  }
+  
+  if (kpis.logisticsCostEfficiency > 140) {
+    keyRisks.push(`Operational cost surge: ${kpis.logisticsCostEfficiency}% logistics efficiency indicates process optimization needs`);
+  }
+
+  // This part of the code generates dynamic opportunity areas based on data insights
+  const opportunityAreas = [];
+  
+  if (kpis.supplierDelayRate > 15) {
+    opportunityAreas.push(`Negotiate supplier SLA improvements: ${kpis.supplierDelayRate}% delay rate provides leverage for better terms`);
+  }
+  
+  if (unfulfillableSkus > 0) {
+    opportunityAreas.push(`Implement AI-driven demand forecasting: ${unfulfillableSkus} inactive SKUs suggest inventory optimization potential`);
+  }
+  
+  if (highCostPercentage > 20) {
+    opportunityAreas.push(`Consolidate high-cost shipments: ${highCostPercentage.toFixed(1)}% of shipments exceed average costs by 20%+`);
+  }
+  
+  if (totalBrands > 10 && top3BrandPercentage < 50) {
+    opportunityAreas.push(`Optimize product portfolio: ${totalBrands} brands present diversification advantages during market volatility`);
+  }
+  
+  if (kpis.transportationCosts > 130) {
+    opportunityAreas.push(`Explore alternative shipping routes: ${kpis.transportationCosts}% transportation costs indicate route optimization opportunities`);
+  }
+  
+  // This part of the code ensures we always have actionable opportunities
+  if (opportunityAreas.length < 3) {
+    opportunityAreas.push("Leverage data analytics to identify cost reduction patterns across operations");
+    if (opportunityAreas.length < 3) {
+      opportunityAreas.push("Establish performance benchmarks to track operational efficiency improvements");
+    }
+  }
+
   return {
-    executiveSummary: `Critical Correlation Alert: External economic pressures are directly amplifying our current operational challenges. With ${kpis.shippingCostImpact}% shipping cost impact and ${kpis.supplierDelayRate}% supplier delays, our ${unfulfillableSkus} inactive SKUs and ${kpis.supplierPerformance}% supplier performance represent operational challenges requiring strategic intervention.`,
-    
-    keyRisks: [
-      `Inventory management challenges compound with ${kpis.shippingCostImpact}% shipping cost increases`,
-      `${kpis.supplierPerformance}% supplier performance creates operational inefficiencies`,
-      `Brand concentration risk escalates with ${kpis.supplierDelayRate}% supplier delay rates`,
-      `Operational costs impact efficiency while fulfillment optimization continues`
-    ],
-    
-    opportunityAreas: [
-      "Leverage market conditions to negotiate better supplier terms",
-      "Implement AI-driven demand forecasting to prevent future stockouts", 
-      "Consolidate shipping volumes for better freight rates",
-      "Diversify product portfolio during market volatility"
-    ]
+    executiveSummary: `Real-time Analysis: Current operational data reveals ${keyRisks.length} critical risk factors requiring attention. With ${kpis.shippingCostImpact}% shipping cost impact and ${kpis.supplierPerformance}% supplier performance across ${totalShipments} shipments, strategic intervention can address ${unfulfillableSkus} inactive SKUs and optimize ${totalBrands} brand portfolio for enhanced operational resilience.`,
+    keyRisks,
+    opportunityAreas
   };
 }
 
