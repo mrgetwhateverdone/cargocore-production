@@ -91,13 +91,13 @@ export function AILearningSystemSection({ userBehavior, isLoading }: AILearningS
                   className={`p-3 text-left border rounded-lg transition-all ${
                     selectedWarehouse?.warehouseId === warehouse.warehouseId
                       ? 'border-purple-300 bg-purple-50 text-purple-900'
-                      : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                      : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50 text-gray-900'
                   }`}
                 >
-                  <div className="text-xs font-medium truncate">
+                  <div className="text-xs font-medium truncate text-gray-900">
                     {warehouse.warehouseName.split('(')[0].trim()}
                   </div>
-                  <div className="text-xs text-gray-500 mt-1">
+                  <div className="text-xs text-gray-600 mt-1">
                     Score: {warehouse.engagementScore}
                   </div>
                 </button>
