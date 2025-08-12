@@ -275,6 +275,118 @@ function generateEconomicInsights(
 }
 
 /**
+ * This part of the code generates detailed KPI information for overlays
+ */
+function generateKPIDetails(
+  products: ProductData[],
+  shipments: ShipmentData[],
+  kpis: any,
+  financialImpacts: any
+) {
+  const totalShipments = shipments.length;
+  const totalProducts = products.length;
+  const activeProducts = products.filter(p => p.active).length;
+  
+  return {
+    supplierPerformance: {
+      id: 'supplier-performance',
+      title: 'Supplier Performance Index',
+      value: `${kpis.supplierPerformance}/100`,
+      description: 'Your supplier delivery performance and reliability metrics',
+      status: kpis.supplierPerformance >= 90 ? 'good' : kpis.supplierPerformance >= 70 ? 'warning' : 'critical',
+      detailedAnalysis: `Based on analysis of ${totalShipments} shipments, your supplier performance shows ${kpis.supplierPerformance}% on-time delivery rate. This metric tracks actual arrival dates against expected delivery dates to measure supplier reliability and operational efficiency.`,
+      keyMetrics: [
+        {
+          label: 'On-time Deliveries',
+          value: `${Math.round((kpis.supplierPerformance / 100) * totalShipments)}/${totalShipments}`,
+          description: 'Shipments that arrived on or before expected date'
+        },
+        {
+          label: 'Total Suppliers',
+          value: new Set(shipments.map(s => s.supplier).filter(s => s)).size,
+          description: 'Unique suppliers in your network'
+        },
+        {
+          label: 'Average Delay',
+          value: kpis.supplierDelayRate > 0 ? `${kpis.supplierDelayRate}%` : 'No delays',
+          description: 'Percentage of shipments experiencing delays'
+        }
+      ],
+      recommendations: [
+        'Focus on improving relationships with consistently late suppliers',
+        'Implement supplier scorecards to track performance trends',
+        'Consider backup suppliers for critical SKUs',
+        'Negotiate delivery time buffers in contracts'
+      ]
+    },
+    
+    shippingCostImpact: {
+      id: 'shipping-cost-impact',
+      title: 'Shipping Cost Impact',
+      value: `${kpis.shippingCostImpact}%`,
+      description: 'Impact of shipping costs on your operational expenses',
+      status: kpis.shippingCostImpact <= 110 ? 'good' : kpis.shippingCostImpact <= 130 ? 'warning' : 'critical',
+      detailedAnalysis: `Current shipping costs are running at ${kpis.shippingCostImpact}% compared to baseline levels. This metric analyzes unit cost trends over time to identify cost inflation or optimization opportunities in your logistics operations.`,
+      keyMetrics: [
+        {
+          label: 'Cost Trend',
+          value: kpis.shippingCostImpact > 100 ? 'Increasing' : 'Stable',
+          description: 'Direction of shipping cost changes'
+        },
+        {
+          label: 'Total Shipments',
+          value: totalShipments,
+          description: 'Shipments analyzed for cost trends'
+        },
+        {
+          label: 'Average Unit Cost',
+          value: totalShipments > 0 ? `$${(shipments.reduce((sum, s) => sum + (s.unit_cost || 0), 0) / totalShipments).toFixed(2)}` : '$0',
+          description: 'Average cost per unit across all shipments'
+        }
+      ],
+      recommendations: [
+        'Analyze shipping routes for optimization opportunities',
+        'Consolidate shipments to reduce per-unit costs',
+        'Negotiate volume discounts with logistics providers',
+        'Consider alternative shipping methods for non-urgent deliveries'
+      ]
+    },
+    
+    supplyChainHealth: {
+      id: 'supply-chain-health',
+      title: 'Supply Chain Health',
+      value: `${kpis.supplyChainHealth}/100`,
+      description: 'Overall health of your supply chain operations',
+      status: kpis.supplyChainHealth >= 90 ? 'good' : kpis.supplyChainHealth >= 70 ? 'warning' : 'critical',
+      detailedAnalysis: `Your supply chain health score of ${kpis.supplyChainHealth}% is based on quantity accuracy between expected and received shipments. This measures operational efficiency and helps identify inventory management challenges.`,
+      keyMetrics: [
+        {
+          label: 'Accurate Shipments',
+          value: `${Math.round((kpis.supplyChainHealth / 100) * totalShipments)}/${totalShipments}`,
+          description: 'Shipments with matching expected vs received quantities'
+        },
+        {
+          label: 'Active Products',
+          value: `${activeProducts}/${totalProducts}`,
+          description: 'Products currently active in your catalog'
+        },
+        {
+          label: 'Quantity Variance',
+          value: `${100 - kpis.supplyChainHealth}%`,
+          description: 'Percentage of shipments with quantity discrepancies'
+        }
+      ],
+      recommendations: [
+        'Improve inventory forecasting accuracy',
+        'Implement stricter quality control processes',
+        'Review supplier contracts for quantity guarantees',
+        'Enhance communication with suppliers on expected quantities'
+      ]
+    }
+  };
+}
+
+/**
  * This part of the code generates business impact analysis
  */
 function generateBusinessImpactAnalysis(
@@ -351,12 +463,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const financialImpacts = calculateFinancialImpacts(products, shipments);
     const insights = generateEconomicInsights(products, shipments, kpis, financialImpacts);
     const businessImpact = generateBusinessImpactAnalysis(products, shipments, kpis, financialImpacts);
+    const kpiDetails = generateKPIDetails(products, shipments, kpis, financialImpacts);
 
     const economicData = {
       kpis,
       insights,
       businessImpact,
       financialImpacts,
+      kpiDetails,
       lastUpdated: new Date().toISOString()
     };
 

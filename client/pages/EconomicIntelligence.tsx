@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { useEconomicIntelligenceData } from "@/hooks/useEconomicIntelligenceData";
 import { LoadingState } from "@/components/ui/loading-spinner";
@@ -6,6 +7,8 @@ import { useSettingsIntegration } from "@/hooks/useSettingsIntegration";
 import { FormattedCurrency } from "@/components/ui/formatted-value";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { EconomicKPIOverlay } from "@/components/EconomicKPIOverlay";
+import type { EconomicKPIDetail } from "@/types/api";
 import { 
   AlertTriangle, 
   Info, 
@@ -21,6 +24,7 @@ import {
 export default function EconomicIntelligence() {
   const { data, isLoading, error, refetch } = useEconomicIntelligenceData();
   const { isPageAIEnabled } = useSettingsIntegration();
+  const [selectedKPI, setSelectedKPI] = useState<EconomicKPIDetail | null>(null);
 
   // This part of the code determines status badge color based on performance value
   const getStatusColor = (value: number, type: 'performance' | 'cost' | 'health') => {
@@ -222,7 +226,10 @@ export default function EconomicIntelligence() {
                         style={{ width: `${data.kpis.supplierPerformance}%` }}
                       ></div>
                     </div>
-                    <button className={`text-xs hover:underline ${data.kpis.supplierPerformance < 70 ? 'text-red-600' : data.kpis.supplierPerformance < 90 ? 'text-yellow-600' : 'text-green-600'}`}>
+                    <button 
+                      onClick={() => setSelectedKPI(data.kpiDetails?.supplierPerformance || null)}
+                      className={`text-xs hover:underline ${data.kpis.supplierPerformance < 70 ? 'text-red-600' : data.kpis.supplierPerformance < 90 ? 'text-yellow-600' : 'text-green-600'}`}
+                    >
                       Click for details
                     </button>
                   </CardContent>
@@ -248,7 +255,10 @@ export default function EconomicIntelligence() {
                         style={{ width: `${Math.min(data.kpis.shippingCostImpact, 200) / 2}%` }}
                       ></div>
                     </div>
-                    <button className={`text-xs hover:underline ${data.kpis.shippingCostImpact > 130 ? 'text-red-600' : data.kpis.shippingCostImpact > 110 ? 'text-yellow-600' : 'text-green-600'}`}>
+                    <button 
+                      onClick={() => setSelectedKPI(data.kpiDetails?.shippingCostImpact || null)}
+                      className={`text-xs hover:underline ${data.kpis.shippingCostImpact > 130 ? 'text-red-600' : data.kpis.shippingCostImpact > 110 ? 'text-yellow-600' : 'text-green-600'}`}
+                    >
                       Click for details
                     </button>
                   </CardContent>
@@ -300,7 +310,10 @@ export default function EconomicIntelligence() {
                         style={{ width: `${data.kpis.supplyChainHealth}%` }}
                       ></div>
                     </div>
-                    <button className={`text-xs hover:underline ${data.kpis.supplyChainHealth < 70 ? 'text-red-600' : data.kpis.supplyChainHealth < 90 ? 'text-yellow-600' : 'text-green-600'}`}>
+                    <button 
+                      onClick={() => setSelectedKPI(data.kpiDetails?.supplyChainHealth || null)}
+                      className={`text-xs hover:underline ${data.kpis.supplyChainHealth < 70 ? 'text-red-600' : data.kpis.supplyChainHealth < 90 ? 'text-yellow-600' : 'text-green-600'}`}
+                    >
                       Click for details
                     </button>
                   </CardContent>
@@ -414,6 +427,13 @@ export default function EconomicIntelligence() {
             </div>
           </>
         )}
+
+        {/* Economic KPI Detail Overlay */}
+        <EconomicKPIOverlay
+          isOpen={!!selectedKPI}
+          onClose={() => setSelectedKPI(null)}
+          kpi={selectedKPI}
+        />
       </div>
     </Layout>
   );

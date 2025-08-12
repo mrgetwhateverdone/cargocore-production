@@ -668,11 +668,31 @@ export interface FinancialImpacts {
   top3BrandPercentage: number;
 }
 
+export interface EconomicKPIDetail {
+  id: string;
+  title: string;
+  value: string | number;
+  description: string;
+  status: 'critical' | 'warning' | 'good';
+  detailedAnalysis: string;
+  keyMetrics: Array<{
+    label: string;
+    value: string | number;
+    description: string;
+  }>;
+  recommendations: string[];
+}
+
 export interface EconomicIntelligenceData {
   kpis: EconomicKPIs;
   insights: EconomicInsight[];
   businessImpact: BusinessImpactAnalysis;
   financialImpacts: FinancialImpacts;
+  kpiDetails?: {
+    supplierPerformance: EconomicKPIDetail;
+    shippingCostImpact: EconomicKPIDetail;
+    supplyChainHealth: EconomicKPIDetail;
+  };
   lastUpdated: string;
 }
 
