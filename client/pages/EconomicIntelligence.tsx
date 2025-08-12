@@ -284,7 +284,10 @@ export default function EconomicIntelligence() {
                         style={{ width: `${Math.min(data.kpis.transportationCosts, 200) / 2}%` }}
                       ></div>
                     </div>
-                    <button className={`text-xs hover:underline ${data.kpis.transportationCosts > 130 ? 'text-red-600' : data.kpis.transportationCosts > 110 ? 'text-yellow-600' : 'text-green-600'}`}>
+                    <button 
+                      onClick={() => setSelectedKPI(data.kpiDetails?.transportationCosts || null)}
+                      className={`text-xs hover:underline ${data.kpis.transportationCosts > 130 ? 'text-red-600' : data.kpis.transportationCosts > 110 ? 'text-yellow-600' : 'text-green-600'}`}
+                    >
                       Click for details
                     </button>
                   </CardContent>
@@ -339,7 +342,10 @@ export default function EconomicIntelligence() {
                         style={{ width: `${Math.min(data.kpis.logisticsCostEfficiency, 200) / 2}%` }}
                       ></div>
                     </div>
-                    <button className={`text-xs hover:underline ${data.kpis.logisticsCostEfficiency > 130 ? 'text-red-600' : data.kpis.logisticsCostEfficiency > 110 ? 'text-yellow-600' : 'text-green-600'}`}>
+                    <button 
+                      onClick={() => setSelectedKPI(data.kpiDetails?.logisticsCostEfficiency || null)}
+                      className={`text-xs hover:underline ${data.kpis.logisticsCostEfficiency > 130 ? 'text-red-600' : data.kpis.logisticsCostEfficiency > 110 ? 'text-yellow-600' : 'text-green-600'}`}
+                    >
                       Click for details
                     </button>
                   </CardContent>
@@ -365,7 +371,10 @@ export default function EconomicIntelligence() {
                         style={{ width: `${data.kpis.supplierDelayRate}%` }}
                       ></div>
                     </div>
-                    <button className={`text-xs hover:underline ${data.kpis.supplierDelayRate > 20 ? 'text-red-600' : data.kpis.supplierDelayRate > 10 ? 'text-yellow-600' : 'text-green-600'}`}>
+                    <button 
+                      onClick={() => setSelectedKPI(data.kpiDetails?.supplierDelayRate || null)}
+                      className={`text-xs hover:underline ${data.kpis.supplierDelayRate > 20 ? 'text-red-600' : data.kpis.supplierDelayRate > 10 ? 'text-yellow-600' : 'text-green-600'}`}
+                    >
                       Click for details
                     </button>
                   </CardContent>

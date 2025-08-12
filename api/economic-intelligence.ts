@@ -382,6 +382,102 @@ function generateKPIDetails(
         'Review supplier contracts for quantity guarantees',
         'Enhance communication with suppliers on expected quantities'
       ]
+    },
+    
+    transportationCosts: {
+      id: 'transportation-costs',
+      title: 'Transportation Cost Index',
+      value: `${kpis.transportationCosts}%`,
+      description: 'Transportation cost trends affecting your deliveries',
+      status: kpis.transportationCosts <= 110 ? 'good' : kpis.transportationCosts <= 130 ? 'warning' : 'critical',
+      detailedAnalysis: `Transportation costs are currently at ${kpis.transportationCosts}% of baseline levels. This metric tracks cost variations across different shipping routes and methods to identify transportation efficiency opportunities.`,
+      keyMetrics: [
+        {
+          label: 'Cost Variance',
+          value: kpis.transportationCosts > 100 ? `+${kpis.transportationCosts - 100}%` : 'Stable',
+          description: 'Change from baseline transportation costs'
+        },
+        {
+          label: 'Shipment Routes',
+          value: new Set(shipments.map(s => `${s.ship_from_city || 'Unknown'}, ${s.ship_from_state || 'Unknown'}`)).size,
+          description: 'Unique shipping origin locations'
+        },
+        {
+          label: 'Average Distance Impact',
+          value: totalShipments > 0 ? `${kpis.transportationCosts}% baseline` : 'No data',
+          description: 'Transportation cost efficiency compared to standard rates'
+        }
+      ],
+      recommendations: [
+        'Analyze shipping routes for cost optimization',
+        'Negotiate regional carrier contracts',
+        'Consider freight consolidation opportunities',
+        'Evaluate alternative transportation modes'
+      ]
+    },
+    
+    logisticsCostEfficiency: {
+      id: 'logistics-cost-efficiency',
+      title: 'Logistics Cost Efficiency',
+      value: `${kpis.logisticsCostEfficiency}%`,
+      description: 'Efficiency of your logistics and shipping operations',
+      status: kpis.logisticsCostEfficiency <= 110 ? 'good' : kpis.logisticsCostEfficiency <= 130 ? 'warning' : 'critical',
+      detailedAnalysis: `Logistics cost efficiency at ${kpis.logisticsCostEfficiency}% indicates operational performance relative to industry benchmarks. This metric evaluates cost per unit processed and identifies areas for operational optimization.`,
+      keyMetrics: [
+        {
+          label: 'Cost per Unit',
+          value: totalShipments > 0 ? `$${(shipments.reduce((sum, s) => sum + ((s.unit_cost || 0) * s.received_quantity), 0) / shipments.reduce((sum, s) => sum + s.received_quantity, 0)).toFixed(2)}` : '$0',
+          description: 'Average cost per unit across all operations'
+        },
+        {
+          label: 'Total Units Processed',
+          value: shipments.reduce((sum, s) => sum + s.received_quantity, 0),
+          description: 'Total units handled in logistics operations'
+        },
+        {
+          label: 'Efficiency Rating',
+          value: kpis.logisticsCostEfficiency <= 110 ? 'Excellent' : kpis.logisticsCostEfficiency <= 130 ? 'Good' : 'Needs Improvement',
+          description: 'Overall logistics efficiency assessment'
+        }
+      ],
+      recommendations: [
+        'Optimize warehouse layouts for faster processing',
+        'Implement automation for high-volume operations',
+        'Review staffing levels during peak periods',
+        'Streamline order fulfillment processes'
+      ]
+    },
+    
+    supplierDelayRate: {
+      id: 'supplier-delay-rate',
+      title: 'Supplier Delay Rate',
+      value: `${kpis.supplierDelayRate}%`,
+      description: 'Percentage of suppliers experiencing delays',
+      status: kpis.supplierDelayRate <= 10 ? 'good' : kpis.supplierDelayRate <= 20 ? 'warning' : 'critical',
+      detailedAnalysis: `${kpis.supplierDelayRate}% of shipments experienced delays beyond expected delivery dates. This metric tracks supplier reliability and helps identify potential supply chain disruptions that could impact customer satisfaction.`,
+      keyMetrics: [
+        {
+          label: 'Delayed Shipments',
+          value: `${Math.round((kpis.supplierDelayRate / 100) * totalShipments)}/${totalShipments}`,
+          description: 'Shipments that arrived after expected date'
+        },
+        {
+          label: 'On-time Rate',
+          value: `${100 - kpis.supplierDelayRate}%`,
+          description: 'Percentage of shipments delivered on schedule'
+        },
+        {
+          label: 'Impact Assessment',
+          value: kpis.supplierDelayRate > 20 ? 'High Risk' : kpis.supplierDelayRate > 10 ? 'Medium Risk' : 'Low Risk',
+          description: 'Potential impact on operations and customer service'
+        }
+      ],
+      recommendations: [
+        'Identify and address consistently late suppliers',
+        'Implement early warning systems for potential delays',
+        'Develop contingency plans for critical deliveries',
+        'Negotiate more realistic delivery timelines'
+      ]
     }
   };
 }

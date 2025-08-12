@@ -692,6 +692,9 @@ export interface EconomicIntelligenceData {
     supplierPerformance: EconomicKPIDetail;
     shippingCostImpact: EconomicKPIDetail;
     supplyChainHealth: EconomicKPIDetail;
+    transportationCosts: EconomicKPIDetail;
+    logisticsCostEfficiency: EconomicKPIDetail;
+    supplierDelayRate: EconomicKPIDetail;
   };
   lastUpdated: string;
 }
