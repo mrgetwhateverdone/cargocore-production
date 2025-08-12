@@ -143,28 +143,27 @@ export default function EconomicIntelligence() {
 
             {/* Economic Intelligence Agent Section */}
             {isPageAIEnabled('liveIntelligence') && data.insights.length > 0 && (
-              <Card className="mb-6">
-                <CardHeader>
-                  <CardTitle className="flex items-center justify-between">
-                    <span>Economic Intelligence Agent</span>
-                    <span className="text-sm font-normal text-gray-500">
-                      {data.insights.length} insights from Economic Intelligence Agent
-                    </span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {data.insights.map((insight) => (
-                      <div
-                        key={insight.id}
-                        className={`p-4 rounded-lg border ${
-                          insight.severity === 'critical' 
-                            ? 'bg-red-50 border-red-200' 
-                            : insight.severity === 'warning'
-                            ? 'bg-yellow-50 border-yellow-200'
-                            : 'bg-blue-50 border-blue-200'
-                        }`}
-                      >
+              <div className="mb-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-xl font-semibold text-gray-900">Economic Intelligence Agent</h2>
+                  <span className="text-sm text-gray-500">
+                    {data.insights.length} insights from Economic Intelligence Agent
+                  </span>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {data.insights.map((insight) => (
+                    <Card
+                      key={insight.id}
+                      className={`${
+                        insight.severity === 'critical' 
+                          ? 'bg-red-50 border-red-200' 
+                          : insight.severity === 'warning'
+                          ? 'bg-yellow-50 border-yellow-200'
+                          : 'bg-blue-50 border-blue-200'
+                      }`}
+                    >
+                      <CardContent className="p-4">
                         <div className="flex items-start justify-between mb-3">
                           <div className="flex items-center">
                             {insight.severity === 'critical' ? (
@@ -178,7 +177,7 @@ export default function EconomicIntelligence() {
                           </div>
                         </div>
                         
-                        <p className="text-sm text-gray-700 mb-3 leading-relaxed">
+                        <p className="text-sm text-gray-900 mb-3 leading-relaxed font-medium">
                           {insight.description}
                         </p>
                         
@@ -186,11 +185,11 @@ export default function EconomicIntelligence() {
                           <DollarSign className="h-4 w-4 mr-1" />
                           <FormattedCurrency value={insight.dollarImpact} /> impact
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </div>
             )}
 
             {/* Global Economic Intelligence Grid */}
