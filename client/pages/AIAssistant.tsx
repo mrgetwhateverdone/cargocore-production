@@ -163,11 +163,11 @@ export default function AIAssistant() {
         </div>
 
         {/* This part of the code creates the main chat layout - clean and accessible */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 md:gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 md:gap-6 items-start">
           
           {/* This part of the code creates the chat conversation area */}
           <div className="lg:col-span-3">
-            <Card className="bg-white shadow-sm">
+            <Card className="bg-white shadow-sm rounded-lg overflow-hidden">
               <CardHeader className="border-b border-gray-200 pb-4">
                 <CardTitle className="text-lg font-semibold text-gray-900">Conversation</CardTitle>
               </CardHeader>
@@ -239,7 +239,7 @@ export default function AIAssistant() {
                 )}
 
                 {/* This part of the code creates the message input area - always visible */}
-                <div className="border-t border-gray-200 p-4 bg-gray-50">
+                <div className="border-t border-gray-200 p-4 bg-gray-50 rounded-b-lg">
                   <div className="flex space-x-3">
                     <Textarea
                       ref={textareaRef}
@@ -248,13 +248,13 @@ export default function AIAssistant() {
                       onChange={(e) => setInputMessage(e.target.value)}
                       onKeyDown={handleKeyDown}
                       disabled={isLoading}
-                      className="flex-1 min-h-[50px] max-h-32 resize-none bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-black"
+                      className="flex-1 min-h-[50px] max-h-32 resize-none bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-black rounded-lg"
                       rows={2}
                     />
                     <Button
                       onClick={() => sendMessage(inputMessage)}
                       disabled={!inputMessage.trim() || isLoading}
-                      className="px-4 py-2 h-auto bg-blue-600 hover:bg-blue-700"
+                      className="px-4 py-2 h-auto bg-blue-600 hover:bg-blue-700 rounded-lg"
                     >
                       <Send className="h-4 w-4" />
                     </Button>
@@ -269,7 +269,7 @@ export default function AIAssistant() {
 
           {/* This part of the code creates the quick actions sidebar */}
           <div className="lg:col-span-1">
-            <Card className="bg-white shadow-sm">
+            <Card className="bg-white shadow-sm rounded-lg overflow-hidden">
               <CardHeader className="border-b border-gray-200 pb-4">
                 <CardTitle className="text-lg font-semibold text-gray-900">Quick Actions</CardTitle>
                 <p className="text-sm text-gray-600">
