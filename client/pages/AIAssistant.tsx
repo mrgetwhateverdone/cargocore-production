@@ -163,18 +163,18 @@ export default function AIAssistant() {
         </div>
 
         {/* This part of the code creates the main chat layout - clean and accessible */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 md:gap-6 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 md:gap-6 items-stretch">
           
           {/* This part of the code creates the chat conversation area */}
           <div className="lg:col-span-3">
-            <Card className="bg-white shadow-sm rounded-lg overflow-hidden">
-              <CardHeader className="border-b border-gray-200 pb-4">
+            <Card className="bg-white shadow-sm rounded-lg overflow-hidden h-full flex flex-col">
+              <CardHeader className="border-b border-gray-200 pb-4 flex-shrink-0">
                 <CardTitle className="text-lg font-semibold text-gray-900">Conversation</CardTitle>
               </CardHeader>
-              <CardContent className="p-0">
+              <CardContent className="p-0 flex-1 flex flex-col">
                 
                 {/* This part of the code creates the scrollable message area */}
-                <div className="h-96 overflow-y-auto p-4 space-y-4">
+                <div className="flex-1 overflow-y-auto p-4 space-y-4">
                   {messages.length === 0 ? (
                     <div className="flex items-center justify-center h-full text-center">
                       <div className="space-y-3">
@@ -239,7 +239,7 @@ export default function AIAssistant() {
                 )}
 
                 {/* This part of the code creates the message input area - always visible */}
-                <div className="border-t border-gray-200 p-4 bg-gray-50 rounded-b-lg">
+                <div className="border-t border-gray-200 p-4 bg-gray-50 rounded-b-lg flex-shrink-0">
                   <div className="flex space-x-3">
                     <Textarea
                       ref={textareaRef}
@@ -269,14 +269,14 @@ export default function AIAssistant() {
 
           {/* This part of the code creates the quick actions sidebar */}
           <div className="lg:col-span-1">
-            <Card className="bg-white shadow-sm rounded-lg overflow-hidden">
-              <CardHeader className="border-b border-gray-200 pb-4">
+            <Card className="bg-white shadow-sm rounded-lg overflow-hidden h-full flex flex-col">
+              <CardHeader className="border-b border-gray-200 pb-4 flex-shrink-0">
                 <CardTitle className="text-lg font-semibold text-gray-900">Quick Actions</CardTitle>
                 <p className="text-sm text-gray-600">
                   Get instant insights about your operations
                 </p>
               </CardHeader>
-              <CardContent className="p-4 space-y-3">
+              <CardContent className="p-4 space-y-3 flex-1 flex flex-col">
                 {quickActions.map((action) => (
                   <Button
                     key={action.id}
@@ -297,7 +297,7 @@ export default function AIAssistant() {
                 ))}
                 
                 {/* This part of the code shows operational context indicator */}
-                <div className="mt-6 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                <div className="mt-auto p-3 bg-blue-50 rounded-lg border border-blue-200">
                   <div className="flex items-start space-x-2">
                     <div className="p-1 bg-blue-500 rounded text-white">
                       <BarChart3 className="h-3 w-3" />
