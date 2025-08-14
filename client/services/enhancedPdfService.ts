@@ -176,10 +176,12 @@ export class EnhancedPDFService {
     this.doc.text(`Generated: ${new Date().toLocaleDateString()}`, this.margin, this.currentY);
     this.currentY += 8;
     
-    // This part of the code adds filter information
+    // This part of the code adds development data period information
     if (reportData.reportPeriod) {
+      this.doc.setTextColor('#666666'); // Grey color for development data info
       this.doc.text(`Period: ${reportData.reportPeriod}`, this.margin, this.currentY);
       this.currentY += 8;
+      this.doc.setTextColor(this.secondaryColor); // Reset color
     }
     
     if (reportData.filters) {
@@ -196,6 +198,14 @@ export class EnhancedPDFService {
         this.doc.text(`Metrics: ${filters.metrics.join(', ')}`, this.margin, this.currentY);
         this.currentY += 8;
       }
+      
+      // This part of the code adds development data notice
+      this.doc.setTextColor('#888888');
+      this.doc.setFontSize(9);
+      this.doc.text('Note: Date filtering unavailable for development dataset', this.margin, this.currentY);
+      this.currentY += 6;
+      this.doc.setFontSize(10);
+      this.doc.setTextColor(this.secondaryColor);
     }
     
     this.currentY += 12;
@@ -226,9 +236,12 @@ export class EnhancedPDFService {
     if (reportData.summary) {
       const s = reportData.summary;
       if (s.filtersApplied > 0) {
-        summary.push(`• Filters Applied: ${s.filtersApplied}`);
+        summary.push(`• Active Filters: ${s.filtersApplied} (brand/warehouse only)`);
       }
     }
+    
+    // This part of the code adds development data notice
+    summary.push(`• Dataset: Development data (last 250 relevant points)`);
     
     // This part of the code adds operational metrics
     if (data.shipments && data.shipments.length > 0) {
@@ -274,14 +287,15 @@ export class EnhancedPDFService {
    */
   private addProductsTable(products: any[], limit: number = 50): void {
     if (!products || products.length === 0) {
-      this.doc.text('No products available', this.margin, this.currentY);
+      this.doc.text('No products available in filtered dataset', this.margin, this.currentY);
       this.currentY += 15;
       return;
     }
 
     this.doc.setFontSize(14);
     this.doc.setTextColor(this.primaryColor);
-    this.doc.text(`Products (First ${Math.min(products.length, limit)})`, this.margin, this.currentY);
+    const actualCount = Math.min(products.length, limit);
+    this.doc.text(`Products (Showing ${actualCount} of ${products.length} filtered results)`, this.margin, this.currentY);
     this.currentY += 15;
 
     try {
@@ -323,14 +337,15 @@ export class EnhancedPDFService {
    */
   private addShipmentsTable(shipments: any[], limit: number = 50): void {
     if (!shipments || shipments.length === 0) {
-      this.doc.text('No shipments available', this.margin, this.currentY);
+      this.doc.text('No shipments available in filtered dataset', this.margin, this.currentY);
       this.currentY += 15;
       return;
     }
 
     this.doc.setFontSize(14);
     this.doc.setTextColor(this.primaryColor);
-    this.doc.text(`Shipments (First ${Math.min(shipments.length, limit)})`, this.margin, this.currentY);
+    const actualCount = Math.min(shipments.length, limit);
+    this.doc.text(`Shipments (Showing ${actualCount} of ${shipments.length} filtered results)`, this.margin, this.currentY);
     this.currentY += 15;
 
     try {
@@ -417,10 +432,11 @@ export class EnhancedPDFService {
     this.addSection('Executive Summary', () => {
       const data = reportData.data;
       const summary = [
-        `Total Products Managed: ${data?.products?.length || 0}`,
+        `Total Products in Dataset: ${data?.products?.length || 0}`,
         `Active Shipments: ${data?.shipments?.filter((s: any) => s.status !== 'completed' && s.status !== 'cancelled')?.length || 0}`,
         `Completed Orders: ${data?.shipments?.filter((s: any) => s.status === 'completed')?.length || 0}`,
-        `Order Fulfillment Rate: ${this.calculateFulfillmentRate(data?.shipments || [])}%`
+        `Order Fulfillment Rate: ${this.calculateFulfillmentRate(data?.shipments || [])}%`,
+        `Note: Based on development dataset (limited sample)`
       ];
       
       summary.forEach(line => {
@@ -448,10 +464,11 @@ export class EnhancedPDFService {
       const inactiveProducts = products.filter((p: any) => !p.active);
       
       const overview = [
-        `Total SKUs: ${products.length}`,
+        `Total SKUs in Dataset: ${products.length}`,
         `Active SKUs: ${activeProducts.length}`,
         `Inactive SKUs: ${inactiveProducts.length}`,
-        `Stock Health: ${this.getStockHealthStatus(activeProducts.length, products.length)}`
+        `Stock Health: ${this.getStockHealthStatus(activeProducts.length, products.length)}`,
+        `Note: Development dataset - limited sample size`
       ];
       
       overview.forEach(line => {
@@ -479,10 +496,11 @@ export class EnhancedPDFService {
       const cancelledShipments = shipments.filter((s: any) => s.status === 'cancelled');
       
       const slaMetrics = [
-        `Total Shipments: ${shipments.length}`,
+        `Total Shipments in Dataset: ${shipments.length}`,
         `Completed: ${completedShipments.length}`,
         `Cancelled: ${cancelledShipments.length}`,
-        `Success Rate: ${shipments.length > 0 ? ((completedShipments.length / shipments.length) * 100).toFixed(1) : 0}%`
+        `Success Rate: ${shipments.length > 0 ? ((completedShipments.length / shipments.length) * 100).toFixed(1) : 0}%`,
+        `Note: Metrics based on development dataset`
       ];
       
       slaMetrics.forEach(line => {
@@ -509,10 +527,11 @@ export class EnhancedPDFService {
       const products = reportData.data?.products || [];
       
       const laborMetrics = [
-        `Processing Volume: ${shipments.length} shipments`,
-        `Product Complexity: ${products.length} SKUs`,
-        `Estimated Labor Hours: ${this.estimateLaborHours(shipments, products)}`,
-        `Recommended Staffing: ${this.recommendStaffing(shipments, products)} FTE`
+        `Processing Volume: ${shipments.length} shipments (sample)`,
+        `Product Complexity: ${products.length} SKUs (sample)`,
+        `Estimated Labor Hours: ${this.estimateLaborHours(shipments, products)} (projected)`,
+        `Recommended Staffing: ${this.recommendStaffing(shipments, products)} FTE (projected)`,
+        `Note: Projections based on development dataset`
       ];
       
       laborMetrics.forEach(line => {

@@ -152,6 +152,7 @@ export default function Reports() {
   ];
 
   // This part of the code applies filters to the data based on user selections
+  // Note: Date filtering is disabled for development data - uses last 250 data points instead
   const applyFilters = (products: any[], shipments: any[]) => {
     let filteredProducts = [...products];
     let filteredShipments = [...shipments];
@@ -173,45 +174,17 @@ export default function Reports() {
       );
     }
     
-    // This part of the code applies date range filtering
-    if (selectedDateRange !== "all") {
-      const now = new Date();
-      let startDate: Date;
-      
-      switch (selectedDateRange) {
-        case "last-7-days":
-          startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-          break;
-        case "last-14-days":
-          startDate = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
-          break;
-        case "last-30-days":
-          startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-          break;
-        case "last-90-days":
-          startDate = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
-          break;
-        default:
-          startDate = new Date(0); // No filtering
-      }
-      
-      if (startDate.getTime() > 0) {
-        filteredProducts = filteredProducts.filter(p => {
-          try {
-            return new Date(p.created_date) >= startDate;
-          } catch {
-            return true; // Keep items with invalid dates
-          }
-        });
-        
-        filteredShipments = filteredShipments.filter(s => {
-          try {
-            return new Date(s.created_date) >= startDate;
-          } catch {
-            return true; // Keep items with invalid dates
-          }
-        });
-      }
+    // This part of the code limits to last 250 relevant data points instead of date filtering
+    // Date filtering disabled for development data
+    const maxDataPoints = 250;
+    
+    // Take the most recent/relevant data points
+    if (filteredProducts.length > maxDataPoints) {
+      filteredProducts = filteredProducts.slice(0, maxDataPoints);
+    }
+    
+    if (filteredShipments.length > maxDataPoints) {
+      filteredShipments = filteredShipments.slice(0, maxDataPoints);
     }
     
     return { filteredProducts, filteredShipments };
@@ -239,36 +212,14 @@ export default function Reports() {
         data.shipments || []
       );
       
-      // This part of the code logs data for debugging
-      console.log('🔍 PDF Debug - Original data:', {
-        products: data.products?.length || 0,
-        shipments: data.shipments?.length || 0,
-        selectedDateRange,
-        selectedBrands: selectedBrands.length,
-        selectedWarehouses: selectedWarehouses.length
+      // This part of the code logs data for development tracking
+      console.log('📄 CargoCore Reports: Generating PDF with', {
+        template: template?.name || 'Custom Report',
+        products: filteredProducts.length,
+        shipments: filteredShipments.length,
+        brandFilters: selectedBrands.length,
+        warehouseFilters: selectedWarehouses.length
       });
-      
-      console.log('🔍 PDF Debug - Filtered data:', {
-        filteredProducts: filteredProducts.length,
-        filteredShipments: filteredShipments.length
-      });
-      
-      // This part of the code shows sample dates for debugging
-      if (data.products?.length > 0) {
-        console.log('🔍 Sample product dates:', data.products.slice(0, 3).map(p => ({
-          id: p.product_id,
-          created_date: p.created_date,
-          parsed: new Date(p.created_date)
-        })));
-      }
-      
-      if (data.shipments?.length > 0) {
-        console.log('🔍 Sample shipment dates:', data.shipments.slice(0, 3).map(s => ({
-          id: s.shipment_id,
-          created_date: s.created_date,
-          parsed: new Date(s.created_date)
-        })));
-      }
       
       // This part of the code creates filtered insights based on selected metrics
       let filteredInsights = data.insights || [];
@@ -300,7 +251,7 @@ export default function Reports() {
         availableBrands,
         availableWarehouses,
         generatedAt: new Date().toISOString(),
-        reportPeriod: selectedDateRange === "all" ? "All available data" : selectedDateRange.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase()),
+        reportPeriod: "Last 250 relevant data points (Development dataset)",
         summary: {
           totalProducts: filteredProducts.length,
           totalShipments: filteredShipments.length,
@@ -464,19 +415,15 @@ export default function Reports() {
               <CardContent className="bg-white space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Date Range</label>
-                    <Select value={selectedDateRange} onValueChange={setSelectedDateRange}>
-                      <SelectTrigger className="bg-white border-gray-300 text-gray-900">
-                        <SelectValue />
+                    <label className="block text-sm font-medium text-gray-400 mb-2">Date Range</label>
+                    <Select value={selectedDateRange} onValueChange={setSelectedDateRange} disabled>
+                      <SelectTrigger className="bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed">
+                        <SelectValue placeholder="Development Data - Last 250 Points" />
                       </SelectTrigger>
-                      <SelectContent className="bg-white border border-gray-300">
-                        <SelectItem value="last-7-days" className="text-gray-900">Last 7 days</SelectItem>
-                        <SelectItem value="last-14-days" className="text-gray-900">Last 14 days</SelectItem>
-                        <SelectItem value="last-30-days" className="text-gray-900">Last 30 days</SelectItem>
-                        <SelectItem value="last-90-days" className="text-gray-900">Last 90 days</SelectItem>
-                        <SelectItem value="all" className="text-gray-900">All time</SelectItem>
-                      </SelectContent>
                     </Select>
+                    <p className="text-xs text-gray-500 mt-1 italic">
+                      Information not available in data set, please update information to use date feature.
+                    </p>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Brand</label>
@@ -692,7 +639,7 @@ export default function Reports() {
                       {selectedTemplate && (
                         <div>• Template: <span className="font-medium">{quickStartTemplates.find(t => t.id === selectedTemplate)?.name || selectedTemplate}</span></div>
                       )}
-                      <div>• Date Range: <span className="font-medium">{selectedDateRange.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}</span></div>
+                      <div>• Date Range: <span className="font-medium text-gray-500 italic">Last 250 data points (Development dataset)</span></div>
                       {selectedBrands.length > 0 && (
                         <div>• Brands: <span className="font-medium">{selectedBrands.length} selected</span></div>
                       )}
