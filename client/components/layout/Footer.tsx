@@ -8,6 +8,11 @@ export function Footer() {
   return (
     <footer className="bg-white border-t border-gray-200 py-4 px-4 md:px-6">
       <div className="flex items-center justify-center space-x-3">
+        {/* Powered by text */}
+        <span className="text-gray-500 text-sm">
+          Powered by
+        </span>
+        
         {/* Heft IQ Logo */}
         <div className="flex items-center space-x-2">
           {/* This part of the code creates the Heft IQ logo using SVG */}
@@ -66,11 +71,6 @@ export function Footer() {
           {/* This part of the code displays the Heft IQ text logo */}
           <span className="text-lg font-bold text-purple-600">HEFT IQ</span>
         </div>
-        
-        {/* Powered by text */}
-        <span className="text-gray-500 text-sm">
-          Powered by
-        </span>
       </div>
     </footer>
   );
