@@ -36,7 +36,7 @@ export default function Reports() {
   const { data, isLoading, error } = useDashboardData();
   const [isGenerating, setIsGenerating] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
-  const [selectedDateRange, setSelectedDateRange] = useState("last-7-days");
+  const [selectedDateRange, setSelectedDateRange] = useState("all");
   const [selectedMetrics, setSelectedMetrics] = useState<string[]>([]);
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
   const [selectedWarehouses, setSelectedWarehouses] = useState<string[]>([]);
@@ -238,6 +238,37 @@ export default function Reports() {
         data.products || [], 
         data.shipments || []
       );
+      
+      // This part of the code logs data for debugging
+      console.log('🔍 PDF Debug - Original data:', {
+        products: data.products?.length || 0,
+        shipments: data.shipments?.length || 0,
+        selectedDateRange,
+        selectedBrands: selectedBrands.length,
+        selectedWarehouses: selectedWarehouses.length
+      });
+      
+      console.log('🔍 PDF Debug - Filtered data:', {
+        filteredProducts: filteredProducts.length,
+        filteredShipments: filteredShipments.length
+      });
+      
+      // This part of the code shows sample dates for debugging
+      if (data.products?.length > 0) {
+        console.log('🔍 Sample product dates:', data.products.slice(0, 3).map(p => ({
+          id: p.product_id,
+          created_date: p.created_date,
+          parsed: new Date(p.created_date)
+        })));
+      }
+      
+      if (data.shipments?.length > 0) {
+        console.log('🔍 Sample shipment dates:', data.shipments.slice(0, 3).map(s => ({
+          id: s.shipment_id,
+          created_date: s.created_date,
+          parsed: new Date(s.created_date)
+        })));
+      }
       
       // This part of the code creates filtered insights based on selected metrics
       let filteredInsights = data.insights || [];
