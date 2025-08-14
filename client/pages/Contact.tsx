@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { Card } from '../components/ui/card';
 import { ArrowLeft, Send, Check } from 'lucide-react';
+import { SignInButton } from '@clerk/clerk-react';
 
 /**
  * This part of the code creates the contact form page with Formspree integration
@@ -45,17 +46,7 @@ export default function Contact() {
     }
   };
 
-  // This part of the code handles demo auto-login from contact page
-  const handleGetDemo = () => {
-    localStorage.setItem('isDemo', 'true');
-    localStorage.setItem('demoUser', JSON.stringify({
-      email: 'demo@cargocore.com',
-      name: 'Demo User',
-      company: 'CargoCore Demo'
-    }));
-    
-    window.location.href = '/dashboard';
-  };
+  // This part of the code handles Clerk authentication for demo access
 
   if (isSubmitted) {
     return (
@@ -75,12 +66,13 @@ export default function Contact() {
           </p>
           
           <div className="space-y-3">
-            <Button 
-              onClick={handleGetDemo}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-            >
-              Try Demo Now
-            </Button>
+            <SignInButton mode="modal">
+              <Button 
+                className="w-full bg-blue-600 hover:bg-blue-700 !text-white"
+              >
+                Try Demo Now
+              </Button>
+            </SignInButton>
             
             <Button 
               variant="outline" 
@@ -111,13 +103,14 @@ export default function Contact() {
               <div className="ml-2 text-sm text-gray-500">3PL Operations Platform</div>
             </div>
             
-            <Button 
-              onClick={handleGetDemo}
-              variant="outline"
-              className="border-blue-600 text-blue-600 hover:bg-blue-50"
-            >
-              Get Demo
-            </Button>
+            <SignInButton mode="modal">
+              <Button 
+                variant="outline"
+                className="border-blue-600 text-blue-600 hover:bg-blue-50"
+              >
+                Get Demo
+              </Button>
+            </SignInButton>
           </div>
         </div>
       </nav>
@@ -272,12 +265,13 @@ export default function Contact() {
                 Skip the wait and explore CargoCore immediately with our interactive demo. 
                 See real data, test features, and experience the platform firsthand.
               </p>
-              <Button
-                onClick={handleGetDemo}
-                className="w-full bg-green-600 hover:bg-green-700 text-white"
-              >
-                Try Demo Now
-              </Button>
+              <SignInButton mode="modal">
+                <Button
+                  className="w-full bg-green-600 hover:bg-green-700 !text-white"
+                >
+                  Try Demo Now
+                </Button>
+              </SignInButton>
             </Card>
 
             {/* Contact Info */}
