@@ -25,7 +25,7 @@ import {
   Settings
 } from "lucide-react";
 import { MultiSelect } from "@/components/ui/multi-select";
-import { enhancedPdfService } from "@/services/enhancedPdfService";
+import { pdfGenerationService } from "@/services/pdfGenerationService";
 import { useDashboardData } from "@/hooks/useDashboardData";
 
 /**
@@ -261,7 +261,8 @@ export default function Reports() {
       };
 
       // This part of the code generates the PDF with filtered data
-      enhancedPdfService.generateReport(reportData);
+      // Use the original working PDF service to avoid autoTable issues
+      pdfGenerationService.generateReport(reportData);
       
     } catch (error) {
       console.error("Error generating PDF:", error);

@@ -298,9 +298,11 @@ export class EnhancedPDFService {
     this.doc.text(`Products (Showing ${actualCount} of ${products.length} filtered results)`, this.margin, this.currentY);
     this.currentY += 15;
 
+    // This part of the code limits products to prevent oversized PDFs
+    const limitedProducts = products.slice(0, limit);
+    
     try {
       if ((this.doc as any).autoTable && typeof (this.doc as any).autoTable === 'function') {
-        const limitedProducts = products.slice(0, limit);
         const tableData = limitedProducts.map(product => [
           product.product_sku || product.sku || 'N/A',
           product.product_name || 'N/A',
@@ -348,9 +350,11 @@ export class EnhancedPDFService {
     this.doc.text(`Shipments (Showing ${actualCount} of ${shipments.length} filtered results)`, this.margin, this.currentY);
     this.currentY += 15;
 
+    // This part of the code limits shipments to prevent oversized PDFs
+    const limitedShipments = shipments.slice(0, limit);
+    
     try {
       if ((this.doc as any).autoTable && typeof (this.doc as any).autoTable === 'function') {
-        const limitedShipments = shipments.slice(0, limit);
         const tableData = limitedShipments.map(shipment => [
           shipment.shipment_id || 'N/A',
           shipment.status || 'N/A',
