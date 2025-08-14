@@ -56,8 +56,7 @@ export default function Landing() {
               ) : (
                 <SignInButton mode="modal">
                   <Button 
-                    variant="outline" 
-                    className="border-blue-600 text-blue-600 hover:bg-blue-50"
+                    className="bg-blue-600 hover:bg-blue-700 !text-white border-0"
                   >
                     Get Demo
                   </Button>
