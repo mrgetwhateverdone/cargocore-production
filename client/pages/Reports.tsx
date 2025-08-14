@@ -38,6 +38,7 @@ export default function Reports() {
   const [isGeneratingInsights, setIsGeneratingInsights] = useState(false);
   const [aiInsights, setAiInsights] = useState<any[]>([]);
   const [insightsReady, setInsightsReady] = useState(false);
+  const [insightsError, setInsightsError] = useState<string | null>(null);
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
   const [selectedDateRange, setSelectedDateRange] = useState("all");
   const [selectedMetrics, setSelectedMetrics] = useState<string[]>([]);
@@ -163,6 +164,7 @@ export default function Reports() {
     setIsGeneratingInsights(true);
     setInsightsReady(false);
     setAiInsights([]);
+    setInsightsError(null);
     
     try {
       console.log('🤖 Generating AI insights for template:', template.name);
@@ -219,20 +221,24 @@ export default function Reports() {
       
     } catch (error) {
       console.error('❌ Failed to generate AI insights:', error);
-      console.error('❌ Full error details:', {
-        message: error instanceof Error ? error.message : String(error),
-        stack: error instanceof Error ? error.stack : undefined,
-        template: template.name,
-        dataSize: {
-          products: data.products?.length || 0,
-          shipments: data.shipments?.length || 0
-        }
-      });
       
-      // DO NOT SET FALLBACK - Let user know there's an issue
-      alert(`Failed to generate AI insights: ${error instanceof Error ? error.message : 'Unknown error'}. Please check console for details.`);
+      // This part of the code provides user-friendly error messages
+      let userMessage = 'AI insights not available';
+      const errorText = error instanceof Error ? error.message : String(error);
+      
+      if (errorText.includes('exceeded your current quota') || errorText.includes('429')) {
+        userMessage = 'AI insights temporarily unavailable - service quota exceeded';
+      } else if (errorText.includes('401') || errorText.includes('Invalid API key')) {
+        userMessage = 'AI insights not available - authentication issue';
+      } else if (errorText.includes('500')) {
+        userMessage = 'AI insights temporarily unavailable - server error';
+      } else if (errorText.includes('network') || errorText.includes('fetch')) {
+        userMessage = 'AI insights not available - connection issue';
+      }
+      
+      // Show clean error without technical details
+      setInsightsError(userMessage);
       setIsGeneratingInsights(false);
-      setSelectedTemplate(null); // Reset template selection
       return; // Exit early, don't set fallback
     } finally {
       setIsGeneratingInsights(false);
@@ -446,6 +452,7 @@ export default function Reports() {
                   setSelectedTemplate(null);
                   setInsightsReady(false);
                   setAiInsights([]);
+                  setInsightsError(null);
                 } else {
                   setSelectedTemplate(template.id);
                   generateAIInsights(template);
@@ -768,12 +775,21 @@ export default function Reports() {
 
                 {/* AI Insights Status */}
                 {selectedTemplate && (
-                  <div className="mb-6 p-4 rounded-lg border-2 border-dashed border-blue-300 bg-blue-50">
+                  <div className={`mb-6 p-4 rounded-lg border-2 border-dashed ${
+                    insightsError ? 'border-red-300 bg-red-50' : 'border-blue-300 bg-blue-50'
+                  }`}>
                     <div className="flex items-center gap-3">
                       {isGeneratingInsights ? (
                         <>
                           <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
                           <span className="text-blue-700 font-medium">🤖 AI is analyzing your data and generating insights...</span>
+                        </>
+                      ) : insightsError ? (
+                        <>
+                          <div className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center">
+                            <span className="text-white text-xs font-bold">✗</span>
+                          </div>
+                          <span className="text-red-700 font-medium">{insightsError}</span>
                         </>
                       ) : insightsReady ? (
                         <>
@@ -796,13 +812,18 @@ export default function Reports() {
                         <strong>{aiInsights.length} insights ready:</strong> {aiInsights.map(i => i.title).join(', ')}
                       </div>
                     )}
+                    {insightsError && (
+                      <div className="mt-3 text-sm text-red-600">
+                        Report can be generated without AI insights, but will contain operational data only.
+                      </div>
+                    )}
                   </div>
                 )}
 
                 {/* Quick Generate Button */}
                 <Button 
                   onClick={handleGeneratePDF}
-                  disabled={isGenerating || !data || (selectedTemplate && !insightsReady)}
+                  disabled={isGenerating || !data || (selectedTemplate && !insightsReady && !insightsError)}
                   className={`px-8 py-3 text-lg ${
                     selectedTemplate && !insightsReady 
                       ? "bg-gray-400 text-gray-600 cursor-not-allowed" 
@@ -815,7 +836,7 @@ export default function Reports() {
                       <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
                       Generating Report...
                     </>
-                  ) : selectedTemplate && !insightsReady ? (
+                  ) : selectedTemplate && !insightsReady && !insightsError ? (
                     <>
                       <span className="w-5 h-5 mr-2">⏳</span>
                       Waiting for AI Analysis...
@@ -823,7 +844,7 @@ export default function Reports() {
                   ) : (
                     <>
                       <Download className="w-5 h-5 mr-2" />
-                      Generate Report Now
+                      {insightsError ? 'Generate Report (No AI Insights)' : 'Generate Report Now'}
                     </>
                   )}
                 </Button>
