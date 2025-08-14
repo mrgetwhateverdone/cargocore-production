@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import {
   useRefreshDashboard,
   useConnectionStatus,
 } from "@/hooks/useDashboardData";
-import { Menu, RefreshCw, Bell, User, Wifi, WifiOff } from "lucide-react";
+import { Menu, RefreshCw, Bell, User, Wifi, WifiOff, LogOut, ChevronDown } from "lucide-react";
+import { useUser, useClerk } from "@clerk/clerk-react";
 
 interface HeaderProps {
   onMenuClick?: () => void;
@@ -14,7 +15,7 @@ interface HeaderProps {
 }
 
 const routeTitles: Record<string, string> = {
-  "/": "Dashboard",
+  "/dashboard": "Dashboard",
   "/workflows": "Workflows",
   "/analytics": "Analytics",
   "/orders": "Orders",
@@ -33,8 +34,13 @@ export function Header({
   onSidebarToggle,
 }: HeaderProps) {
   const location = useLocation();
+  const navigate = useNavigate();
   const [currentTime, setCurrentTime] = useState(new Date());
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+  
+  const { user } = useUser();
+  const { signOut } = useClerk();
 
   const { refreshAll } = useRefreshDashboard();
   const { isConnected, isLoading, hasError, lastUpdated } =
@@ -62,6 +68,28 @@ export function Header({
       setIsRefreshing(false);
     }
   };
+
+  // This part of the code handles user logout
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      navigate('/');
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
+  };
+
+  // This part of the code closes dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (userDropdownOpen && !(event.target as Element).closest('.user-dropdown')) {
+        setUserDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [userDropdownOpen]);
 
   const pageTitle = routeTitles[location.pathname] || "Dashboard";
 
@@ -138,10 +166,42 @@ export function Header({
           )}
         </button>
 
-        {/* User Avatar */}
-        <button className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white hover:bg-blue-600 transition-colors">
-          <User className="h-4 w-4" />
-        </button>
+        {/* User Dropdown */}
+        <div className="relative user-dropdown">
+          <button 
+            onClick={() => setUserDropdownOpen(!userDropdownOpen)}
+            className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100 transition-colors"
+          >
+            <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white">
+              {user?.firstName ? user.firstName[0].toUpperCase() : <User className="h-4 w-4" />}
+            </div>
+            <ChevronDown className="h-4 w-4 text-gray-500" />
+          </button>
+
+          {/* Dropdown Menu */}
+          {userDropdownOpen && (
+            <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+              {/* User Info */}
+              <div className="px-4 py-2 border-b border-gray-100">
+                <div className="text-sm font-medium text-gray-900">
+                  {user?.fullName || 'User'}
+                </div>
+                <div className="text-xs text-gray-500">
+                  {user?.primaryEmailAddress?.emailAddress || 'No email'}
+                </div>
+              </div>
+              
+              {/* Logout Button */}
+              <button
+                onClick={handleLogout}
+                className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center space-x-2"
+              >
+                <LogOut className="h-4 w-4" />
+                <span>Sign Out</span>
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </header>
   );

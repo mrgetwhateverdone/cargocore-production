@@ -13,10 +13,11 @@ export default function Landing() {
   const { isSignedIn, user } = useUser();
 
   // This part of the code automatically redirects signed-in users to dashboard
+  // Only redirect on initial page load, not when navigating back to landing
   React.useEffect(() => {
-    if (isSignedIn) {
-      console.log('🔒 User is signed in, redirecting to dashboard...');
-      navigate('/dashboard');
+    if (isSignedIn && window.location.pathname === '/') {
+      console.log('🔒 User is signed in on landing page, redirecting to dashboard...');
+      navigate('/dashboard', { replace: true });
     }
   }, [isSignedIn, navigate]);
 
