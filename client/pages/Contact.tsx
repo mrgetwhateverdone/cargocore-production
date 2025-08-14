@@ -151,7 +151,7 @@ export default function Contact() {
                   name="name"
                   id="name"
                   required
-                  className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                  className="w-full px-4 py-3 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors placeholder:text-gray-400"
                   placeholder="Your full name"
                   disabled={isSubmitting}
                 />
@@ -167,7 +167,7 @@ export default function Contact() {
                   name="email"
                   id="email"
                   required
-                  className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                  className="w-full px-4 py-3 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors placeholder:text-gray-400"
                   placeholder="your.email@company.com"
                   disabled={isSubmitting}
                 />
@@ -182,7 +182,7 @@ export default function Contact() {
                   type="text"
                   name="company"
                   id="company"
-                  className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                  className="w-full px-4 py-3 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors placeholder:text-gray-400"
                   placeholder="Your company name"
                   disabled={isSubmitting}
                 />
@@ -198,7 +198,7 @@ export default function Contact() {
                   id="message"
                   rows={6}
                   required
-                  className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors resize-vertical"
+                  className="w-full px-4 py-3 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors resize-vertical placeholder:text-gray-400"
                   placeholder="Tell us about your 3PL needs, current challenges, or what you'd like to learn about CargoCore..."
                   disabled={isSubmitting}
                 />
