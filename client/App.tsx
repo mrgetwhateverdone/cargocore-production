@@ -58,16 +58,16 @@ const App = () => {
   return (
     <ErrorBoundary>
       <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY}>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <QueryClientProvider client={queryClient}>
+      <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+        <QueryClientProvider client={queryClient}>
             <SettingsProvider>
-              <TooltipProvider>
-              <Toaster />
-              <Sonner />
-              <WorkflowToastListener />
-              <BrowserRouter>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <WorkflowToastListener />
+            <BrowserRouter>
                 <SmartRouter />
-                <Routes>
+              <Routes>
                   {/* Public Landing & Contact Pages */}
                   <Route path="/" element={<Landing />} />
                   <Route path="/contact" element={<Contact />} />
@@ -129,8 +129,8 @@ const App = () => {
                       </SignedIn>
                     } 
                   />
-                  <Route
-                    path="/intelligence"
+                <Route
+                  path="/intelligence"
                     element={
                       <SignedIn>
                         <EconomicIntelligence />
@@ -162,14 +162,14 @@ const App = () => {
                     } 
                   />
 
-                  {/* 404 Catch-all */}
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </BrowserRouter>
-              </TooltipProvider>
+                {/* 404 Catch-all */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </BrowserRouter>
+          </TooltipProvider>
             </SettingsProvider>
-          </QueryClientProvider>
-        </ThemeProvider>
+        </QueryClientProvider>
+      </ThemeProvider>
       </ClerkProvider>
     </ErrorBoundary>
   );
