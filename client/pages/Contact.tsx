@@ -24,13 +24,20 @@ export default function Contact() {
     const formData = new FormData(form);
 
     try {
+      // Add timeout to prevent hanging
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+      
       const response = await fetch('https://formspree.io/f/movlbjnz', {
         method: 'POST',
         body: formData,
         headers: {
           'Accept': 'application/json'
-        }
+        },
+        signal: controller.signal
       });
+      
+      clearTimeout(timeoutId);
 
       if (response.ok) {
         setIsSubmitted(true);
@@ -40,7 +47,11 @@ export default function Contact() {
         setError(data.error || 'Something went wrong. Please try again.');
       }
     } catch (err) {
-      setError('Network error. Please check your connection and try again.');
+      if (err.name === 'AbortError') {
+        setError('Request timed out. Please try again.');
+      } else {
+        setError('Network error. Please check your connection and try again.');
+      }
     } finally {
       setIsSubmitting(false);
     }
