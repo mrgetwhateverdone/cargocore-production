@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Sidebar } from './Sidebar'
 import { Header } from './Header'
+import { Footer } from './Footer'
 
 interface LayoutProps {
   children: React.ReactNode
@@ -45,6 +46,7 @@ export function Layout({ children }: LayoutProps) {
         <main className="flex-1 overflow-y-auto p-4 md:p-6">
           {children}
         </main>
+        <Footer />
       </div>
     </div>
   )

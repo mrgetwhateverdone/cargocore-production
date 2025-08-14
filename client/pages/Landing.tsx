@@ -12,6 +12,14 @@ export default function Landing() {
   const navigate = useNavigate();
   const { isSignedIn, user } = useUser();
 
+  // This part of the code automatically redirects signed-in users to dashboard
+  React.useEffect(() => {
+    if (isSignedIn) {
+      console.log('🔒 User is signed in, redirecting to dashboard...');
+      navigate('/dashboard');
+    }
+  }, [isSignedIn, navigate]);
+
   // This part of the code handles navigation to dashboard for signed-in users
   const handleGetDemo = () => {
     if (isSignedIn) {
