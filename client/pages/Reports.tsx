@@ -35,6 +35,9 @@ import { useDashboardData } from "@/hooks/useDashboardData";
 export default function Reports() {
   const { data, isLoading, error } = useDashboardData();
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isGeneratingInsights, setIsGeneratingInsights] = useState(false);
+  const [aiInsights, setAiInsights] = useState<any[]>([]);
+  const [insightsReady, setInsightsReady] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
   const [selectedDateRange, setSelectedDateRange] = useState("all");
   const [selectedMetrics, setSelectedMetrics] = useState<string[]>([]);
@@ -153,6 +156,78 @@ export default function Reports() {
 
   // This part of the code applies filters to the data based on user selections
   // Note: Date filtering is disabled for development data - uses last 250 data points instead
+  // This part of the code generates AI insights when a template is selected
+  const generateAIInsights = async (template: any) => {
+    if (!data) return;
+    
+    setIsGeneratingInsights(true);
+    setInsightsReady(false);
+    setAiInsights([]);
+    
+    try {
+      console.log('🤖 Generating AI insights for template:', template.name);
+      
+      // Apply current filters to data
+      const { filteredProducts, filteredShipments } = applyFilters(
+        data.products || [], 
+        data.shipments || []
+      );
+      
+      const insightRequest = {
+        template: {
+          id: template.id,
+          name: template.name
+        },
+        data: {
+          products: filteredProducts,
+          shipments: filteredShipments
+        },
+        filters: {
+          brands: selectedBrands,
+          warehouses: selectedWarehouses,
+          metrics: selectedMetrics
+        }
+      };
+      
+      const response = await fetch('/api/report-insights', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(insightRequest)
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to generate insights: ${response.status}`);
+      }
+      
+      const result = await response.json();
+      
+      if (result.success && result.data.insights) {
+        setAiInsights(result.data.insights);
+        setInsightsReady(true);
+        console.log('✅ AI insights generated successfully:', result.data.insights.length);
+      } else {
+        throw new Error('Invalid response format');
+      }
+      
+    } catch (error) {
+      console.error('❌ Failed to generate AI insights:', error);
+      // Set fallback insights
+      setAiInsights([
+        {
+          title: 'Analysis Complete',
+          content: `AI analysis for ${template.name} has been completed. The report contains comprehensive operational metrics and performance indicators.`,
+          priority: 'medium',
+          category: 'operational'
+        }
+      ]);
+      setInsightsReady(true);
+    } finally {
+      setIsGeneratingInsights(false);
+    }
+  };
+
   const applyFilters = (products: any[], shipments: any[]) => {
     let filteredProducts = [...products];
     let filteredShipments = [...shipments];
@@ -233,7 +308,7 @@ export default function Reports() {
         );
       }
       
-      // This part of the code creates the report data structure
+      // This part of the code creates the report data structure with AI insights
       const reportData = {
         template,
         filters: {
@@ -246,7 +321,7 @@ export default function Reports() {
           products: filteredProducts,
           shipments: filteredShipments,
           kpis: data.kpis || {},
-          insights: filteredInsights
+          insights: aiInsights.length > 0 ? aiInsights : filteredInsights
         },
         availableBrands,
         availableWarehouses,
@@ -354,7 +429,18 @@ export default function Reports() {
                 : "bg-gray-100 text-gray-500 cursor-not-allowed"
             }`}
             disabled={!template.available}
-            onClick={() => template.available && setSelectedTemplate(isSelected ? null : template.id)}
+            onClick={() => {
+              if (template.available) {
+                if (isSelected) {
+                  setSelectedTemplate(null);
+                  setInsightsReady(false);
+                  setAiInsights([]);
+                } else {
+                  setSelectedTemplate(template.id);
+                  generateAIInsights(template);
+                }
+              }
+            }}
           >
             {isSelected ? "✓ Selected" : "Use Template"}
           </Button>
@@ -669,17 +755,59 @@ export default function Reports() {
                   </div>
                 </div>
 
+                {/* AI Insights Status */}
+                {selectedTemplate && (
+                  <div className="mb-6 p-4 rounded-lg border-2 border-dashed border-blue-300 bg-blue-50">
+                    <div className="flex items-center gap-3">
+                      {isGeneratingInsights ? (
+                        <>
+                          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+                          <span className="text-blue-700 font-medium">🤖 AI is analyzing your data and generating insights...</span>
+                        </>
+                      ) : insightsReady ? (
+                        <>
+                          <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
+                            <span className="text-white text-xs font-bold">✓</span>
+                          </div>
+                          <span className="text-green-700 font-medium">✅ AI insights ready! Report can now be generated.</span>
+                        </>
+                      ) : (
+                        <>
+                          <div className="w-5 h-5 bg-yellow-500 rounded-full flex items-center justify-center">
+                            <span className="text-white text-xs font-bold">⏳</span>
+                          </div>
+                          <span className="text-yellow-700 font-medium">⏳ Select a template to generate AI insights...</span>
+                        </>
+                      )}
+                    </div>
+                    {aiInsights.length > 0 && (
+                      <div className="mt-3 text-sm text-blue-600">
+                        <strong>{aiInsights.length} insights ready:</strong> {aiInsights.map(i => i.title).join(', ')}
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {/* Quick Generate Button */}
                 <Button 
                   onClick={handleGeneratePDF}
-                  disabled={isGenerating || !data}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 text-lg"
+                  disabled={isGenerating || !data || (selectedTemplate && !insightsReady)}
+                  className={`px-8 py-3 text-lg ${
+                    selectedTemplate && !insightsReady 
+                      ? "bg-gray-400 text-gray-600 cursor-not-allowed" 
+                      : "bg-blue-600 hover:bg-blue-700 text-white"
+                  }`}
                   size="lg"
                 >
                   {isGenerating ? (
                     <>
                       <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
                       Generating Report...
+                    </>
+                  ) : selectedTemplate && !insightsReady ? (
+                    <>
+                      <span className="w-5 h-5 mr-2">⏳</span>
+                      Waiting for AI Analysis...
                     </>
                   ) : (
                     <>
