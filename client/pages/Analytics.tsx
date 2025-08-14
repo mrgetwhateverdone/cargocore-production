@@ -1,3 +1,4 @@
+import React from "react";
 import { Layout } from "@/components/layout/Layout";
 import { useAnalyticsData } from "@/hooks/useAnalyticsData";
 import { LoadingState } from "@/components/ui/loading-spinner";
@@ -13,6 +14,14 @@ import { BrandPerformanceSection } from "@/components/analytics/BrandPerformance
 
 export default function Analytics() {
   const { data, isLoading, error, refetch } = useAnalyticsData();
+
+  // This part of the code checks for demo authentication
+  React.useEffect(() => {
+    const isDemo = localStorage.getItem('isDemo');
+    if (!isDemo) {
+      window.location.href = '/';
+    }
+  }, []);
 
   return (
     <Layout>

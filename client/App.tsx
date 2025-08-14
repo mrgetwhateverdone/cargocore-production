@@ -15,7 +15,9 @@ import { SettingsProvider } from "@/contexts/SettingsContext";
 console.log("🚀 CargoCore: App.tsx loading...");
 
 // Page imports
-import Index from "./pages/Index";
+import Landing from "./pages/Landing";
+import Contact from "./pages/Contact";
+import Dashboard from "./pages/Dashboard";
 import Workflows from "./pages/Workflows";
 import Analytics from "./pages/Analytics";
 import Orders from "./pages/Orders";
@@ -57,10 +59,12 @@ const App = () => {
             <BrowserRouter>
               <SmartRouter />
               <Routes>
-                {/* Main Dashboard */}
-                <Route path="/" element={<Index />} />
+                {/* Public Landing & Contact Pages */}
+                <Route path="/" element={<Landing />} />
+                <Route path="/contact" element={<Contact />} />
 
-                {/* All 11 CargoCore Pages */}
+                {/* Protected Dashboard & App Pages */}
+                <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/workflows" element={<Workflows />} />
                 <Route path="/analytics" element={<Analytics />} />
                 <Route path="/orders" element={<Orders />} />

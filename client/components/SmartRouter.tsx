@@ -12,13 +12,16 @@ export function SmartRouter() {
   const { getDefaultPage } = useSettingsIntegration();
 
   useEffect(() => {
-    // This part of the code redirects to user's default page only on root path
-    if (location.pathname === "/") {
+    // This part of the code handles smart routing for authenticated users
+    const isDemo = localStorage.getItem('isDemo');
+    
+    if (location.pathname === "/dashboard" && isDemo) {
+      // User is accessing dashboard and is authenticated - check for default page preference
       const defaultPage = getDefaultPage();
       
       // This part of the code maps setting values to actual routes
       const pageRoutes: Record<string, string> = {
-        'dashboard': '/',
+        'dashboard': '/dashboard',
         'orders': '/orders',
         'inventory': '/inventory',
         'analytics': '/analytics',
@@ -28,9 +31,9 @@ export function SmartRouter() {
 
       const targetRoute = pageRoutes[defaultPage];
       
-      // Only redirect if it's not the dashboard (which is already the current route)
-      if (targetRoute && targetRoute !== "/" && defaultPage !== 'dashboard') {
-        console.log(`🎯 Smart Router: Redirecting to user's default page: ${targetRoute}`);
+      // Only redirect if user prefers a different page than dashboard
+      if (targetRoute && targetRoute !== "/dashboard" && defaultPage !== 'dashboard') {
+        console.log(`🎯 Smart Router: Redirecting authenticated user to preferred page: ${targetRoute}`);
         navigate(targetRoute, { replace: true });
       }
     }

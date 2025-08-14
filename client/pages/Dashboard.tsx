@@ -1,3 +1,4 @@
+import React from "react";
 import { Layout } from "@/components/layout/Layout";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { LoadingState } from "@/components/ui/loading-spinner";
@@ -13,8 +14,17 @@ import { SmartMarginRiskSection } from "@/components/dashboard/SmartMarginRiskSe
 import { ShipmentCostVarianceSection } from "@/components/dashboard/ShipmentCostVarianceSection";
 
 
-export default function Index() {
+export default function Dashboard() {
   const { data, isLoading, error, refetch } = useDashboardData();
+
+  // This part of the code checks for demo authentication
+  React.useEffect(() => {
+    const isDemo = localStorage.getItem('isDemo');
+    if (!isDemo) {
+      // Redirect to landing page if not authenticated
+      window.location.href = '/';
+    }
+  }, []);
 
   return (
     <Layout>
