@@ -98,7 +98,7 @@ export default function Landing() {
                 ) : (
                   <SignInButton mode="modal">
                     <Button 
-                      className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 text-lg font-semibold"
+                      className="bg-blue-600 hover:bg-blue-700 !text-white px-8 py-4 text-lg font-semibold"
                       size="lg"
                     >
                       Get Demo
@@ -372,7 +372,7 @@ export default function Landing() {
             ) : (
               <SignInButton mode="modal">
                 <Button 
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 text-lg font-semibold"
+                  className="bg-blue-600 hover:bg-blue-700 !text-white px-8 py-4 text-lg font-semibold"
                   size="lg"
                 >
                   Get Demo
