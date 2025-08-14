@@ -462,7 +462,7 @@ export class EnhancedPDFServiceV2 {
     this.doc.setFontSize(18);
     this.doc.setTextColor(this.primaryColor);
     this.doc.setFont('helvetica', 'bold');
-    this.doc.text('🤖 AI Intelligence Summary', this.margin, this.currentY);
+    this.doc.text('AI Intelligence Summary', this.margin, this.currentY);
     
     this.doc.setFontSize(10);
     this.doc.setTextColor(this.secondaryColor);

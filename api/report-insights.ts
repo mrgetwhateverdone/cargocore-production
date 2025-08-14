@@ -54,7 +54,14 @@ async function generateAIReportInsights(
 ): Promise<ReportInsight[]> {
   const apiKey = process.env.OPENAI_API_KEY;
   
+  console.log('🔑 Checking OpenAI API key...', {
+    hasKey: !!apiKey,
+    keyPrefix: apiKey ? apiKey.substring(0, 10) + '...' : 'none',
+    template: template.name
+  });
+  
   if (!apiKey) {
+    console.error('❌ OpenAI API key not found in environment variables');
     throw new Error("OpenAI API key not configured");
   }
 
@@ -107,49 +114,92 @@ ${operationalContext}`
   try {
     const openaiUrl = process.env.OPENAI_API_URL || "https://api.openai.com/v1/chat/completions";
     
+    console.log('🚀 Making OpenAI API call...', {
+      url: openaiUrl,
+      model: 'gpt-4',
+      messageCount: messages.length,
+      operationalContextLength: operationalContext.length
+    });
+    
+    const requestBody = {
+      model: "gpt-4",
+      messages,
+      max_tokens: 1000,
+      temperature: 0.3,
+      presence_penalty: 0.1,
+      frequency_penalty: 0.1
+    };
+    
+    console.log('📦 Request body prepared:', {
+      model: requestBody.model,
+      messagesLength: requestBody.messages.length,
+      maxTokens: requestBody.max_tokens
+    });
+    
     const response = await fetch(openaiUrl, {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${apiKey}`,
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({
-        model: "gpt-4",
-        messages,
-        max_tokens: 1000,
-        temperature: 0.3,
-        presence_penalty: 0.1,
-        frequency_penalty: 0.1
-      })
+      body: JSON.stringify(requestBody)
     });
 
+    console.log('📊 OpenAI Response status:', response.status);
+
     if (!response.ok) {
-      throw new Error(`OpenAI API error: ${response.status}`);
+      const errorText = await response.text();
+      console.error('❌ OpenAI API error response:', errorText);
+      throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
     }
 
     const aiResponse = await response.json();
+    console.log('✅ OpenAI Response received:', {
+      hasChoices: !!aiResponse.choices,
+      choicesLength: aiResponse.choices?.length || 0,
+      hasContent: !!aiResponse.choices?.[0]?.message?.content
+    });
+    
     const content = aiResponse.choices?.[0]?.message?.content;
     
     if (!content) {
+      console.error('❌ No content in OpenAI response:', aiResponse);
       throw new Error("No response from OpenAI");
     }
+
+    console.log('📝 Raw AI content received:', content);
 
     // This part of the code parses the AI response and ensures valid JSON
     try {
       const insights = JSON.parse(content);
+      console.log('✅ Successfully parsed AI insights:', {
+        isArray: Array.isArray(insights),
+        length: insights?.length || 0,
+        insights
+      });
+      
       if (Array.isArray(insights) && insights.length > 0) {
         return insights.slice(0, 3); // Ensure max 3 insights
       }
     } catch (parseError) {
-      console.warn("Failed to parse AI response as JSON, using fallback");
+      console.error('❌ Failed to parse AI response as JSON:', parseError);
+      console.log('📝 Attempting fallback parsing for content:', content);
     }
     
     // Fallback: Convert text response to structured insights
     return parseTextResponseToInsights(content, template);
     
   } catch (error) {
-    console.error("AI insight generation failed:", error);
-    throw new Error("Failed to generate AI insights");
+    console.error('❌ AI insight generation failed:', {
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+      template: template.name,
+      dataSize: {
+        products: data.products?.length || 0,
+        shipments: data.shipments?.length || 0
+      }
+    });
+    throw new Error(`Failed to generate AI insights: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
 

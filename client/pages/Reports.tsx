@@ -167,11 +167,10 @@ export default function Reports() {
     try {
       console.log('🤖 Generating AI insights for template:', template.name);
       
-      // Apply current filters to data
-      const { filteredProducts, filteredShipments } = applyFilters(
-        data.products || [], 
-        data.shipments || []
-      );
+      // Apply current filters to data for AI analysis
+      const allProducts = data.products || [];
+      const allShipments = data.shipments || [];
+      const { filteredProducts, filteredShipments } = applyFilters(allProducts, allShipments);
       
       const insightRequest = {
         template: {
@@ -197,32 +196,44 @@ export default function Reports() {
         body: JSON.stringify(insightRequest)
       });
       
+      console.log('📊 API Response Status:', response.status);
+      
       if (!response.ok) {
-        throw new Error(`Failed to generate insights: ${response.status}`);
+        const errorText = await response.text();
+        console.error('❌ API Error Response:', errorText);
+        throw new Error(`Failed to generate insights: ${response.status} - ${errorText}`);
       }
       
       const result = await response.json();
+      console.log('📊 API Result:', result);
       
-      if (result.success && result.data.insights) {
+      if (result.success && result.data && result.data.insights) {
+        console.log('✅ Setting AI insights:', result.data.insights);
         setAiInsights(result.data.insights);
         setInsightsReady(true);
         console.log('✅ AI insights generated successfully:', result.data.insights.length);
       } else {
-        throw new Error('Invalid response format');
+        console.error('❌ Invalid API response format:', result);
+        throw new Error('Invalid response format from AI service');
       }
       
     } catch (error) {
       console.error('❌ Failed to generate AI insights:', error);
-      // Set fallback insights
-      setAiInsights([
-        {
-          title: 'Analysis Complete',
-          content: `AI analysis for ${template.name} has been completed. The report contains comprehensive operational metrics and performance indicators.`,
-          priority: 'medium',
-          category: 'operational'
+      console.error('❌ Full error details:', {
+        message: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+        template: template.name,
+        dataSize: {
+          products: data.products?.length || 0,
+          shipments: data.shipments?.length || 0
         }
-      ]);
-      setInsightsReady(true);
+      });
+      
+      // DO NOT SET FALLBACK - Let user know there's an issue
+      alert(`Failed to generate AI insights: ${error instanceof Error ? error.message : 'Unknown error'}. Please check console for details.`);
+      setIsGeneratingInsights(false);
+      setSelectedTemplate(null); // Reset template selection
+      return; // Exit early, don't set fallback
     } finally {
       setIsGeneratingInsights(false);
     }
