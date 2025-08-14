@@ -70,7 +70,7 @@ export default function Landing() {
               <div className="flex flex-col sm:flex-row gap-4 mt-8">
                 <Button 
                   onClick={handleGetDemo}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 text-lg"
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 text-lg font-semibold"
                   size="lg"
                 >
                   Get Demo
@@ -78,7 +78,7 @@ export default function Landing() {
                 <Button 
                   variant="outline" 
                   asChild
-                  className="border-gray-300 text-gray-700 hover:bg-gray-50 px-8 py-4 text-lg"
+                  className="border-gray-700 text-gray-900 hover:bg-gray-100 hover:text-black px-8 py-4 text-lg font-semibold bg-white"
                   size="lg"
                 >
                   <Link to="/contact">Get Started</Link>
@@ -284,25 +284,37 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Social Proof / Testimonial */}
+      {/* Key Benefits / Value Proposition */}
       <section className="py-20 bg-white">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <blockquote className="text-2xl lg:text-3xl font-medium text-gray-900 mb-8">
-            "CargoCore transformed our operations completely. We reduced costs by{' '}
-            <span className="text-blue-600">$150K annually</span> and improved our 
-            operational efficiency by <span className="text-blue-600">40%</span>. 
-            The AI insights are game-changing."
-          </blockquote>
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-3xl font-bold text-gray-900 mb-12">
+            Trusted by 3PL operators managing complex supply chains
+          </h2>
           
-          <div className="flex items-center justify-center space-x-4">
-            <div className="w-16 h-16 bg-gray-300 rounded-full flex items-center justify-center">
-              <Users className="w-8 h-8 text-gray-600" />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+            <div className="bg-blue-50 p-6 rounded-xl border border-blue-100">
+              <div className="text-3xl font-bold text-blue-600 mb-2">2,500+</div>
+              <div className="text-lg font-semibold text-gray-900 mb-2">Products Tracked</div>
+              <div className="text-gray-600">Real-time inventory visibility across multiple warehouses and SKUs</div>
             </div>
-            <div className="text-left">
-              <div className="font-semibold text-gray-900">Sarah Johnson</div>
-              <div className="text-gray-600">Operations Manager, LogiFlow Partners</div>
+            
+            <div className="bg-green-50 p-6 rounded-xl border border-green-100">
+              <div className="text-3xl font-bold text-green-600 mb-2">7,600+</div>
+              <div className="text-lg font-semibold text-gray-900 mb-2">Shipments Processed</div>
+              <div className="text-gray-600">End-to-end tracking with predictive analytics and SLA monitoring</div>
+            </div>
+            
+            <div className="bg-purple-50 p-6 rounded-xl border border-purple-100">
+              <div className="text-3xl font-bold text-purple-600 mb-2">24/7</div>
+              <div className="text-lg font-semibold text-gray-900 mb-2">AI-Powered Insights</div>
+              <div className="text-gray-600">Continuous monitoring with automated alerts and optimization recommendations</div>
             </div>
           </div>
+          
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            Built for operations teams who need instant visibility, predictive insights, 
+            and the ability to optimize costs while maintaining excellent service levels.
+          </p>
         </div>
       </section>
 
@@ -321,7 +333,7 @@ export default function Landing() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button 
               onClick={handleGetDemo}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 text-lg"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 text-lg font-semibold"
               size="lg"
             >
               Get Demo
@@ -329,7 +341,7 @@ export default function Landing() {
             <Button 
               variant="outline" 
               asChild
-              className="border-white text-white hover:bg-white hover:text-gray-900 px-8 py-4 text-lg"
+              className="border-white text-white hover:bg-white hover:text-gray-900 px-8 py-4 text-lg font-semibold"
               size="lg"
             >
               <Link to="/contact">Get Started</Link>
