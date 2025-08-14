@@ -843,7 +843,7 @@ export class PDFGenerationService {
     try {
       if ((this.doc as any).autoTable && typeof (this.doc as any).autoTable === 'function') {
         const tableData = products.map(product => [
-          product.sku || 'N/A',
+          product.product_sku || product.sku || 'N/A',
           product.product_name || 'N/A',
           product.brand_name || 'N/A',
           `$${(product.unit_cost || 0).toFixed(2)}`
@@ -914,7 +914,7 @@ export class PDFGenerationService {
     this.doc.setFont('helvetica', 'normal');
     
     products.slice(0, 10).forEach((product, index) => {
-      const text = `${index + 1}. ${product.sku || 'N/A'} - ${product.product_name || 'N/A'} (${product.brand_name || 'N/A'}) - $${(product.unit_cost || 0).toFixed(2)}`;
+      const text = `${index + 1}. ${product.product_sku || product.sku || 'N/A'} - ${product.product_name || 'N/A'} (${product.brand_name || 'N/A'}) - $${(product.unit_cost || 0).toFixed(2)}`;
       this.doc.text(text, this.margin, this.currentY);
       this.currentY += 6;
     });

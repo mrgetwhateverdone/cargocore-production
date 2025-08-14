@@ -25,7 +25,7 @@ import {
   Settings
 } from "lucide-react";
 import { MultiSelect } from "@/components/ui/multi-select";
-import { pdfGenerationService } from "@/services/pdfGenerationService";
+import { enhancedPdfService } from "@/services/enhancedPdfService";
 import { useDashboardData } from "@/hooks/useDashboardData";
 
 /**
@@ -151,35 +151,135 @@ export default function Reports() {
     }
   ];
 
-  // This part of the code handles simple PDF generation
+  // This part of the code applies filters to the data based on user selections
+  const applyFilters = (products: any[], shipments: any[]) => {
+    let filteredProducts = [...products];
+    let filteredShipments = [...shipments];
+    
+    // This part of the code applies brand filtering
+    if (selectedBrands.length > 0) {
+      filteredProducts = filteredProducts.filter(p => 
+        p.brand_name && selectedBrands.includes(p.brand_name)
+      );
+      filteredShipments = filteredShipments.filter(s => 
+        s.brand_name && selectedBrands.includes(s.brand_name)
+      );
+    }
+    
+    // This part of the code applies warehouse filtering
+    if (selectedWarehouses.length > 0) {
+      filteredShipments = filteredShipments.filter(s => 
+        s.warehouse_id && selectedWarehouses.includes(s.warehouse_id)
+      );
+    }
+    
+    // This part of the code applies date range filtering
+    if (selectedDateRange !== "all") {
+      const now = new Date();
+      let startDate: Date;
+      
+      switch (selectedDateRange) {
+        case "last-7-days":
+          startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+          break;
+        case "last-14-days":
+          startDate = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
+          break;
+        case "last-30-days":
+          startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+          break;
+        case "last-90-days":
+          startDate = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+          break;
+        default:
+          startDate = new Date(0); // No filtering
+      }
+      
+      if (startDate.getTime() > 0) {
+        filteredProducts = filteredProducts.filter(p => {
+          try {
+            return new Date(p.created_date) >= startDate;
+          } catch {
+            return true; // Keep items with invalid dates
+          }
+        });
+        
+        filteredShipments = filteredShipments.filter(s => {
+          try {
+            return new Date(s.created_date) >= startDate;
+          } catch {
+            return true; // Keep items with invalid dates
+          }
+        });
+      }
+    }
+    
+    return { filteredProducts, filteredShipments };
+  };
+  
+  // This part of the code handles template-specific PDF generation with filtering
   const handleGeneratePDF = () => {
     if (!data) return;
     
     setIsGenerating(true);
     
     try {
-      // This part of the code creates a simple report data structure
-      const simpleReportData = {
-        template: {
-          id: "simple-report",
-          name: "CargoCore Data Report",
-          description: "Simple data export from CargoCore dashboard"
+      // This part of the code gets the selected template or creates a default one
+      const template = selectedTemplate ? 
+        [...quickStartTemplates, ...laborCostTemplates].find(t => t.id === selectedTemplate) :
+        {
+          id: "custom-report",
+          name: "Custom CargoCore Report",
+          description: "Custom report with selected filters and metrics"
+        };
+      
+      // This part of the code applies all selected filters
+      const { filteredProducts, filteredShipments } = applyFilters(
+        data.products || [], 
+        data.shipments || []
+      );
+      
+      // This part of the code creates filtered insights based on selected metrics
+      let filteredInsights = data.insights || [];
+      if (selectedMetrics.length > 0) {
+        // Filter insights to match selected metrics (simple keyword matching)
+        filteredInsights = filteredInsights.filter((insight: any) => 
+          selectedMetrics.some(metric => 
+            insight.content?.toLowerCase().includes(metric.toLowerCase()) ||
+            insight.title?.toLowerCase().includes(metric.toLowerCase())
+          )
+        );
+      }
+      
+      // This part of the code creates the report data structure
+      const reportData = {
+        template,
+        filters: {
+          dateRange: selectedDateRange,
+          brands: selectedBrands,
+          warehouses: selectedWarehouses,
+          metrics: selectedMetrics
         },
-        filters: {},
         data: {
-          products: data.products || [],
-          shipments: data.shipments || [],
+          products: filteredProducts,
+          shipments: filteredShipments,
           kpis: data.kpis || {},
-          insights: data.insights || []
+          insights: filteredInsights
         },
-        availableBrands: [],
-        availableWarehouses: [],
+        availableBrands,
+        availableWarehouses,
         generatedAt: new Date().toISOString(),
-        reportPeriod: "All available data"
+        reportPeriod: selectedDateRange === "all" ? "All available data" : selectedDateRange.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase()),
+        summary: {
+          totalProducts: filteredProducts.length,
+          totalShipments: filteredShipments.length,
+          totalInsights: filteredInsights.length,
+          filtersApplied: selectedBrands.length + selectedWarehouses.length + (selectedDateRange !== "all" ? 1 : 0)
+        }
       };
 
-      // This part of the code generates the PDF
-      pdfGenerationService.generateReport(simpleReportData);
+      // This part of the code generates the PDF with filtered data
+      enhancedPdfService.generateReport(reportData);
       
     } catch (error) {
       console.error("Error generating PDF:", error);
@@ -208,7 +308,7 @@ export default function Reports() {
     );
   }
 
-  // This part of the code renders a template card with enhanced styling
+  // This part of the code renders a template card with enhanced styling and selection animation
   const renderTemplateCard = (template: any, isQuickStart: boolean = true) => {
     const colorClasses = {
       blue: "bg-blue-50 text-blue-600 border-blue-200",
@@ -217,8 +317,15 @@ export default function Reports() {
       orange: "bg-orange-50 text-orange-600 border-orange-200"
     };
 
+    const isSelected = selectedTemplate === template.id;
+    const cardClasses = `bg-white shadow-md border transition-all duration-300 h-full ${
+      isSelected 
+        ? "border-blue-500 shadow-lg ring-2 ring-blue-200 scale-105" 
+        : "border-gray-200 hover:shadow-lg hover:border-blue-300"
+    }`;
+
     return (
-      <Card key={template.id} className="bg-white shadow-md border border-gray-200 hover:shadow-lg transition-shadow h-full">
+      <Card key={template.id} className={cardClasses}>
         <CardContent className="p-6 h-full flex flex-col">
           {/* Icon and Status Badge */}
           <div className="flex items-start justify-between mb-4">
@@ -257,15 +364,17 @@ export default function Reports() {
           
           {/* Use Template Button */}
           <Button 
-            className={`w-full mt-auto ${
+            className={`w-full mt-auto transition-all duration-200 ${
               template.available 
-                ? "bg-blue-600 hover:bg-blue-700 text-white" 
+                ? isSelected
+                  ? "bg-green-600 hover:bg-green-700 text-white"
+                  : "bg-blue-600 hover:bg-blue-700 text-white" 
                 : "bg-gray-100 text-gray-500 cursor-not-allowed"
             }`}
             disabled={!template.available}
-            onClick={() => template.available && setSelectedTemplate(template.id)}
+            onClick={() => template.available && setSelectedTemplate(isSelected ? null : template.id)}
           >
-            Use Template
+            {isSelected ? "✓ Selected" : "Use Template"}
           </Button>
         </CardContent>
       </Card>
@@ -334,6 +443,7 @@ export default function Reports() {
                         <SelectItem value="last-14-days" className="text-gray-900">Last 14 days</SelectItem>
                         <SelectItem value="last-30-days" className="text-gray-900">Last 30 days</SelectItem>
                         <SelectItem value="last-90-days" className="text-gray-900">Last 90 days</SelectItem>
+                        <SelectItem value="all" className="text-gray-900">All time</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
