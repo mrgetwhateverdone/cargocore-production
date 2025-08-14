@@ -472,18 +472,22 @@ export class EnhancedPDFServiceV2 {
     
     this.currentY += 25;
     
-    // Display up to 3 key insights prominently
+    // Display up to 3 key insights prominently with dynamic sizing
     insights.slice(0, 3).forEach((insight, index) => {
-      this.checkPageBreak(50);
+      // This part of the code calculates dynamic box height based on content length
+      const content = insight.content || insight.message || 'Analysis in progress...';
+      const lines = this.doc.splitTextToSize(content, this.pageWidth - 2 * this.margin - 30);
+      const baseHeight = 25; // Minimum height for title and spacing
+      const lineHeight = 6;
+      const dynamicBoxHeight = baseHeight + (lines.length * lineHeight) + 5; // 5px extra padding
       
-      // Enhanced insight box with better spacing
-      const boxHeight = 35;
+      this.checkPageBreak(dynamicBoxHeight + 15);
       
-      // Premium insight box styling
+      // Premium insight box styling with dynamic height
       this.doc.setFillColor(239, 246, 255); // Light blue background
       this.doc.setDrawColor(59, 130, 246); // Blue border
       this.doc.setLineWidth(1);
-      this.doc.roundedRect(this.margin, this.currentY, this.pageWidth - 2 * this.margin, boxHeight, 3, 3, 'FD');
+      this.doc.roundedRect(this.margin, this.currentY, this.pageWidth - 2 * this.margin, dynamicBoxHeight, 3, 3, 'FD');
       
       // Premium insight number badge
       this.doc.setFillColor(59, 130, 246);
@@ -500,20 +504,19 @@ export class EnhancedPDFServiceV2 {
       const title = insight.title || `Key Insight ${index + 1}`;
       this.doc.text(title, this.margin + 22, this.currentY + 12);
       
-      // Insight content with improved readability
+      // Insight content with improved readability - ALL LINES, NOT LIMITED
       this.doc.setFontSize(10);
       this.doc.setTextColor('#1f2937');
       this.doc.setFont('helvetica', 'normal');
-      const content = insight.content || insight.message || 'Analysis in progress...';
-      const lines = this.doc.splitTextToSize(content, this.pageWidth - 2 * this.margin - 30);
       
       let lineY = this.currentY + 22;
-      lines.slice(0, 2).forEach((line: string) => {
+      // This part of the code displays ALL lines of the AI response, not just 2
+      lines.forEach((line: string) => {
         this.doc.text(line, this.margin + 22, lineY);
-        lineY += 6;
+        lineY += lineHeight;
       });
       
-      this.currentY += boxHeight + 10;
+      this.currentY += dynamicBoxHeight + 10;
     });
     
     this.currentY += 10;
