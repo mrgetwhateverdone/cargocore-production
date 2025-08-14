@@ -190,8 +190,8 @@ export default function Reports() {
     return { filteredProducts, filteredShipments };
   };
   
-  // This part of the code handles template-specific PDF generation with filtering
-  const handleGeneratePDF = () => {
+  // This part of the code handles template-specific PDF generation with AI insights
+  const handleGeneratePDF = async () => {
     if (!data) return;
     
     setIsGenerating(true);
@@ -260,8 +260,8 @@ export default function Reports() {
         }
       };
 
-      // This part of the code generates the enhanced PDF with professional styling and multi-page support
-      enhancedPdfServiceV2.generateReport(reportData);
+      // This part of the code generates the enhanced PDF with AI insights and professional styling
+      await enhancedPdfServiceV2.generateReport(reportData);
       
     } catch (error) {
       console.error("Error generating PDF:", error);
