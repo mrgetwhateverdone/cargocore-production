@@ -11,8 +11,16 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ThemeProvider } from "next-themes";
 import { SettingsProvider } from "@/contexts/SettingsContext";
+import { ClerkProvider, SignedIn, SignedOut } from "@clerk/clerk-react";
 
 console.log("🚀 CargoCore: App.tsx loading...");
+
+// This part of the code configures Clerk authentication
+const CLERK_PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY || "pk_test_YW1hemluZy1kb3J5LTY1LmNsZXJrLmFjY291bnRzLmRldiQ";
+
+if (!CLERK_PUBLISHABLE_KEY) {
+  throw new Error("Missing Clerk Publishable Key");
+}
 
 // Page imports
 import Landing from "./pages/Landing";
@@ -49,44 +57,120 @@ const App = () => {
 
   return (
     <ErrorBoundary>
-      <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-        <QueryClientProvider client={queryClient}>
-          <SettingsProvider>
-            <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <WorkflowToastListener />
-            <BrowserRouter>
-              <SmartRouter />
-              <Routes>
-                {/* Public Landing & Contact Pages */}
-                <Route path="/" element={<Landing />} />
-                <Route path="/contact" element={<Contact />} />
+      <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY}>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <QueryClientProvider client={queryClient}>
+            <SettingsProvider>
+              <TooltipProvider>
+              <Toaster />
+              <Sonner />
+              <WorkflowToastListener />
+              <BrowserRouter>
+                <SmartRouter />
+                <Routes>
+                  {/* Public Landing & Contact Pages */}
+                  <Route path="/" element={<Landing />} />
+                  <Route path="/contact" element={<Contact />} />
 
-                {/* Protected Dashboard & App Pages */}
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/workflows" element={<Workflows />} />
-                <Route path="/analytics" element={<Analytics />} />
-                <Route path="/orders" element={<Orders />} />
-                <Route path="/inventory" element={<Inventory />} />
-                <Route path="/warehouses" element={<Warehouses />} />
-                <Route path="/cost-management" element={<CostManagement />} />
-                <Route
-                  path="/intelligence"
-                  element={<EconomicIntelligence />}
-                />
-                <Route path="/reports" element={<Reports />} />
-                <Route path="/assistant" element={<AIAssistant />} />
-                <Route path="/settings" element={<Settings />} />
+                  {/* Protected Dashboard & App Pages */}
+                  <Route 
+                    path="/dashboard" 
+                    element={
+                      <SignedIn>
+                        <Dashboard />
+                      </SignedIn>
+                    } 
+                  />
+                  <Route 
+                    path="/workflows" 
+                    element={
+                      <SignedIn>
+                        <Workflows />
+                      </SignedIn>
+                    } 
+                  />
+                  <Route 
+                    path="/analytics" 
+                    element={
+                      <SignedIn>
+                        <Analytics />
+                      </SignedIn>
+                    } 
+                  />
+                  <Route 
+                    path="/orders" 
+                    element={
+                      <SignedIn>
+                        <Orders />
+                      </SignedIn>
+                    } 
+                  />
+                  <Route 
+                    path="/inventory" 
+                    element={
+                      <SignedIn>
+                        <Inventory />
+                      </SignedIn>
+                    } 
+                  />
+                  <Route 
+                    path="/warehouses" 
+                    element={
+                      <SignedIn>
+                        <Warehouses />
+                      </SignedIn>
+                    } 
+                  />
+                  <Route 
+                    path="/cost-management" 
+                    element={
+                      <SignedIn>
+                        <CostManagement />
+                      </SignedIn>
+                    } 
+                  />
+                  <Route
+                    path="/intelligence"
+                    element={
+                      <SignedIn>
+                        <EconomicIntelligence />
+                      </SignedIn>
+                    }
+                  />
+                  <Route 
+                    path="/reports" 
+                    element={
+                      <SignedIn>
+                        <Reports />
+                      </SignedIn>
+                    } 
+                  />
+                  <Route 
+                    path="/assistant" 
+                    element={
+                      <SignedIn>
+                        <AIAssistant />
+                      </SignedIn>
+                    } 
+                  />
+                  <Route 
+                    path="/settings" 
+                    element={
+                      <SignedIn>
+                        <Settings />
+                      </SignedIn>
+                    } 
+                  />
 
-                {/* 404 Catch-all */}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </BrowserRouter>
-            </TooltipProvider>
-          </SettingsProvider>
-        </QueryClientProvider>
-      </ThemeProvider>
+                  {/* 404 Catch-all */}
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </BrowserRouter>
+              </TooltipProvider>
+            </SettingsProvider>
+          </QueryClientProvider>
+        </ThemeProvider>
+      </ClerkProvider>
     </ErrorBoundary>
   );
 };

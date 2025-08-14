@@ -17,14 +17,7 @@ import { ShipmentCostVarianceSection } from "@/components/dashboard/ShipmentCost
 export default function Dashboard() {
   const { data, isLoading, error, refetch } = useDashboardData();
 
-  // This part of the code checks for demo authentication
-  React.useEffect(() => {
-    const isDemo = localStorage.getItem('isDemo');
-    if (!isDemo) {
-      // Redirect to landing page if not authenticated
-      window.location.href = '/';
-    }
-  }, []);
+  // Authentication is now handled by Clerk in App.tsx
 
   return (
     <Layout>

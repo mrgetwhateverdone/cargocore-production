@@ -1,26 +1,23 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { Check, BarChart3, Zap, Shield, TrendingUp, Users, DollarSign } from 'lucide-react';
+import { SignInButton, SignUpButton, UserButton, useUser } from '@clerk/clerk-react';
 
 /**
  * This part of the code creates the main landing page with HubSpot-inspired design
  * Includes hero section, features, benefits, and call-to-action buttons
  */
 export default function Landing() {
-  
-  // This part of the code handles the demo auto-login functionality
+  const navigate = useNavigate();
+  const { isSignedIn, user } = useUser();
+
+  // This part of the code handles navigation to dashboard for signed-in users
   const handleGetDemo = () => {
-    // Set demo flag in localStorage for temporary auth
-    localStorage.setItem('isDemo', 'true');
-    localStorage.setItem('demoUser', JSON.stringify({
-      email: 'demo@cargocore.com',
-      name: 'Demo User',
-      company: 'CargoCore Demo'
-    }));
-    
-    // Redirect to dashboard
-    window.location.href = '/dashboard';
+    if (isSignedIn) {
+      navigate('/dashboard');
+    }
+    // If not signed in, the SignInButton will handle the sign-in flow
   };
 
   return (
@@ -37,13 +34,26 @@ export default function Landing() {
             
             {/* Navigation Actions */}
             <div className="flex items-center space-x-4">
-              <Button 
-                variant="outline" 
-                onClick={handleGetDemo}
-                className="border-blue-600 text-blue-600 hover:bg-blue-50"
-              >
-                Get Demo
-              </Button>
+              {isSignedIn ? (
+                <div className="flex items-center space-x-4">
+                  <Button 
+                    onClick={handleGetDemo}
+                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                  >
+                    Go to Dashboard
+                  </Button>
+                  <UserButton />
+                </div>
+              ) : (
+                <SignInButton mode="modal">
+                  <Button 
+                    variant="outline" 
+                    className="border-blue-600 text-blue-600 hover:bg-blue-50"
+                  >
+                    Get Demo
+                  </Button>
+                </SignInButton>
+              )}
             </div>
           </div>
         </div>
@@ -68,13 +78,24 @@ export default function Landing() {
               
               {/* CTA Buttons */}
               <div className="flex flex-col sm:flex-row gap-4 mt-8">
-                <Button 
-                  onClick={handleGetDemo}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 text-lg font-semibold"
-                  size="lg"
-                >
-                  Get Demo
-                </Button>
+                {isSignedIn ? (
+                  <Button 
+                    onClick={handleGetDemo}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 text-lg font-semibold"
+                    size="lg"
+                  >
+                    Go to Dashboard
+                  </Button>
+                ) : (
+                  <SignInButton mode="modal">
+                    <Button 
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 text-lg font-semibold"
+                      size="lg"
+                    >
+                      Get Demo
+                    </Button>
+                  </SignInButton>
+                )}
                 <Button 
                   variant="outline" 
                   asChild
@@ -331,13 +352,24 @@ export default function Landing() {
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button 
-              onClick={handleGetDemo}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 text-lg font-semibold"
-              size="lg"
-            >
-              Get Demo
-            </Button>
+            {isSignedIn ? (
+              <Button 
+                onClick={handleGetDemo}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 text-lg font-semibold"
+                size="lg"
+              >
+                Go to Dashboard
+              </Button>
+            ) : (
+              <SignInButton mode="modal">
+                <Button 
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 text-lg font-semibold"
+                  size="lg"
+                >
+                  Get Demo
+                </Button>
+              </SignInButton>
+            )}
             <Button 
               variant="outline" 
               asChild

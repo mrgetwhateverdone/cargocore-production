@@ -15,13 +15,7 @@ import { BrandPerformanceSection } from "@/components/analytics/BrandPerformance
 export default function Analytics() {
   const { data, isLoading, error, refetch } = useAnalyticsData();
 
-  // This part of the code checks for demo authentication
-  React.useEffect(() => {
-    const isDemo = localStorage.getItem('isDemo');
-    if (!isDemo) {
-      window.location.href = '/';
-    }
-  }, []);
+  // Authentication is now handled by Clerk in App.tsx
 
   return (
     <Layout>
