@@ -138,6 +138,15 @@ export function SupplierAnalysisSection({ supplierAnalysis, isLoading }: Supplie
                   Countries
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Diversity Score
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Lead Time
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Multi-Source SKUs
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Risk Level
                 </th>
               </tr>
@@ -175,6 +184,46 @@ export function SupplierAnalysisSection({ supplierAnalysis, isLoading }: Supplie
                             {formatNumber(supplier.countries.length)}
                           </div>
                         </button>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-center">
+                        <div className={`inline-flex items-center px-2 py-1 rounded-md text-sm font-medium ${
+                          supplier.diversity_score >= 80 ? 'bg-green-100 text-green-800' :
+                          supplier.diversity_score >= 60 ? 'bg-yellow-100 text-yellow-800' :
+                          supplier.diversity_score >= 40 ? 'bg-orange-100 text-orange-800' :
+                          'bg-red-100 text-red-800'
+                        }`}>
+                          {supplier.diversity_score}/100
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">
+                        {supplier.avg_lead_time !== null ? (
+                          <span className={`inline-flex items-center px-2 py-1 rounded-md text-sm font-medium ${
+                            supplier.avg_lead_time <= 7 ? 'bg-green-100 text-green-800' :
+                            supplier.avg_lead_time <= 14 ? 'bg-yellow-100 text-yellow-800' :
+                            supplier.avg_lead_time <= 30 ? 'bg-orange-100 text-orange-800' :
+                            'bg-red-100 text-red-800'
+                          }`}>
+                            {supplier.avg_lead_time} days
+                          </span>
+                        ) : (
+                          <span className="text-gray-400 text-xs">No data</span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-center">
+                        <div className={`inline-flex items-center px-2 py-1 rounded-md text-sm font-medium ${
+                          supplier.multi_source_skus > 5 ? 'bg-green-100 text-green-800' :
+                          supplier.multi_source_skus > 2 ? 'bg-yellow-100 text-yellow-800' :
+                          supplier.multi_source_skus > 0 ? 'bg-orange-100 text-orange-800' :
+                          'bg-gray-100 text-gray-600'
+                        }`}>
+                          {formatNumber(supplier.multi_source_skus)}
+                        </div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">

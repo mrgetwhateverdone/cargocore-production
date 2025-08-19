@@ -44,6 +44,46 @@ async function fetchProducts(): Promise<ProductData[]> {
   }
 }
 
+// TinyBird Shipments API Response interface
+interface ShipmentData {
+  company_url: string;
+  shipment_id: string;
+  supplier: string | null;
+  created_date: string;
+  expected_arrival_date: string | null;
+  arrival_date: string;
+  inventory_item_id: string;
+  sku: string | null;
+}
+
+async function fetchShipments(): Promise<ShipmentData[]> {
+  const baseUrl = process.env.WAREHOUSE_BASE_URL;
+  const token = process.env.WAREHOUSE_TOKEN;
+
+  if (!baseUrl || !token) {
+    console.log("⚠️ Warehouse TinyBird config missing, skipping shipment data");
+    return [];
+  }
+
+  // This part of the code matches the working pattern from other APIs
+  const url = `${baseUrl}?token=${token}&limit=1000&company_url=COMP002_3PL`;
+  
+  try {
+    console.log("🔒 Fetching shipments from TinyBird:", url.replace(token, "[TOKEN]"));
+    const response = await fetch(url);
+    if (!response.ok) {
+      console.log("⚠️ Shipments API failed:", response.status, response.statusText);
+      return [];
+    }
+    const result = await response.json();
+    console.log("✅ Shipments response:", result.data?.length || 0, "shipments");
+    return result.data || [];
+  } catch (error) {
+    console.log("⚠️ Shipments fetch failed:", error);
+    return [];
+  }
+}
+
 function calculateEnhancedKPIs(products: ProductData[]) {
   // Data is already filtered by company_url in the API call
   const companyProducts = products;
@@ -119,7 +159,71 @@ function calculateBrandPerformance(products: ProductData[]) {
     .sort((a, b) => b.total_value - a.total_value); // All brands, sorted by value
 }
 
-function calculateSupplierAnalysis(products: ProductData[]) {
+// This part of the code calculates supplier diversity score based on geographic and operational factors
+function calculateDiversityScore(countries: string[], skuCount: number, totalValue: number): number {
+  // Base score from geographic diversity (0-50 points)
+  const geoScore = Math.min(50, countries.length * 5);
+  
+  // Operational diversity bonus (0-30 points)
+  const operationalScore = Math.min(30, Math.floor(skuCount / 5) * 2);
+  
+  // Business scale factor (0-20 points)
+  const scaleScore = totalValue > 50000 ? 20 : totalValue > 10000 ? 10 : 5;
+  
+  return Math.min(100, geoScore + operationalScore + scaleScore);
+}
+
+// This part of the code calculates average lead time for a supplier from shipment data
+function calculateAvgLeadTime(supplierName: string, shipments: ShipmentData[]): number | null {
+  const supplierShipments = shipments.filter(s => 
+    s.supplier && s.supplier.toLowerCase() === supplierName.toLowerCase()
+  );
+  
+  if (supplierShipments.length === 0) return null;
+  
+  const leadTimes = supplierShipments
+    .filter(s => s.created_date && s.arrival_date)
+    .map(s => {
+      const created = new Date(s.created_date);
+      const arrived = new Date(s.arrival_date);
+      return Math.max(0, Math.ceil((arrived.getTime() - created.getTime()) / (1000 * 60 * 60 * 24)));
+    })
+    .filter(days => days > 0 && days < 365); // Filter out invalid dates
+  
+  if (leadTimes.length === 0) return null;
+  
+  return Math.round(leadTimes.reduce((sum, days) => sum + days, 0) / leadTimes.length);
+}
+
+// This part of the code counts SKUs available from multiple suppliers
+function countMultiSourceSKUs(supplierName: string, allProducts: ProductData[]): number {
+  // Get all SKUs from this supplier
+  const supplierSKUs = new Set(
+    allProducts
+      .filter(p => p.supplier_name === supplierName && p.product_sku)
+      .map(p => p.product_sku!)
+  );
+  
+  // Count how many of these SKUs are also available from other suppliers
+  let multiSourceCount = 0;
+  
+  supplierSKUs.forEach(sku => {
+    const suppliersForSKU = new Set(
+      allProducts
+        .filter(p => p.product_sku === sku)
+        .map(p => p.supplier_name)
+    );
+    
+    // If this SKU is available from more than one supplier, count it
+    if (suppliersForSKU.size > 1) {
+      multiSourceCount++;
+    }
+  });
+  
+  return multiSourceCount;
+}
+
+function calculateSupplierAnalysis(products: ProductData[], shipments: ShipmentData[] = []) {
   // Data is already filtered by company_url in the API call
   const companyProducts = products;
   const supplierMap = new Map<string, {skuCount: number, totalValue: number, countries: Set<string>}>();
@@ -142,14 +246,22 @@ function calculateSupplierAnalysis(products: ProductData[]) {
     }
   });
   
+  const totalCompanyValue = companyProducts.reduce((sum, p) => sum + (p.unit_quantity * (p.unit_cost || 0)), 0);
+  
   return Array.from(supplierMap.entries())
-    .map(([supplier, data]) => ({
-      supplier_name: supplier,
-      sku_count: data.skuCount,
-      total_value: Math.round(data.totalValue),
-      countries: Array.from(data.countries),
-      concentration_risk: Math.round((data.totalValue / companyProducts.reduce((sum, p) => sum + (p.unit_quantity * (p.unit_cost || 0)), 0)) * 100)
-    }))
+    .map(([supplier, data]) => {
+      const countries = Array.from(data.countries);
+      return {
+        supplier_name: supplier,
+        sku_count: data.skuCount,
+        total_value: Math.round(data.totalValue),
+        countries,
+        concentration_risk: Math.round((data.totalValue / totalCompanyValue) * 100),
+        diversity_score: calculateDiversityScore(countries, data.skuCount, data.totalValue),
+        avg_lead_time: calculateAvgLeadTime(supplier, shipments),
+        multi_source_skus: countMultiSourceSKUs(supplier, companyProducts)
+      };
+    })
     .sort((a, b) => b.total_value - a.total_value)
     .slice(0, 15);
 }
@@ -206,7 +318,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     console.log("🔒 Phase 2: Building world-class inventory dashboard...");
 
     // Fetch real data and calculate enhanced analytics
-    const products = await fetchProducts();
+    const [products, shipments] = await Promise.all([
+      fetchProducts(),
+      fetchShipments()
+    ]);
     
     if (products.length === 0) {
       // No data available - return clean empty state
@@ -247,7 +362,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Calculate enhanced analytics
     const kpis = calculateEnhancedKPIs(products);
     const brandPerformance = calculateBrandPerformance(products);
-    const supplierAnalysis = calculateSupplierAnalysis(products);
+    const supplierAnalysis = calculateSupplierAnalysis(products, shipments);
     const inventory = transformToEnhancedInventoryItems(products);
 
     // Generate enhanced insights

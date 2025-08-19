@@ -456,6 +456,9 @@ export interface SupplierAnalysis {
   total_value: number;
   countries: string[];
   concentration_risk: number; // percentage
+  diversity_score: number; // 0-100 score based on geographic and operational diversity
+  avg_lead_time: number | null; // average lead time in days, null if no data
+  multi_source_skus: number; // count of SKUs available from multiple suppliers
 }
 
 export interface InventoryData {
