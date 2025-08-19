@@ -1,4 +1,6 @@
 import type { InventoryKPIs } from "@/types/api";
+import { formatCurrency, formatNumber } from "@/lib/utils";
+import { Package, DollarSign, AlertTriangle, XCircle } from "lucide-react";
 
 interface InventoryKPISectionProps {
   kpis: InventoryKPIs;
@@ -7,25 +9,24 @@ interface InventoryKPISectionProps {
 
 export function InventoryKPISection({ kpis, isLoading }: InventoryKPISectionProps) {
   // This part of the code defines enhanced KPI cards with business-critical metrics
-  const formatCurrency = (value: number) => {
-    if (value >= 1000000) return `$${(value / 1000000).toFixed(1)}M`;
-    if (value >= 1000) return `$${(value / 1000).toFixed(1)}K`;
-    return `$${value.toLocaleString()}`;
-  };
 
   const kpiCards = [
     {
       title: "Total Active SKUs",
       value: kpis.totalActiveSKUs,
       description: "Products available for sale",
+      icon: Package,
+      iconColor: "text-blue-600",
       className: "bg-white",
       colorClass: "text-blue-600",
-      format: (val: number | null) => val?.toString() || "0",
+      format: (val: number | null) => formatNumber(val),
     },
     {
       title: "Total Inventory Value",
       value: kpis.totalInventoryValue,
       description: "Total portfolio investment",
+      icon: DollarSign,
+      iconColor: "text-green-600",
       className: "bg-white",
       colorClass: "text-green-600",
       format: formatCurrency,
@@ -34,17 +35,21 @@ export function InventoryKPISection({ kpis, isLoading }: InventoryKPISectionProp
       title: "Low Stock Alerts",
       value: kpis.lowStockAlerts,
       description: "SKUs requiring replenishment",
+      icon: AlertTriangle,
+      iconColor: "text-orange-600",
       className: "bg-white",
       colorClass: kpis.lowStockAlerts > 0 ? "text-orange-600" : "text-gray-600",
-      format: (val: number | null) => val?.toString() || "0",
+      format: (val: number | null) => formatNumber(val),
     },
     {
       title: "Inactive SKUs",
       value: kpis.inactiveSKUs,
       description: "Products requiring review",
+      icon: XCircle,
+      iconColor: "text-red-600",
       className: "bg-white",
       colorClass: kpis.inactiveSKUs > 0 ? "text-red-600" : "text-gray-600",
-      format: (val: number | null) => val?.toString() || "0",
+      format: (val: number | null) => formatNumber(val),
     },
   ];
 
@@ -80,27 +85,25 @@ export function InventoryKPISection({ kpis, isLoading }: InventoryKPISectionProp
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-      {kpiCards.map((kpi, index) => (
-        <div
-          key={index}
-          className={`${kpi.className} p-4 rounded-lg border border-gray-200 shadow-sm`}
-        >
-          {/* This part of the code displays the KPI title */}
-          <div className="text-sm font-medium text-gray-500 mb-1">
-            {kpi.title}
+      {kpiCards.map((kpi, index) => {
+        const IconComponent = kpi.icon;
+        return (
+          <div
+            key={index}
+            className={`${kpi.className} p-4 rounded-lg border border-gray-200 shadow-sm`}
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-500">{kpi.title}</p>
+                <p className={`text-2xl font-bold ${kpi.colorClass}`}>
+                  {kpi.format ? kpi.format(kpi.value) : formatValue(kpi.value)}
+                </p>
+              </div>
+              <IconComponent className={`h-8 w-8 ${kpi.iconColor}`} />
+            </div>
           </div>
-          
-          {/* This part of the code displays the KPI value with appropriate coloring */}
-          <div className={`text-2xl font-semibold mb-1 ${kpi.colorClass}`}>
-            {kpi.format ? kpi.format(kpi.value) : formatValue(kpi.value)}
-          </div>
-          
-          {/* This part of the code displays the KPI description */}
-          <div className="text-sm text-gray-500">
-            {kpi.description}
-          </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import { Globe, AlertTriangle } from "lucide-react";
 import type { SupplierAnalysis } from "@/types/api";
+import { formatCurrency, formatNumber } from "@/lib/utils";
 
 interface SupplierAnalysisSectionProps {
   supplierAnalysis: SupplierAnalysis[];
@@ -7,12 +8,7 @@ interface SupplierAnalysisSectionProps {
 }
 
 export function SupplierAnalysisSection({ supplierAnalysis, isLoading }: SupplierAnalysisSectionProps) {
-  // This part of the code formats currency values for display
-  const formatCurrency = (value: number) => {
-    if (value >= 1000000) return `$${(value / 1000000).toFixed(1)}M`;
-    if (value >= 1000) return `$${(value / 1000).toFixed(1)}K`;
-    return `$${value.toLocaleString()}`;
-  };
+  // This part of the code formats currency values using the global utility
 
   // This part of the code determines risk level based on concentration
   const getRiskLevel = (concentration: number) => {
@@ -106,50 +102,69 @@ export function SupplierAnalysisSection({ supplierAnalysis, isLoading }: Supplie
           </div>
         </div>
 
-        {/* This part of the code displays the supplier list */}
-        <div className="space-y-3 max-h-96 overflow-y-auto">
-          {supplierAnalysis.map((supplier, index) => {
-            const risk = getRiskLevel(supplier.concentration_risk);
-            
-            return (
-              <div
-                key={supplier.supplier_name}
-                className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                <div className="flex items-center space-x-4 flex-1">
-                  <div className="flex-1">
-                    <div className="font-medium text-gray-900">{supplier.supplier_name}</div>
-                    <div className="flex items-center space-x-2 mt-1">
-                      <Globe className="h-4 w-4 text-gray-400" />
-                      <span className="text-sm text-gray-500">
-                        {supplier.countries.length > 0 ? supplier.countries.join(', ') : 'Unknown origin'}
-                      </span>
-                    </div>
-                  </div>
-                </div>
+        {/* This part of the code displays the supplier table in the same format as Top Supplier Analysis */}
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Supplier
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Total Value
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  SKUs
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Countries
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Risk Level
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {supplierAnalysis.map((supplier, index) => {
+                const risk = getRiskLevel(supplier.concentration_risk);
                 
-                <div className="flex items-center space-x-4">
-                  <div className="text-right">
-                    <div className="font-medium text-gray-900">
-                      {formatCurrency(supplier.total_value)}
-                    </div>
-                    <div className="text-sm text-gray-500">
-                      {supplier.sku_count} SKUs
-                    </div>
-                  </div>
-                  
-                  <div className={`px-3 py-1 rounded-full border ${risk.bgColor}`}>
-                    <div className={`text-sm font-medium ${risk.color}`}>
-                      {supplier.concentration_risk}%
-                    </div>
-                    <div className={`text-xs ${risk.color}`}>
-                      {risk.level} Risk
-                    </div>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
+                return (
+                  <tr key={supplier.supplier_name} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-900">
+                        {supplier.supplier_name}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900 font-medium">
+                        {formatCurrency(supplier.total_value)}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">
+                        {formatNumber(supplier.sku_count)}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <Globe className="h-4 w-4 text-gray-400 mr-2" />
+                        <div className="text-sm text-gray-900">
+                          {formatNumber(supplier.countries.length)}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className={`inline-flex items-center px-3 py-1 rounded-full border ${risk.bgColor}`}>
+                        <div className={`text-sm font-medium ${risk.color}`}>
+                          {supplier.concentration_risk}% {risk.level}
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>

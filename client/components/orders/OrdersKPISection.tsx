@@ -1,4 +1,6 @@
 import type { OrdersKPIs } from "@/types/api";
+import { formatNumber } from "@/lib/utils";
+import { ShoppingCart, AlertTriangle, FileText, XCircle } from "lucide-react";
 
 interface OrdersKPISectionProps {
   kpis: OrdersKPIs;
@@ -12,6 +14,8 @@ export function OrdersKPISection({ kpis, isLoading }: OrdersKPISectionProps) {
       title: "Orders Today",
       value: kpis.ordersToday,
       description: "New orders received today",
+      icon: ShoppingCart,
+      iconColor: "text-blue-600",
       className: "bg-white",
       colorClass: "text-blue-600",
     },
@@ -19,6 +23,8 @@ export function OrdersKPISection({ kpis, isLoading }: OrdersKPISectionProps) {
       title: "At-Risk Orders",
       value: kpis.atRiskOrders,
       description: "Orders with delays or issues",
+      icon: AlertTriangle,
+      iconColor: "text-red-600",
       className: "bg-white",
       colorClass: kpis.atRiskOrders > 0 ? "text-red-600" : "text-gray-600",
     },
@@ -26,6 +32,8 @@ export function OrdersKPISection({ kpis, isLoading }: OrdersKPISectionProps) {
       title: "Open POs",
       value: kpis.openPOs,
       description: "Active purchase orders",
+      icon: FileText,
+      iconColor: "text-green-600",
       className: "bg-white",
       colorClass: "text-green-600",
     },
@@ -33,6 +41,8 @@ export function OrdersKPISection({ kpis, isLoading }: OrdersKPISectionProps) {
       title: "Unfulfillable SKUs",
       value: kpis.unfulfillableSKUs,
       description: "SKUs with fulfillment issues",
+      icon: XCircle,
+      iconColor: "text-orange-600",
       className: "bg-white",
       colorClass: kpis.unfulfillableSKUs > 0 ? "text-orange-600" : "text-gray-600",
     },
@@ -42,7 +52,7 @@ export function OrdersKPISection({ kpis, isLoading }: OrdersKPISectionProps) {
   const formatValue = (value: number | null | undefined) => {
     if (value === null || value === undefined) return "N/A";
     if (value === 0) return "—";
-    return value.toString();
+    return formatNumber(value);
   };
 
   if (isLoading) {
@@ -70,27 +80,25 @@ export function OrdersKPISection({ kpis, isLoading }: OrdersKPISectionProps) {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-      {kpiCards.map((kpi, index) => (
-        <div
-          key={index}
-          className={`${kpi.className} p-4 rounded-lg border border-gray-200 shadow-sm`}
-        >
-          {/* This part of the code displays the KPI title */}
-          <div className="text-sm font-medium text-gray-500 mb-1">
-            {kpi.title}
+      {kpiCards.map((kpi, index) => {
+        const IconComponent = kpi.icon;
+        return (
+          <div
+            key={index}
+            className={`${kpi.className} p-4 rounded-lg border border-gray-200 shadow-sm`}
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-500">{kpi.title}</p>
+                <p className={`text-2xl font-bold ${kpi.colorClass}`}>
+                  {formatValue(kpi.value)}
+                </p>
+              </div>
+              <IconComponent className={`h-8 w-8 ${kpi.iconColor}`} />
+            </div>
           </div>
-          
-          {/* This part of the code displays the KPI value with appropriate coloring */}
-          <div className={`text-2xl font-semibold mb-1 ${kpi.colorClass}`}>
-            {formatValue(kpi.value)}
-          </div>
-          
-          {/* This part of the code displays the KPI description */}
-          <div className="text-sm text-gray-500">
-            {kpi.description}
-          </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }

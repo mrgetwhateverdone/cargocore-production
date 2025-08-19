@@ -1,4 +1,5 @@
 import type { WarehouseKPIs } from "@/types/api";
+import { formatPercentage, formatNumber } from "@/lib/utils";
 
 interface WarehouseKPISectionProps {
   kpis: WarehouseKPIs;
@@ -55,16 +56,15 @@ export function WarehouseKPISection({ kpis, isLoading }: WarehouseKPISectionProp
     if (isLoading) return "—";
     if (value === null || value === undefined) return "N/A";
     
-    // This part of the code handles different number formatting based on size
+    // This part of the code handles different number formatting based on type
     if (typeof value === "number") {
       if (unit === "%") {
-        return value.toFixed(1);
-      } else if (value >= 1000) {
-        return value.toLocaleString();
+        return formatPercentage(value);
       } else if (unit === "h") {
-        return value.toFixed(1);
+        // This part of the code keeps hours with one decimal for precision
+        return `${value.toFixed(1)}`;
       }
-      return value.toString();
+      return formatNumber(value);
     }
     
     return "Check WMS Connection";

@@ -1,6 +1,6 @@
 import type { DashboardKPIs } from "@/types/api";
-import { useSettingsIntegration } from "@/hooks/useSettingsIntegration";
-import { FormattedNumber } from "@/components/ui/formatted-value";
+import { formatNumber } from "@/lib/utils";
+import { Package, AlertTriangle, FileText, XCircle } from "lucide-react";
 
 interface KPISectionProps {
   kpis: DashboardKPIs;
@@ -8,49 +8,62 @@ interface KPISectionProps {
 }
 
 export function KPISection({ kpis, isLoading }: KPISectionProps) {
-  const { formatNumber } = useSettingsIntegration();
   const kpiCards = [
     {
       title: "Total Orders Today",
       value: kpis.totalOrdersToday,
+      icon: Package,
+      iconColor: "text-blue-600",
       className: "bg-white",
     },
     {
       title: "At-Risk Orders",
       value: kpis.atRiskOrders,
+      icon: AlertTriangle,
+      iconColor: "text-red-600",
       className: "bg-white",
     },
     {
       title: "Open POs",
       value: kpis.openPOs,
+      icon: FileText,
+      iconColor: "text-green-600",
       className: "bg-white",
     },
     {
       title: "Unfulfillable SKUs",
       value: kpis.unfulfillableSKUs,
+      icon: XCircle,
+      iconColor: "text-orange-600",
       className: "bg-white",
     },
   ];
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-      {kpiCards.map((kpi, index) => (
-        <div
-          key={index}
-          className={`${kpi.className} p-4 rounded-lg border border-gray-200 shadow-sm`}
-        >
-          <div className="text-sm font-medium text-gray-500 mb-1">
-            {kpi.title}
+      {kpiCards.map((kpi, index) => {
+        const IconComponent = kpi.icon;
+        return (
+          <div
+            key={index}
+            className={`${kpi.className} p-4 rounded-lg border border-gray-200 shadow-sm`}
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-500">{kpi.title}</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {isLoading ? (
+                    <div className="h-8 w-16 bg-gray-200 rounded animate-pulse" />
+                  ) : (
+                    formatNumber(kpi.value)
+                  )}
+                </p>
+              </div>
+              <IconComponent className={`h-8 w-8 ${kpi.iconColor}`} />
+            </div>
           </div>
-          <div className="text-2xl font-semibold text-gray-900">
-            {isLoading ? (
-              <div className="h-8 w-16 bg-gray-200 rounded animate-pulse" />
-            ) : (
-              formatNumber(kpi.value)
-            )}
-          </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import type { PerformanceMetrics } from "@/types/api";
+import { formatPercentage } from "@/lib/utils";
 
 interface PerformanceMetricsSectionProps {
   metrics: PerformanceMetrics;
@@ -25,8 +26,7 @@ export function PerformanceMetricsSection({ metrics, isLoading }: PerformanceMet
 
   // This part of the code formats growth rate with proper sign indicator
   const formatGrowthRate = (rate: number) => {
-    const sign = rate >= 0 ? '+' : '';
-    return `${sign}${(rate || 0).toFixed(1)}%`;
+    return formatPercentage(rate, true);
   };
 
   if (isLoading) {
@@ -81,7 +81,7 @@ export function PerformanceMetricsSection({ metrics, isLoading }: PerformanceMet
             Fulfillment Performance
           </div>
           <div className="text-xl font-bold mb-2 text-gray-900">
-            {(metrics.fulfillmentPerformance.efficiencyRate || 0).toFixed(1)}%
+            {formatPercentage(metrics.fulfillmentPerformance.efficiencyRate || 0)}
           </div>
           {/* This part of the code creates a progress bar showing efficiency rate */}
           <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
