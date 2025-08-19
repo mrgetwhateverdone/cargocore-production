@@ -1,6 +1,5 @@
 import type { CostKPIs } from "@/types/api";
-import { useSettingsIntegration } from "@/hooks/useSettingsIntegration";
-import { FormattedCurrency, FormattedPercentage } from "@/components/ui/formatted-value";
+import { formatCurrency, formatPercentage, formatNumber } from "@/lib/utils";
 import { DollarSign, BarChart3, CheckCircle, Building } from "lucide-react";
 
 interface CostKPISectionProps {
@@ -9,15 +8,6 @@ interface CostKPISectionProps {
 }
 
 export function CostKPISection({ kpis, isLoading }: CostKPISectionProps) {
-  const { formatCurrency, formatPercentage: formatPercent } = useSettingsIntegration();
-
-  // This part of the code formats large numbers with M/K suffixes for display
-  const formatLargeNumber = (num: number) => {
-    const safeNum = num || 0;
-    if (safeNum >= 1000000) return `${(safeNum / 1000000).toFixed(1)}M`;
-    if (safeNum >= 1000) return `${(safeNum / 1000).toFixed(1)}K`;
-    return formatCurrency(safeNum);
-  };
 
   if (isLoading) {
     return (
@@ -43,7 +33,7 @@ export function CostKPISection({ kpis, isLoading }: CostKPISectionProps) {
           <div>
             <p className="text-sm font-medium text-gray-500">Total Monthly Costs</p>
             <p className="text-2xl font-bold text-gray-900">
-              <FormattedCurrency value={kpis.totalMonthlyCosts} />
+              {formatCurrency(kpis.totalMonthlyCosts)}
             </p>
           </div>
           <DollarSign className="h-8 w-8 text-blue-600" />
@@ -56,7 +46,7 @@ export function CostKPISection({ kpis, isLoading }: CostKPISectionProps) {
           <div>
             <p className="text-sm font-medium text-gray-500">Cost Efficiency Rate</p>
             <p className="text-2xl font-bold text-gray-900">
-              <FormattedPercentage value={kpis.costEfficiencyRate} />
+              {formatPercentage(kpis.costEfficiencyRate)}
             </p>
           </div>
           <BarChart3 className="h-8 w-8 text-yellow-600" />
@@ -69,7 +59,7 @@ export function CostKPISection({ kpis, isLoading }: CostKPISectionProps) {
           <div>
             <p className="text-sm font-medium text-gray-500">Top Performing Warehouses</p>
             <p className="text-2xl font-bold text-gray-900">
-              {kpis.topPerformingWarehouses || "—"}/{kpis.totalCostCenters || "—"}
+              {formatNumber(kpis.topPerformingWarehouses)}/{formatNumber(kpis.totalCostCenters)}
             </p>
           </div>
           <CheckCircle className="h-8 w-8 text-green-600" />
@@ -82,7 +72,7 @@ export function CostKPISection({ kpis, isLoading }: CostKPISectionProps) {
           <div>
             <p className="text-sm font-medium text-gray-500">Total Cost Centers</p>
             <p className="text-2xl font-bold text-gray-900">
-              {kpis.totalCostCenters || "—"}
+              {formatNumber(kpis.totalCostCenters)}
             </p>
           </div>
           <Building className="h-8 w-8 text-purple-600" />
