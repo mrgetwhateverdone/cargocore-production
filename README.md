@@ -391,7 +391,7 @@ CargoCore delivers measurable business impact:
 ✅ **Enterprise Security**: Bank-grade security and compliance  
 ✅ **Expert Support**: Backed by logistics industry professionals  
 
-*Professional Precision in 3PL Operations* ✨
+*Professional Precision in 3PL Operations.* ✨
 
 ---
 
