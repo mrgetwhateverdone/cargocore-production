@@ -13,6 +13,9 @@ import {
   AlertTriangle, 
   Info, 
   DollarSign,
+  Users,
+  Truck,
+  Activity,
   Target,
   Globe
 } from "lucide-react";
@@ -88,61 +91,45 @@ export default function EconomicIntelligence() {
           <>
             {/* Top Economic KPIs Row */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-              <Card className="bg-white">
-                <CardContent className="p-4">
-                  <div className="text-sm font-medium text-gray-500 mb-1">
-                    Supplier Performance
+              <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-500">Supplier Performance</p>
+                    <p className="text-2xl font-bold text-gray-900">{data.kpis.supplierPerformance}/100</p>
                   </div>
-                  <div className="text-2xl font-semibold text-gray-900 mb-2">
-                    {data.kpis.supplierPerformance}/100
-                  </div>
-                  <Badge className={getStatusColor(data.kpis.supplierPerformance, 'performance')}>
-                    {getStatusText(data.kpis.supplierPerformance, 'performance')}
-                  </Badge>
-                </CardContent>
-              </Card>
+                  <Users className="h-8 w-8 text-blue-600" />
+                </div>
+              </div>
 
-              <Card className="bg-white">
-                <CardContent className="p-4">
-                  <div className="text-sm font-medium text-gray-500 mb-1">
-                    Shipping Cost Impact
+              <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-500">Shipping Cost Impact</p>
+                    <p className="text-2xl font-bold text-gray-900">{data.kpis.shippingCostImpact}%</p>
                   </div>
-                  <div className="text-2xl font-semibold text-gray-900 mb-2">
-                    {data.kpis.shippingCostImpact}%
-                  </div>
-                  <Badge className={getStatusColor(data.kpis.shippingCostImpact, 'cost')}>
-                    {getStatusText(data.kpis.shippingCostImpact, 'cost')}
-                  </Badge>
-                </CardContent>
-              </Card>
+                  <DollarSign className="h-8 w-8 text-green-600" />
+                </div>
+              </div>
 
-              <Card className="bg-white">
-                <CardContent className="p-4">
-                  <div className="text-sm font-medium text-gray-500 mb-1">
-                    Transportation Costs
+              <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-500">Transportation Costs</p>
+                    <p className="text-2xl font-bold text-gray-900">{data.kpis.transportationCosts}%</p>
                   </div>
-                  <div className="text-2xl font-semibold text-gray-900 mb-2">
-                    {data.kpis.transportationCosts}%
-                  </div>
-                  <Badge className={getStatusColor(data.kpis.transportationCosts, 'cost')}>
-                    {getStatusText(data.kpis.transportationCosts, 'cost')}
-                  </Badge>
-                </CardContent>
-              </Card>
+                  <Truck className="h-8 w-8 text-orange-600" />
+                </div>
+              </div>
 
-              <Card className="bg-white">
-                <CardContent className="p-4">
-                  <div className="text-sm font-medium text-gray-500 mb-1">
-                    Supply Chain Health
+              <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-500">Supply Chain Health</p>
+                    <p className="text-2xl font-bold text-gray-900">{data.kpis.supplyChainHealth}/100</p>
                   </div>
-                  <div className="text-2xl font-semibold text-gray-900 mb-2">
-                    {data.kpis.supplyChainHealth}/100
-                  </div>
-                  <Badge className={getStatusColor(data.kpis.supplyChainHealth, 'health')}>
-                    {getStatusText(data.kpis.supplyChainHealth, 'health')}
-                  </Badge>
-                </CardContent>
-              </Card>
+                  <Activity className="h-8 w-8 text-purple-600" />
+                </div>
+              </div>
             </div>
 
             {/* Economic Intelligence Agent Section */}

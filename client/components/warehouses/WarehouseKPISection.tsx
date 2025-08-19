@@ -83,34 +83,15 @@ export function WarehouseKPISection({ kpis, isLoading }: WarehouseKPISectionProp
             key={kpi.title}
             className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow"
           >
-            {/* This part of the code displays the KPI icon and title */}
-            <div className="flex items-center mb-3">
-              <div className={`p-2 rounded-lg ${kpi.bgColor} mr-3`}>
-                <span className="text-lg">{kpi.icon}</span>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-500">{kpi.title}</p>
+                <p className={`text-2xl font-bold ${kpi.color}`}>
+                  {formatKPIValue(kpi.value, kpi.unit)}{kpi.unit}
+                </p>
               </div>
-              <h3 className="text-sm font-medium text-gray-600 truncate">
-                {kpi.title}
-              </h3>
+              <span className="text-2xl">{kpi.icon}</span>
             </div>
-
-            {/* This part of the code displays the main KPI value with units */}
-            <div className="mb-2">
-              <div className="flex items-baseline">
-                <span className={`text-2xl font-bold ${kpi.color}`}>
-                  {formatKPIValue(kpi.value, kpi.unit)}
-                </span>
-                {kpi.unit && (
-                  <span className="text-sm text-gray-500 ml-1">
-                    {kpi.unit}
-                  </span>
-                )}
-              </div>
-            </div>
-
-            {/* This part of the code shows the description text */}
-            <p className="text-xs text-gray-500">
-              {kpi.description}
-            </p>
 
             {/* This part of the code adds visual indicators for different KPI types */}
             {kpi.title === "SLA % by Warehouse" && kpi.value !== null && !isLoading && (
