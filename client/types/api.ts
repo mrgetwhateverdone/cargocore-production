@@ -423,6 +423,17 @@ export interface InventoryItem {
   days_since_created: number;
   warehouse_id?: string | null;
   last_updated?: string | null;
+  // Reorder analysis data
+  reorder_analysis?: {
+    daily_usage_rate: number;
+    lead_time_days: number;
+    reorder_date: string;
+    recommended_quantity: number;
+    reorder_cost: number;
+    days_until_stockout: number;
+    safety_stock: number;
+    reorder_status: 'critical' | 'warning' | 'good';
+  };
 }
 
 export interface InventoryKPIs {

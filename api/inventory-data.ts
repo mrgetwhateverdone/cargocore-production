@@ -223,6 +223,71 @@ function countMultiSourceSKUs(supplierName: string, allProducts: ProductData[]):
   return multiSourceCount;
 }
 
+// This part of the code calculates reorder analysis for inventory items
+function calculateReorderAnalysis(
+  product: ProductData, 
+  shipments: ShipmentData[]
+): {
+  daily_usage_rate: number;
+  lead_time_days: number;
+  reorder_date: string;
+  recommended_quantity: number;
+  reorder_cost: number;
+  days_until_stockout: number;
+  safety_stock: number;
+  status: 'critical' | 'warning' | 'good';
+} {
+  // Calculate daily usage rate from shipment data
+  const productShipments = shipments.filter(s => 
+    s.sku === product.product_sku || s.inventory_item_id === product.inventory_item_id
+  );
+  
+  const dailyUsageRate = productShipments.length > 0 ? 
+    Math.max(1, Math.ceil(productShipments.length / 30)) : 2; // Fallback to 2 units/day
+  
+  // Get lead time (use supplier average or fallback to 14 days)
+  const leadTimeDays = calculateAvgLeadTime(product.supplier_name, shipments) || 14;
+  
+  // Calculate safety stock (20% of lead time consumption)
+  const safetyStock = Math.ceil(dailyUsageRate * leadTimeDays * 0.2);
+  
+  // Calculate days until stockout
+  const availableStock = Math.max(0, product.unit_quantity - Math.floor(product.unit_quantity * 0.1));
+  const daysUntilStockout = Math.floor(availableStock / dailyUsageRate);
+  
+  // Calculate recommended reorder quantity (lead time consumption + safety stock)
+  const recommendedQuantity = Math.ceil((dailyUsageRate * leadTimeDays) + safetyStock);
+  
+  // Calculate reorder cost
+  const reorderCost = recommendedQuantity * (product.unit_cost || 0);
+  
+  // Calculate reorder date (today + days until reorder needed)
+  const reorderDays = Math.max(0, daysUntilStockout - leadTimeDays);
+  const reorderDate = new Date();
+  reorderDate.setDate(reorderDate.getDate() + reorderDays);
+  
+  // Determine status
+  let status: 'critical' | 'warning' | 'good';
+  if (daysUntilStockout <= 3) {
+    status = 'critical';
+  } else if (daysUntilStockout <= 14) {
+    status = 'warning';
+  } else {
+    status = 'good';
+  }
+  
+  return {
+    daily_usage_rate: dailyUsageRate,
+    lead_time_days: leadTimeDays,
+    reorder_date: reorderDate.toLocaleDateString(),
+    recommended_quantity: recommendedQuantity,
+    reorder_cost: Math.round(reorderCost),
+    days_until_stockout: daysUntilStockout,
+    safety_stock: safetyStock,
+    status
+  };
+}
+
 function calculateSupplierAnalysis(products: ProductData[], shipments: ShipmentData[] = []) {
   // Data is already filtered by company_url in the API call
   const companyProducts = products;
@@ -266,7 +331,7 @@ function calculateSupplierAnalysis(products: ProductData[], shipments: ShipmentD
     .slice(0, 15);
 }
 
-function transformToEnhancedInventoryItems(products: ProductData[]) {
+function transformToEnhancedInventoryItems(products: ProductData[], shipments: ShipmentData[] = []) {
   // Data is already filtered by company_url in the API call
   return products
     .map(p => {
@@ -288,6 +353,22 @@ function transformToEnhancedInventoryItems(products: ProductData[]) {
         status = 'In Stock';
       }
       
+      // Calculate reorder analysis for active products
+      let reorderAnalysis = undefined;
+      if (p.active && (status === 'Low Stock' || status === 'Out of Stock' || status === 'In Stock')) {
+        const analysis = calculateReorderAnalysis(p, shipments);
+        reorderAnalysis = {
+          daily_usage_rate: analysis.daily_usage_rate,
+          lead_time_days: analysis.lead_time_days,
+          reorder_date: analysis.reorder_date,
+          recommended_quantity: analysis.recommended_quantity,
+          reorder_cost: analysis.reorder_cost,
+          days_until_stockout: analysis.days_until_stockout,
+          safety_stock: analysis.safety_stock,
+          reorder_status: analysis.status
+        };
+      }
+      
       return {
         sku: p.product_sku || p.product_id,
         product_name: p.product_name,
@@ -303,7 +384,8 @@ function transformToEnhancedInventoryItems(products: ProductData[]) {
         active: p.active,
         days_since_created: daysSinceCreated,
         warehouse_id: null,
-        last_updated: p.updated_date
+        last_updated: p.updated_date,
+        reorder_analysis: reorderAnalysis
       };
     })
     .sort((a, b) => b.total_value - a.total_value); // Sort by value descending
@@ -363,7 +445,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const kpis = calculateEnhancedKPIs(products);
     const brandPerformance = calculateBrandPerformance(products);
     const supplierAnalysis = calculateSupplierAnalysis(products, shipments);
-    const inventory = transformToEnhancedInventoryItems(products);
+    const inventory = transformToEnhancedInventoryItems(products, shipments);
 
     // Generate enhanced insights
     const insights = [];

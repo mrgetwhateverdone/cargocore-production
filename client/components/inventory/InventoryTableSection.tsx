@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { ChevronUp, ChevronDown, ArrowUpDown, Search } from "lucide-react";
 import type { InventoryItem } from "@/types/api";
+import { ReorderAnalysisOverlay } from "./ReorderAnalysisOverlay";
 
 interface InventoryTableSectionProps {
   inventory: InventoryItem[];
@@ -23,6 +24,8 @@ export function InventoryTableSection({
   const [sortField, setSortField] = useState<SortField>('sku');
   const [sortDirection, setSortDirection] = useState<SortDirection>('default');
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
+  const [isOverlayOpen, setIsOverlayOpen] = useState(false);
 
   // This part of the code determines the color for inventory status badges
   const getStatusColor = (status: string) => {
@@ -47,6 +50,42 @@ export function InventoryTableSection({
     if (value >= 1000000) return `$${(value / 1000000).toFixed(1)}M`;
     if (value >= 1000) return `$${(value / 1000).toFixed(1)}K`;
     return `$${value.toLocaleString()}`;
+  };
+
+  // This part of the code handles opening the reorder analysis overlay
+  const handleStatusClick = (item: InventoryItem) => {
+    if (item.reorder_analysis && ['Low Stock', 'Out of Stock', 'In Stock'].includes(item.status)) {
+      setSelectedItem(item);
+      setIsOverlayOpen(true);
+    }
+  };
+
+  // This part of the code handles closing the overlay
+  const handleCloseOverlay = () => {
+    setIsOverlayOpen(false);
+    setSelectedItem(null);
+  };
+
+  // This part of the code transforms inventory item to reorder analysis format
+  const getReorderData = (item: InventoryItem) => {
+    if (!item.reorder_analysis) return null;
+    
+    return {
+      sku: item.sku,
+      product_name: item.product_name,
+      current_stock: item.on_hand,
+      available_stock: item.available,
+      supplier: item.supplier,
+      unit_cost: item.unit_cost,
+      daily_usage_rate: item.reorder_analysis.daily_usage_rate,
+      lead_time_days: item.reorder_analysis.lead_time_days,
+      reorder_date: item.reorder_analysis.reorder_date,
+      recommended_quantity: item.reorder_analysis.recommended_quantity,
+      reorder_cost: item.reorder_analysis.reorder_cost,
+      days_until_stockout: item.reorder_analysis.days_until_stockout,
+      safety_stock: item.reorder_analysis.safety_stock,
+      status: item.reorder_analysis.reorder_status
+    };
   };
 
   // This part of the code handles 3-state sorting: desc -> asc -> default
@@ -292,11 +331,21 @@ export function InventoryTableSection({
                     {item.supplier || 'N/A'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span
-                      className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(item.status)}`}
-                    >
-                      {item.status}
-                    </span>
+                    {item.reorder_analysis && ['Low Stock', 'Out of Stock', 'In Stock'].includes(item.status) ? (
+                      <button
+                        onClick={() => handleStatusClick(item)}
+                        className={`inline-flex px-2 py-1 text-xs font-medium rounded-full transition-all hover:shadow-md hover:scale-105 cursor-pointer ${getStatusColor(item.status)}`}
+                        title="Click for reorder analysis"
+                      >
+                        {item.status}
+                      </button>
+                    ) : (
+                      <span
+                        className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(item.status)}`}
+                      >
+                        {item.status}
+                      </span>
+                    )}
                   </td>
                 </tr>
               ))
@@ -318,6 +367,13 @@ export function InventoryTableSection({
           </button>
         </div>
       )}
+
+      {/* This part of the code renders the reorder analysis overlay when an item is selected */}
+      <ReorderAnalysisOverlay
+        isOpen={isOverlayOpen}
+        onClose={handleCloseOverlay}
+        reorderData={selectedItem ? getReorderData(selectedItem) : null}
+      />
     </div>
   );
 }
