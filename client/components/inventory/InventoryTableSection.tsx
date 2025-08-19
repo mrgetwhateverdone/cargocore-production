@@ -236,6 +236,15 @@ export function InventoryTableSection({
               </th>
               <th 
                 className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors"
+                onClick={() => handleSort('status')}
+              >
+                <div className="flex items-center space-x-1">
+                  <span>Status</span>
+                  {getSortIcon('status')}
+                </div>
+              </th>
+              <th 
+                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors"
                 onClick={() => handleSort('product_name')}
               >
                 <div className="flex items-center space-x-1">
@@ -288,15 +297,6 @@ export function InventoryTableSection({
                   {getSortIcon('supplier')}
                 </div>
               </th>
-              <th 
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors"
-                onClick={() => handleSort('status')}
-              >
-                <div className="flex items-center space-x-1">
-                  <span>Status</span>
-                  {getSortIcon('status')}
-                </div>
-              </th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
@@ -311,6 +311,23 @@ export function InventoryTableSection({
                 <tr key={`${item.sku}-${index}`} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                     {item.sku}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {item.reorder_analysis && ['Low Stock', 'Out of Stock', 'In Stock'].includes(item.status) ? (
+                      <button
+                        onClick={() => handleStatusClick(item)}
+                        className={`inline-flex px-2 py-1 text-xs font-medium rounded-full transition-all hover:shadow-md hover:scale-105 cursor-pointer ${getStatusColor(item.status)}`}
+                        title="Click for reorder analysis"
+                      >
+                        {item.status}
+                      </button>
+                    ) : (
+                      <span
+                        className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(item.status)}`}
+                      >
+                        {item.status}
+                      </span>
+                    )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {item.product_name}
@@ -329,23 +346,6 @@ export function InventoryTableSection({
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {item.supplier || 'N/A'}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {item.reorder_analysis && ['Low Stock', 'Out of Stock', 'In Stock'].includes(item.status) ? (
-                      <button
-                        onClick={() => handleStatusClick(item)}
-                        className={`inline-flex px-2 py-1 text-xs font-medium rounded-full transition-all hover:shadow-md hover:scale-105 cursor-pointer ${getStatusColor(item.status)}`}
-                        title="Click for reorder analysis"
-                      >
-                        {item.status}
-                      </button>
-                    ) : (
-                      <span
-                        className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(item.status)}`}
-                      >
-                        {item.status}
-                      </span>
-                    )}
                   </td>
                 </tr>
               ))
