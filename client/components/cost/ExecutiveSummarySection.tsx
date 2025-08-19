@@ -49,7 +49,7 @@ export function ExecutiveSummarySection({ kpis, costCenters, isLoading }: Execut
         </div>
         <div className="ml-4 flex-1">
           <h3 className="text-lg font-semibold text-gray-900 mb-3">
-            Executive Summary (Real TinyBird Data)
+            Executive Summary
           </h3>
           
           {/* This part of the code generates dynamic executive summary text */}
