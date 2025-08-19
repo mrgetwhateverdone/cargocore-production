@@ -1,6 +1,8 @@
 import { Globe, AlertTriangle } from "lucide-react";
+import { useState } from "react";
 import type { SupplierAnalysis } from "@/types/api";
 import { formatCurrency, formatNumber } from "@/lib/utils";
+import { SupplierCountriesOverlay } from "./SupplierCountriesOverlay";
 
 interface SupplierAnalysisSectionProps {
   supplierAnalysis: SupplierAnalysis[];
@@ -8,6 +10,10 @@ interface SupplierAnalysisSectionProps {
 }
 
 export function SupplierAnalysisSection({ supplierAnalysis, isLoading }: SupplierAnalysisSectionProps) {
+  // This part of the code manages overlay state for displaying country details
+  const [selectedSupplier, setSelectedSupplier] = useState<SupplierAnalysis | null>(null);
+  const [isOverlayOpen, setIsOverlayOpen] = useState(false);
+
   // This part of the code formats currency values using the global utility
 
   // This part of the code determines risk level based on concentration
@@ -52,6 +58,18 @@ export function SupplierAnalysisSection({ supplierAnalysis, isLoading }: Supplie
 
   // This part of the code calculates high-risk suppliers
   const highRiskSuppliers = supplierAnalysis.filter(s => s.concentration_risk >= 30);
+
+  // This part of the code handles opening the countries overlay
+  const handleCountriesClick = (supplier: SupplierAnalysis) => {
+    setSelectedSupplier(supplier);
+    setIsOverlayOpen(true);
+  };
+
+  // This part of the code handles closing the overlay
+  const handleCloseOverlay = () => {
+    setIsOverlayOpen(false);
+    setSelectedSupplier(null);
+  };
 
   return (
     <div className="bg-white rounded-lg border border-gray-200 shadow-sm mb-6">
@@ -147,10 +165,16 @@ export function SupplierAnalysisSection({ supplierAnalysis, isLoading }: Supplie
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
-                        <Globe className="h-4 w-4 text-gray-400 mr-2" />
-                        <div className="text-sm text-gray-900">
-                          {formatNumber(supplier.countries.length)}
-                        </div>
+                        <button
+                          onClick={() => handleCountriesClick(supplier)}
+                          className="flex items-center hover:bg-gray-100 rounded-md p-1 transition-colors group"
+                          title="Click to view countries"
+                        >
+                          <Globe className="h-4 w-4 text-gray-400 group-hover:text-blue-600 mr-2 transition-colors" />
+                          <div className="text-sm text-gray-900 group-hover:text-blue-600 transition-colors">
+                            {formatNumber(supplier.countries.length)}
+                          </div>
+                        </button>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -167,6 +191,13 @@ export function SupplierAnalysisSection({ supplierAnalysis, isLoading }: Supplie
           </table>
         </div>
       </div>
+
+      {/* This part of the code renders the countries overlay when a supplier is selected */}
+      <SupplierCountriesOverlay
+        isOpen={isOverlayOpen}
+        onClose={handleCloseOverlay}
+        supplier={selectedSupplier}
+      />
     </div>
   );
 }
