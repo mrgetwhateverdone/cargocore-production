@@ -143,13 +143,7 @@ export default function AIAssistant() {
   return (
     <Layout>
       <div className="max-w-7xl mx-auto space-y-4 md:space-y-6">
-        {/* This part of the code shows connection status */}
-        <div className="flex justify-end">
-          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-            <div className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></div>
-            Connected to CargoCore
-          </Badge>
-        </div>
+
 
         {/* This part of the code creates the main chat layout - clean and accessible */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 md:gap-6 items-stretch h-[calc(100vh-12rem)]">
