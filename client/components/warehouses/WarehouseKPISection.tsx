@@ -22,7 +22,6 @@ export function WarehouseKPISection({ kpis, isLoading }: WarehouseKPISectionProp
       icon: BarChart3,
       color: "text-gray-900",
       iconColor: "text-blue-600",
-      bgColor: "bg-blue-50",
     },
     {
       title: "Active Orders",
@@ -32,7 +31,6 @@ export function WarehouseKPISection({ kpis, isLoading }: WarehouseKPISectionProp
       icon: Package,
       color: "text-gray-900", 
       iconColor: "text-green-600",
-      bgColor: "bg-green-50",
     },
     {
       title: "Avg Fulfillment Time",
@@ -42,7 +40,6 @@ export function WarehouseKPISection({ kpis, isLoading }: WarehouseKPISectionProp
       icon: Clock,
       color: "text-gray-900",
       iconColor: "text-orange-600",
-      bgColor: "bg-orange-50",
     },
     {
       title: "Inbound Throughput",
@@ -52,7 +49,6 @@ export function WarehouseKPISection({ kpis, isLoading }: WarehouseKPISectionProp
       icon: Truck,
       color: "text-gray-900",
       iconColor: "text-purple-600",
-      bgColor: "bg-purple-50",
     },
   ];
 
@@ -91,40 +87,10 @@ export function WarehouseKPISection({ kpis, isLoading }: WarehouseKPISectionProp
                   {formatKPIValue(kpi.value, kpi.unit)}{kpi.unit}
                 </p>
               </div>
-              <div className={`p-2 rounded-lg ${kpi.bgColor}`}>
-                <kpi.icon className={`h-6 w-6 ${kpi.iconColor}`} />
-              </div>
+              <kpi.icon className={`h-8 w-8 ${kpi.iconColor}`} />
             </div>
-
-            {/* This part of the code adds visual indicators for different KPI types */}
-            {kpi.title === "SLA % by Warehouse" && kpi.value !== null && !isLoading && (
-              <div className="mt-2">
-                <div className="flex items-center text-xs">
-                  <div 
-                    className={`w-2 h-2 rounded-full mr-1 ${
-                      kpi.value >= 95 ? 'bg-green-500' : 
-                      kpi.value >= 85 ? 'bg-yellow-500' : 'bg-red-500'
-                    }`}
-                  ></div>
-                  <span className={
-                    kpi.value >= 95 ? 'text-green-600' : 
-                    kpi.value >= 85 ? 'text-yellow-600' : 'text-red-600'
-                  }>
-                    {kpi.value >= 95 ? 'Excellent' : 
-                     kpi.value >= 85 ? 'Good' : 'Needs Attention'}
-                  </span>
-                </div>
-              </div>
-            )}
           </div>
         ))}
-      </div>
-
-      {/* This part of the code shows real-time data timestamp */}
-      <div className="mt-4 text-right">
-        <p className="text-xs text-gray-500">
-          Real-time data from TinyBird warehouse operations
-        </p>
       </div>
     </div>
   );
