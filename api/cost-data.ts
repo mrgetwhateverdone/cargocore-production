@@ -512,6 +512,23 @@ function generateCostInsights(
 }
 
 /**
+ * This part of the code cleans up markdown formatting from AI responses
+ * Removes bold markers and other formatting that shouldn't be displayed literally
+ */
+function cleanMarkdownFormatting(text: string): string {
+  return text
+    // Remove bold markers
+    .replace(/\*\*(.*?)\*\*/g, '$1')
+    // Remove italic markers  
+    .replace(/\*(.*?)\*/g, '$1')
+    // Remove any remaining asterisks
+    .replace(/\*/g, '')
+    // Clean up extra spaces
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/**
  * This part of the code generates AI-powered executive summary for cost management
  * Uses world-class prompts to provide strategic cost analysis
  */
@@ -587,7 +604,7 @@ TONE: Professional, strategic, data-driven, and focused on financial performance
       throw new Error("No response from OpenAI");
     }
 
-    return aiSummary.trim();
+    return cleanMarkdownFormatting(aiSummary);
 
   } catch (error) {
     console.error('❌ Cost Management AI summary generation failed:', error);

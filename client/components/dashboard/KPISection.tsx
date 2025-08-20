@@ -1,6 +1,7 @@
 import type { DashboardKPIs } from "@/types/api";
 import { formatNumber } from "@/lib/utils";
 import { Package, AlertTriangle, FileText, XCircle } from "lucide-react";
+import { evaluateKPIStatus, renderKPIWarningIcon } from "@/lib/kpiThresholds";
 
 interface KPISectionProps {
   kpis: DashboardKPIs;
@@ -15,6 +16,7 @@ export function KPISection({ kpis, isLoading }: KPISectionProps) {
       icon: Package,
       iconColor: "text-blue-600",
       className: "bg-white",
+      thresholdKey: null, // No threshold for this metric
     },
     {
       title: "At-Risk Orders",
@@ -22,6 +24,7 @@ export function KPISection({ kpis, isLoading }: KPISectionProps) {
       icon: AlertTriangle,
       iconColor: "text-red-600",
       className: "bg-white",
+      thresholdKey: "at_risk_orders",
     },
     {
       title: "Open POs",
@@ -29,6 +32,7 @@ export function KPISection({ kpis, isLoading }: KPISectionProps) {
       icon: FileText,
       iconColor: "text-green-600",
       className: "bg-white",
+      thresholdKey: null, // No threshold for this metric
     },
     {
       title: "Unfulfillable SKUs",
@@ -36,6 +40,7 @@ export function KPISection({ kpis, isLoading }: KPISectionProps) {
       icon: XCircle,
       iconColor: "text-orange-600",
       className: "bg-white",
+      thresholdKey: "unfulfillable_skus",
     },
   ];
 
@@ -43,6 +48,8 @@ export function KPISection({ kpis, isLoading }: KPISectionProps) {
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
       {kpiCards.map((kpi, index) => {
         const IconComponent = kpi.icon;
+        const status = kpi.thresholdKey ? evaluateKPIStatus(kpi.thresholdKey, kpi.value) : 'normal';
+        
         return (
           <div
             key={index}
@@ -50,7 +57,10 @@ export function KPISection({ kpis, isLoading }: KPISectionProps) {
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-500">{kpi.title}</p>
+                <p className="text-sm font-medium text-gray-500">
+                  {kpi.title}
+                  {!isLoading && renderKPIWarningIcon(status)}
+                </p>
                 <p className="text-2xl font-bold text-gray-900">
                   {isLoading ? (
                     <div className="h-8 w-16 bg-gray-200 rounded animate-pulse" />
