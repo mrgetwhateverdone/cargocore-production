@@ -28,6 +28,23 @@ interface ChatResponse {
 }
 
 /**
+ * This part of the code cleans up markdown formatting from AI responses
+ * Removes bold markers and other formatting that shouldn't be displayed literally
+ */
+function cleanMarkdownFormatting(text: string): string {
+  return text
+    // Remove bold markers
+    .replace(/\*\*(.*?)\*\*/g, '$1')
+    // Remove italic markers  
+    .replace(/\*(.*?)\*/g, '$1')
+    // Remove any remaining asterisks
+    .replace(/\*/g, '')
+    // Clean up extra spaces
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/**
  * This part of the code fetches all real operational data for AI context
  * Combines data from multiple TinyBird endpoints to provide comprehensive context
  */
@@ -268,6 +285,12 @@ RESPONSE EXCELLENCE STANDARDS:
 - Suggest immediate actions the user can take today
 - End with the highest-priority item requiring attention
 
+FORMATTING REQUIREMENTS:
+- Use clear, plain text without markdown formatting
+- Avoid bold markers, asterisks, or special formatting
+- Structure responses with numbered lists or bullet points using standard characters
+- Keep language professional but conversational
+
 Remember: You have access to live TinyBird data including products, shipments, warehouses, brands, costs, and performance metrics. Use this data to provide insights that drive real business value.`
     },
     ...conversation.slice(-6), // Keep last 6 messages for context
@@ -307,7 +330,8 @@ Remember: You have access to live TinyBird data including products, shipments, w
       throw new Error("No response from OpenAI");
     }
 
-    return aiResponse.trim();
+    // This part of the code cleans markdown formatting before returning response
+    return cleanMarkdownFormatting(aiResponse);
   } catch (error) {
     console.error("AI Response Error:", error);
     throw new Error("Failed to generate AI response");
