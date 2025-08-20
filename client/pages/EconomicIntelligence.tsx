@@ -60,22 +60,7 @@ export default function EconomicIntelligence() {
 
   return (
     <Layout>
-      <div className="max-w-7xl mx-auto space-y-6 p-6">
-        {/* Page Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-              <Globe className="h-6 w-6 text-blue-600" />
-              Economic Intelligence
-            </h1>
-            <p className="text-gray-600 text-sm">
-              Real-time economic analysis and business impact intelligence
-            </p>
-          </div>
-          <div className="text-sm text-gray-500">
-            Last updated: {data?.lastUpdated ? new Date(data.lastUpdated).toLocaleTimeString() : 'N/A'}
-          </div>
-        </div>
+      <div className="max-w-7xl mx-auto space-y-4 md:space-y-6">
 
         {isLoading && (
           <LoadingState message="Loading economic intelligence data..." />

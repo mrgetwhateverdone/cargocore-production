@@ -60,7 +60,7 @@ export default function CostManagement() {
 
   return (
     <Layout>
-      <div className="p-6">
+      <div className="max-w-7xl mx-auto space-y-4 md:space-y-6">
         {/* This part of the code displays enhanced cost management KPI cards */}
         <CostKPISection kpis={data.kpis} isLoading={isLoading} />
 
