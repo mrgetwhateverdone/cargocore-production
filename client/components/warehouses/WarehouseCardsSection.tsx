@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { WarehouseData } from "@/types/api";
 import { WarehouseModal } from "./WarehouseModal";
+import { WarehouseOptimizationOverlay } from "../WarehouseOptimizationOverlay";
 
 interface WarehouseCardsSectionProps {
   warehouses: WarehouseData[];
@@ -15,6 +16,61 @@ export function WarehouseCardsSection({ warehouses, isLoading }: WarehouseCardsS
   const [showAllModal, setShowAllModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [selectedWarehouse, setSelectedWarehouse] = useState<WarehouseData | null>(null);
+  const [isOptimizationOverlayOpen, setIsOptimizationOverlayOpen] = useState(false);
+  const [recommendations, setRecommendations] = useState<string[]>([]);
+  const [isLoadingRecommendations, setIsLoadingRecommendations] = useState(false);
+
+  // This part of the code handles clicking on warehouse cards to get AI optimization recommendations
+  const handleWarehouseClick = async (warehouse: WarehouseData) => {
+    setSelectedWarehouse(warehouse);
+    setIsOptimizationOverlayOpen(true);
+    setIsLoadingRecommendations(true);
+    setRecommendations([]);
+
+    try {
+      // This part of the code calculates context data for AI recommendations
+      const contextData = {
+        totalWarehouses: warehouses.length,
+        avgPerformance: warehouses.reduce((sum, w) => sum + w.performanceScore, 0) / warehouses.length,
+        topPerformers: warehouses.filter(w => w.status === 'Excellent').length,
+        needsAttention: warehouses.filter(w => w.status === 'Needs Attention').length,
+        totalThroughput: warehouses.reduce((sum, w) => sum + w.throughput, 0)
+      };
+
+      const response = await fetch(`/api/warehouses-data?warehouseRecommendations=true&warehouse=${encodeURIComponent(JSON.stringify(warehouse))}&contextData=${encodeURIComponent(JSON.stringify(contextData))}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch recommendations: ${response.status}`);
+      }
+
+      const data = await response.json();
+      setRecommendations(data.data.recommendations);
+    } catch (error) {
+      console.error('Failed to load warehouse optimization recommendations:', error);
+      // Set fallback recommendations
+      setRecommendations([
+        'Implement real-time performance monitoring dashboard for key metrics',
+        'Optimize warehouse layout and picking routes for efficiency gains',
+        'Establish SLA improvement targets with supplier performance reviews',
+        'Deploy automated inventory management systems for accuracy'
+      ]);
+    } finally {
+      setIsLoadingRecommendations(false);
+    }
+  };
+
+  // This part of the code handles closing the optimization overlay
+  const handleCloseOptimizationOverlay = () => {
+    setIsOptimizationOverlayOpen(false);
+    setSelectedWarehouse(null);
+    setRecommendations([]);
+  };
 
   // This part of the code determines which warehouses to show by default
   const criticalWarehouses = warehouses.filter(w => w.status === "Needs Attention");
@@ -150,7 +206,9 @@ export function WarehouseCardsSection({ warehouses, isLoading }: WarehouseCardsS
   const renderWarehouseCard = (warehouse: WarehouseData) => (
     <div
       key={warehouse.warehouseId}
-      className={`bg-white border rounded-lg p-4 shadow-sm hover:shadow-md transition-all cursor-pointer ${getStatusBorderColor(warehouse.status)}`}
+      onClick={() => handleWarehouseClick(warehouse)}
+      className={`bg-white border rounded-lg p-4 shadow-sm hover:shadow-lg transition-all cursor-pointer hover:scale-[1.02] hover:z-10 relative ${getStatusBorderColor(warehouse.status)}`}
+      title="Click for AI warehouse optimization recommendations"
     >
       {/* Card Header - Warehouse name, ID, and status */}
       <div className="mb-4">
@@ -349,6 +407,15 @@ export function WarehouseCardsSection({ warehouses, isLoading }: WarehouseCardsS
           )}
         </div>
       </WarehouseModal>
+
+      {/* This part of the code renders the warehouse optimization overlay with AI recommendations */}
+      <WarehouseOptimizationOverlay
+        isOpen={isOptimizationOverlayOpen}
+        onClose={handleCloseOptimizationOverlay}
+        warehouse={selectedWarehouse}
+        recommendations={recommendations}
+        isLoadingRecommendations={isLoadingRecommendations}
+      />
     </div>
   );
 }

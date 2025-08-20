@@ -583,12 +583,277 @@ function generateOptimizationRecommendations(warehouses: WarehouseData[]) {
 }
 
 /**
+ * This part of the code generates world-class AI recommendations for warehouse optimization
+ * Uses advanced prompts to provide specific, actionable warehouse performance strategies
+ */
+async function generateWarehouseOptimizationRecommendations(
+  warehouse: any,
+  contextData: { 
+    totalWarehouses: number; 
+    avgPerformance: number; 
+    topPerformers: number;
+    needsAttention: number;
+    totalThroughput: number;
+  }
+): Promise<string[]> {
+  const openaiApiKey = process.env.OPENAI_API_KEY;
+  
+  if (!openaiApiKey) {
+    console.warn('🤖 OpenAI API key not available, using fallback warehouse optimization recommendations');
+    return [
+      'Implement real-time performance monitoring dashboard for key metrics',
+      'Optimize warehouse layout and picking routes for efficiency gains',
+      'Establish SLA improvement targets with supplier performance reviews',
+      'Deploy automated inventory management systems for accuracy'
+    ];
+  }
+
+  // This part of the code creates world-class prompts specific to warehouse performance levels
+  const getPromptByStatus = () => {
+    if (warehouse.status === 'Excellent') {
+      return `EXCELLENCE SUSTAINING WAREHOUSE OPTIMIZATION:
+
+Facility Excellence Analysis:
+- Warehouse: ${warehouse.warehouseName} (${warehouse.warehouseId})
+- Performance Score: ${warehouse.performanceScore}/100 (Top Tier)
+- SLA Achievement: ${warehouse.slaPerformance}% (Excellent)
+- Operational Capacity: ${warehouse.totalSKUs} SKUs, ${warehouse.throughput.toLocaleString()} units/month
+- Fulfillment Speed: ${warehouse.avgFulfillmentTime}h average
+- Active Workload: ${warehouse.activeOrders} orders
+- Supplier: ${warehouse.supplierName}
+
+Network Leadership Context:
+- Warehouse network: ${contextData.totalWarehouses} facilities
+- Top performers: ${contextData.topPerformers}/${contextData.totalWarehouses} (${warehouse.warehouseName} included)
+- Network average: ${contextData.avgPerformance}/100 performance
+- Total network throughput: ${contextData.totalThroughput.toLocaleString()} units/month
+
+STRATEGIC EXCELLENCE: Generate 4 competitive advantage strategies:
+1. Innovation leadership and advanced automation
+2. Operational excellence and efficiency maximization
+3. Strategic capacity expansion and capability enhancement
+4. Best practice sharing and network optimization leadership
+
+Requirements:
+- Maintain market leadership position (6+ month strategy)
+- Target 5-10% additional efficiency gains
+- Focus on innovation and competitive differentiation
+- Include scalable solutions for network-wide implementation`;
+
+    } else if (warehouse.status === 'Good') {
+      return `PERFORMANCE ACCELERATION WAREHOUSE OPTIMIZATION:
+
+Facility Enhancement Analysis:
+- Warehouse: ${warehouse.warehouseName} (${warehouse.warehouseId})
+- Performance Score: ${warehouse.performanceScore}/100 (Strong Performance)
+- SLA Achievement: ${warehouse.slaPerformance}% (Good)
+- Operations Scale: ${warehouse.totalSKUs} SKUs, ${warehouse.throughput.toLocaleString()} units/month
+- Fulfillment Efficiency: ${warehouse.avgFulfillmentTime}h cycle time
+- Current Load: ${warehouse.activeOrders} active orders
+- Partner: ${warehouse.supplierName}
+
+Optimization Context:
+- Network size: ${contextData.totalWarehouses} warehouses
+- Performance benchmark: ${contextData.avgPerformance}/100 average
+- Excellence tier: ${contextData.topPerformers} facilities above ${warehouse.warehouseName}
+- Improvement potential: ${contextData.needsAttention} facilities need attention
+
+PERFORMANCE ACCELERATION: Generate 4 optimization strategies:
+1. Efficiency improvement and process optimization
+2. Technology upgrade and automation enhancement
+3. Capacity optimization and throughput acceleration
+4. SLA performance and service level improvement
+
+Requirements:
+- Target 15-20% performance improvement over 90 days
+- Focus on measurable efficiency gains
+- Balance operational excellence with cost efficiency
+- Include specific ROI and timeline projections`;
+
+    } else {
+      return `URGENT WAREHOUSE TURNAROUND OPTIMIZATION:
+
+Critical Facility Recovery:
+- Warehouse: ${warehouse.warehouseName} (${warehouse.warehouseId})
+- Performance Score: ${warehouse.performanceScore}/100 (Needs Attention)
+- SLA Achievement: ${warehouse.slaPerformance}% (Below Standard)
+- Operational Challenges: ${warehouse.totalSKUs} SKUs, ${warehouse.throughput.toLocaleString()} units/month
+- Fulfillment Issues: ${warehouse.avgFulfillmentTime}h cycle time
+- Backlog Risk: ${warehouse.activeOrders} active orders
+- Supplier Impact: ${warehouse.supplierName}
+
+Crisis Context:
+- Total network: ${contextData.totalWarehouses} warehouses
+- Performance gap: ${contextData.avgPerformance - warehouse.performanceScore} points below average
+- Facilities requiring intervention: ${contextData.needsAttention}
+- Network efficiency at risk: ${contextData.totalThroughput.toLocaleString()} total throughput
+
+URGENT RECOVERY: Generate 4 immediate improvement strategies:
+1. Emergency process redesign and workflow optimization
+2. Immediate SLA recovery and performance stabilization
+3. Resource reallocation and capacity management
+4. Supplier collaboration and performance accountability
+
+Requirements:
+- Implement within 30 days for immediate impact
+- Target minimum 25% performance improvement
+- Focus on SLA recovery and operational stability
+- Include specific crisis management and escalation protocols`;
+    }
+  };
+
+  try {
+    const openaiUrl = process.env.OPENAI_API_URL || "https://api.openai.com/v1/chat/completions";
+    
+    const response = await fetch(openaiUrl, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${openaiApiKey}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        model: "gpt-4o-mini",
+        messages: [
+          {
+            role: "system",
+            content: "You are a world-class warehouse operations optimization expert with 20+ years of experience in 3PL and distribution center management. Provide specific, actionable recommendations that drive measurable operational improvements. Each recommendation should be a single, clear action (15-20 words max). No explanations or bullet points - just the actionable strategies that deliver operational excellence."
+          },
+          {
+            role: "user", 
+            content: getPromptByStatus()
+          }
+        ],
+        max_tokens: 500,
+        temperature: 0.2  // Lower temperature for more focused, practical recommendations
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`OpenAI API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const aiResponse = data.choices?.[0]?.message?.content;
+
+    if (!aiResponse) {
+      throw new Error("No response from OpenAI");
+    }
+
+    // This part of the code parses AI response into clean, actionable warehouse recommendations
+    const lines = aiResponse.split('\n')
+      .map(line => line.trim())
+      .filter(line => line.length > 0)
+      .map(line => {
+        // Remove any formatting characters and numbers
+        return line
+          .replace(/^\d+\.\s*/, '')    // Remove "1. "
+          .replace(/^[•-]\s*/, '')     // Remove "• " or "- "
+          .replace(/^\*+/, '')         // Remove asterisks
+          .replace(/\*+$/, '')         // Remove trailing asterisks
+          .replace(/\*\*/g, '')        // Remove **bold** formatting
+          .replace(/^\s*-\s*/, '')     // Remove leading dashes
+          .trim();
+      })
+      .filter(line => line.length > 10 && line.length < 150)  // Reasonable length for warehouse actions
+      .slice(0, 4);  // Max 4 recommendations
+
+    const recommendations = lines.length > 0 ? lines : [
+      'Implement real-time performance monitoring and automated alerting systems',
+      'Optimize warehouse layout and picking paths for maximum efficiency',
+      'Establish supplier collaboration programs for SLA improvement',
+      'Deploy predictive analytics for demand forecasting and capacity planning'
+    ];
+
+    return recommendations;
+
+  } catch (error) {
+    console.error('❌ Warehouse optimization AI recommendation generation failed:', error);
+    
+    // This part of the code provides high-quality fallback recommendations based on status
+    const fallbackRecs = {
+      'Excellent': [
+        'Implement advanced automation and robotics for next-level efficiency',
+        'Develop innovation labs for testing cutting-edge warehouse technologies',
+        'Create best practice sharing programs across warehouse network',
+        'Establish strategic partnerships for market expansion capabilities'
+      ],
+      'Good': [
+        'Optimize warehouse layout and implement lean management principles',
+        'Deploy advanced WMS features for improved tracking and efficiency',
+        'Establish performance benchmarking and continuous improvement programs',
+        'Implement cross-training programs for operational flexibility'
+      ],
+      'Needs Attention': [
+        'Conduct immediate process audit and implement quick-win improvements',
+        'Establish daily performance monitoring and escalation procedures',
+        'Implement focused training programs for key operational staff',
+        'Create supplier collaboration plan for SLA recovery initiatives'
+      ]
+    };
+
+    return fallbackRecs[warehouse.status as keyof typeof fallbackRecs] || fallbackRecs['Good'];
+  }
+}
+
+/**
  * Main API handler for warehouse data
  * This part of the code orchestrates all warehouse analytics and returns comprehensive data
  */
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "GET") {
     return res.status(405).json({ error: "Method not allowed" });
+  }
+
+  // This part of the code handles warehouse optimization recommendation requests
+  if (req.query.warehouseRecommendations === 'true') {
+    try {
+      console.log("🏭 Warehouses API: Processing warehouse optimization recommendation request...");
+      
+      const { warehouse, contextData } = req.query;
+      
+      if (!warehouse || !contextData) {
+        return res.status(400).json({
+          success: false,
+          error: "Warehouse and context data are required for recommendations",
+          timestamp: new Date().toISOString(),
+        });
+      }
+
+      const parsedWarehouse = JSON.parse(warehouse as string);
+      const parsedContextData = JSON.parse(contextData as string);
+
+      console.log(`🎯 Generating warehouse recommendations for: ${parsedWarehouse.warehouseName} - ${parsedWarehouse.status} status`);
+      
+      // Generate AI-powered warehouse optimization recommendations
+      const recommendations = await generateWarehouseOptimizationRecommendations(parsedWarehouse, parsedContextData);
+      
+      console.log(`✅ Generated ${recommendations.length} warehouse optimization recommendations successfully`);
+      
+      return res.status(200).json({
+        success: true,
+        data: {
+          recommendations,
+          warehouse: parsedWarehouse.warehouseName,
+          generatedAt: new Date().toISOString(),
+          context: {
+            status: parsedWarehouse.status,
+            performanceScore: parsedWarehouse.performanceScore,
+            slaPerformance: parsedWarehouse.slaPerformance
+          }
+        },
+        message: "Warehouse optimization recommendations generated successfully"
+      });
+
+    } catch (error) {
+      console.error("❌ Warehouses API Optimization Recommendations Error:", error);
+      
+      return res.status(500).json({
+        success: false,
+        error: "Failed to generate warehouse optimization recommendations",
+        details: error instanceof Error ? error.message : "Unknown error",
+        timestamp: new Date().toISOString(),
+      });
+    }
   }
 
   try {
