@@ -1,5 +1,7 @@
 import type { CostVarianceAnomaly } from "@/types/api";
 import { AlertTriangle, Eye } from "lucide-react";
+import { useState } from "react";
+import { CostVarianceOverlay } from "../CostVarianceOverlay";
 
 interface ShipmentCostVarianceSectionProps {
   costVariances: CostVarianceAnomaly[];
@@ -10,6 +12,65 @@ export function ShipmentCostVarianceSection({
   costVariances,
   isLoading,
 }: ShipmentCostVarianceSectionProps) {
+  const [selectedAnomaly, setSelectedAnomaly] = useState<CostVarianceAnomaly | null>(null);
+  const [isOverlayOpen, setIsOverlayOpen] = useState(false);
+  const [recommendations, setRecommendations] = useState<string[]>([]);
+  const [isLoadingRecommendations, setIsLoadingRecommendations] = useState(false);
+
+  // This part of the code handles clicking on cost variance cards to get AI recommendations
+  const handleAnomalyClick = async (anomaly: CostVarianceAnomaly) => {
+    setSelectedAnomaly(anomaly);
+    setIsOverlayOpen(true);
+    setIsLoadingRecommendations(true);
+    setRecommendations([]);
+
+    try {
+      // This part of the code calculates context data for AI recommendations
+      const contextData = {
+        totalAnomalies: costVariances.length,
+        avgVariance: costVariances.reduce((sum, a) => sum + a.variance, 0) / costVariances.length,
+        totalImpact: costVariances.reduce((sum, a) => sum + a.financialImpact, 0),
+        supplierCount: new Set(costVariances.map(a => a.supplier).filter(s => s)).size,
+        warehouseCount: new Set(costVariances.map(a => a.warehouseId).filter(w => w)).size
+      };
+
+      const response = await fetch('/api/cost-variance-recommendations', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          anomaly,
+          contextData
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch recommendations: ${response.status}`);
+      }
+
+      const data = await response.json();
+      setRecommendations(data.data.recommendations);
+    } catch (error) {
+      console.error('Failed to load cost variance recommendations:', error);
+      // Set fallback recommendations
+      setRecommendations([
+        'Review supplier contracts and negotiate volume discounts',
+        'Implement cost monitoring alerts for future variances',
+        'Establish approval workflows for non-standard pricing',
+        'Conduct supplier performance audit and optimization review'
+      ]);
+    } finally {
+      setIsLoadingRecommendations(false);
+    }
+  };
+
+  // This part of the code handles closing the overlay
+  const handleCloseOverlay = () => {
+    setIsOverlayOpen(false);
+    setSelectedAnomaly(null);
+    setRecommendations([]);
+  };
   const getSeverityStyles = (severity: string) => {
     switch (severity) {
       case "High":
@@ -82,7 +143,9 @@ export function ShipmentCostVarianceSection({
           {costVariances.map((anomaly, index) => (
             <div
               key={`cost-variance-${index}`}
-              className={`p-4 rounded-lg border ${getSeverityStyles(anomaly.severity)}`}
+              onClick={() => handleAnomalyClick(anomaly)}
+              className={`p-4 rounded-lg border cursor-pointer hover:shadow-md transition-all hover:scale-[1.01] ${getSeverityStyles(anomaly.severity)}`}
+              title="Click for AI cost optimization recommendations"
             >
               <div className="flex justify-between items-start">
                 {/* This part of the code displays alert details on the left side */}
@@ -132,6 +195,15 @@ export function ShipmentCostVarianceSection({
       <div className="text-xs text-gray-500 text-center pt-2">
         Last updated: {new Date().toLocaleTimeString()}
       </div>
+
+      {/* This part of the code renders the cost variance overlay with AI recommendations */}
+      <CostVarianceOverlay
+        isOpen={isOverlayOpen}
+        onClose={handleCloseOverlay}
+        anomaly={selectedAnomaly}
+        recommendations={recommendations}
+        isLoadingRecommendations={isLoadingRecommendations}
+      />
     </div>
   );
 }
