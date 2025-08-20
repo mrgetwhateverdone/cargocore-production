@@ -135,7 +135,7 @@ export function SmartMarginRiskSection({
             <div
               key={`margin-risk-${index}`}
               onClick={() => handleMarginRiskClick(alert)}
-              className={`p-4 rounded-lg border cursor-pointer hover:shadow-md transition-all hover:scale-[1.01] ${getRiskStyles(alert.riskLevel)}`}
+              className={`p-4 rounded-lg border cursor-pointer hover:shadow-lg transition-all hover:scale-[1.02] hover:z-10 relative ${getRiskStyles(alert.riskLevel)}`}
               title="Click for AI margin optimization recommendations"
             >
               {/* This part of the code displays brand name and risk level badge */}

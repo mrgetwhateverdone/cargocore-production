@@ -173,7 +173,7 @@ export function BrandPerformanceSection({ brandPerformance, isLoading, onViewAll
               <div
                 key={brand.brand_name}
                 onClick={() => handleBrandClick(brand)}
-                className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-all hover:shadow-md hover:scale-[1.01]"
+                className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-all hover:shadow-lg hover:scale-[1.02] hover:z-10 relative"
                 title="Click for AI brand investment recommendations"
               >
                 <div className="flex items-center space-x-4">
