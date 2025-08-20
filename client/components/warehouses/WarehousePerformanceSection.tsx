@@ -229,14 +229,7 @@ export function WarehousePerformanceSection({ rankings, isLoading }: WarehousePe
           <div className="divide-y divide-gray-200">
             {defaultRankings.map(renderRankingRow)}
             
-            {/* Gap indicator for truncated rankings */}
-            {rankings.length > 13 && (
-              <div className="px-4 py-3 bg-gray-50 border-t border-b border-gray-200">
-                <div className="text-center text-sm text-gray-500">
-                  <span className="font-medium">⋯ {rankings.length - 13} warehouses not shown ⋯</span>
-                </div>
-              </div>
-            )}
+
           </div>
 
           {/* Table Footer with summary */}

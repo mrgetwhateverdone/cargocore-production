@@ -38,45 +38,78 @@ export default function Warehouses() {
           />
         )}
 
-        {/* This part of the code renders all warehouse sections when data is available */}
+        {/* This part of the code renders warehouse sections organized in logical groups for better visual hierarchy */}
         {data && (
-          <>
-            {/* Top-Level KPI Cards Section - SLA %, Active Orders, Avg Fulfillment Time, Inbound Throughput */}
-            <WarehouseKPISection kpis={data.kpis} isLoading={isLoading} />
+          <div className="space-y-8">
+            {/* Group 1: Performance Overview */}
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100">
+              <div className="flex items-center mb-6">
+                <span className="text-2xl mr-3">📊</span>
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-900">Performance Overview</h2>
+                  <p className="text-sm text-gray-600">Key metrics and AI-powered insights</p>
+                </div>
+              </div>
+              
+              {/* KPI Cards - Essential performance metrics */}
+              <WarehouseKPISection kpis={data.kpis} isLoading={isLoading} />
 
-            {/* AI Insights Section - Warehouse Agent Insights */}
-            <InsightsSection insights={data.insights} isLoading={isLoading} />
+              {/* AI Insights - Warehouse Agent insights */}
+              <InsightsSection insights={data.insights} isLoading={isLoading} />
+            </div>
 
-            {/* Warehouse Cards Section - Individual warehouse performance cards */}
-            <WarehouseCardsSection 
-              warehouses={data.warehouses} 
-              isLoading={isLoading} 
-            />
+            {/* Group 2: Warehouse Operations */}
+            <div className="bg-gradient-to-r from-gray-50 to-slate-50 rounded-xl p-6 border border-gray-200">
+              <div className="flex items-center mb-6">
+                <span className="text-2xl mr-3">🏭</span>
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-900">Warehouse Operations</h2>
+                  <p className="text-sm text-gray-600">Individual warehouse performance and rankings</p>
+                </div>
+              </div>
 
-            {/* Warehouse Performance Rankings Table - Performance-based sorting */}
-            <WarehousePerformanceSection 
-              rankings={data.performanceRankings} 
-              isLoading={isLoading} 
-            />
+              {/* Warehouse Cards - Individual warehouse performance */}
+              <WarehouseCardsSection 
+                warehouses={data.warehouses} 
+                isLoading={isLoading} 
+              />
 
-            {/* Smart Budget Allocation Engine - AI-powered budget optimization */}
-            <SmartBudgetAllocationSection 
-              budgetAllocations={data.budgetAllocations} 
-              isLoading={isLoading} 
-            />
+              {/* Performance Rankings - Performance-based sorting */}
+              <WarehousePerformanceSection 
+                rankings={data.performanceRankings} 
+                isLoading={isLoading} 
+              />
+            </div>
 
-            {/* AI Learning System - User behavior analysis */}
-            <AILearningSystemSection 
-              userBehavior={data.userBehavior} 
-              isLoading={isLoading} 
-            />
+            {/* Group 3: AI Intelligence & Optimization */}
+            <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-6 border border-green-100">
+              <div className="flex items-center mb-6">
+                <span className="text-2xl mr-3">🤖</span>
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-900">AI Intelligence & Optimization</h2>
+                  <p className="text-sm text-gray-600">Smart budget allocation, learning systems, and performance optimization</p>
+                </div>
+              </div>
 
-            {/* Performance Optimization Engine - AI-driven optimization recommendations */}
-            <PerformanceOptimizationSection 
-              optimizations={data.optimizations} 
-              isLoading={isLoading} 
-            />
-          </>
+              {/* Budget Allocation - AI-powered budget optimization */}
+              <SmartBudgetAllocationSection 
+                budgetAllocations={data.budgetAllocations} 
+                isLoading={isLoading} 
+              />
+
+              {/* AI Learning System - User behavior analysis */}
+              <AILearningSystemSection 
+                userBehavior={data.userBehavior} 
+                isLoading={isLoading} 
+              />
+
+              {/* Performance Optimization - AI-driven optimization recommendations */}
+              <PerformanceOptimizationSection 
+                optimizations={data.optimizations} 
+                isLoading={isLoading} 
+              />
+            </div>
+          </div>
         )}
       </div>
     </Layout>
