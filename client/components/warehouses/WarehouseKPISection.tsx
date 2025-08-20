@@ -1,5 +1,6 @@
 import type { WarehouseKPIs } from "@/types/api";
 import { formatPercentage, formatNumber } from "@/lib/utils";
+import { BarChart3, Package, Clock, Truck } from "lucide-react";
 
 interface WarehouseKPISectionProps {
   kpis: WarehouseKPIs;
@@ -18,7 +19,7 @@ export function WarehouseKPISection({ kpis, isLoading }: WarehouseKPISectionProp
       value: kpis.avgSLAPercentage,
       unit: "%",
       description: "Average SLA percentage across all warehouses",
-      icon: "📊",
+      icon: BarChart3,
       color: "text-blue-600",
       bgColor: "bg-blue-50",
     },
@@ -27,7 +28,7 @@ export function WarehouseKPISection({ kpis, isLoading }: WarehouseKPISectionProp
       value: kpis.totalActiveOrders,
       unit: "",
       description: "Total active orders across all warehouses",
-      icon: "📦",
+      icon: Package,
       color: "text-green-600", 
       bgColor: "bg-green-50",
     },
@@ -36,7 +37,7 @@ export function WarehouseKPISection({ kpis, isLoading }: WarehouseKPISectionProp
       value: kpis.avgFulfillmentTime,
       unit: "h",
       description: "Average fulfillment time in hours",
-      icon: "⏱️",
+      icon: Clock,
       color: "text-orange-600",
       bgColor: "bg-orange-50",
     },
@@ -45,7 +46,7 @@ export function WarehouseKPISection({ kpis, isLoading }: WarehouseKPISectionProp
       value: kpis.totalInboundThroughput,
       unit: "",
       description: "Total inbound throughput across warehouses", 
-      icon: "🚛",
+      icon: Truck,
       color: "text-purple-600",
       bgColor: "bg-purple-50",
     },
@@ -72,10 +73,6 @@ export function WarehouseKPISection({ kpis, isLoading }: WarehouseKPISectionProp
 
   return (
     <div className="mb-6">
-      <h2 className="text-lg font-medium text-gray-900 mb-4">
-        Warehouse Performance Overview
-      </h2>
-      
       {/* This part of the code creates responsive grid layout for KPI cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {kpiCards.map((kpi) => (
@@ -90,7 +87,9 @@ export function WarehouseKPISection({ kpis, isLoading }: WarehouseKPISectionProp
                   {formatKPIValue(kpi.value, kpi.unit)}{kpi.unit}
                 </p>
               </div>
-              <span className="text-2xl">{kpi.icon}</span>
+              <div className={`p-2 rounded-lg ${kpi.bgColor}`}>
+                <kpi.icon className={`h-6 w-6 ${kpi.color}`} />
+              </div>
             </div>
 
             {/* This part of the code adds visual indicators for different KPI types */}
