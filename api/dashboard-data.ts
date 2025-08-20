@@ -1047,6 +1047,211 @@ Requirements:
   }
 }
 
+/**
+ * This part of the code generates world-class AI recommendations for dashboard insights
+ * Uses advanced prompts to provide specific, actionable operational strategies
+ */
+async function generateDashboardInsightRecommendations(
+  insight: any,
+  contextData: { 
+    totalShipments: number; 
+    totalProducts: number; 
+    totalWarehouses: number;
+    totalOrders: number;
+    atRiskOrders: number;
+    unfulfillableSKUs: number;
+  }
+): Promise<string[]> {
+  const openaiApiKey = process.env.OPENAI_API_KEY;
+  
+  if (!openaiApiKey) {
+    console.warn('🤖 OpenAI API key not available, using fallback dashboard insight recommendations');
+    return [
+      'Implement real-time performance monitoring and alerting systems',
+      'Establish emergency response protocols for critical issues',
+      'Create standardized operational procedures and documentation',
+      'Deploy predictive analytics for proactive issue prevention'
+    ];
+  }
+
+  // This part of the code creates world-class prompts specific to insight severity and type
+  const getPromptBySeverity = () => {
+    const baseContext = `
+OPERATIONAL INTELLIGENCE ANALYSIS:
+
+Current Insight: ${insight.title}
+Description: ${insight.description}
+Severity: ${insight.severity.toUpperCase()}
+Financial Impact: ${insight.dollarImpact ? `$${insight.dollarImpact.toLocaleString()}` : 'Not quantified'}
+Source: ${insight.source}
+Created: ${new Date(insight.createdAt).toLocaleDateString()}
+
+OPERATIONAL CONTEXT:
+- Active Shipments: ${contextData.totalShipments.toLocaleString()}
+- Product Catalog: ${contextData.totalProducts.toLocaleString()} SKUs
+- Warehouse Network: ${contextData.totalWarehouses} facilities
+- Daily Orders: ${contextData.totalOrders}
+- At-Risk Orders: ${contextData.atRiskOrders} (${((contextData.atRiskOrders / Math.max(contextData.totalOrders, 1)) * 100).toFixed(1)}% risk rate)
+- Unfulfillable SKUs: ${contextData.unfulfillableSKUs}`;
+
+    if (insight.severity === 'critical') {
+      return `${baseContext}
+
+CRITICAL OPERATIONAL CRISIS RESPONSE:
+
+This is a CRITICAL operational issue requiring immediate executive intervention. The financial impact of $${insight.dollarImpact?.toLocaleString() || 'significant amount'} demands urgent action to prevent business disruption.
+
+CRISIS MANAGEMENT PROTOCOL:
+Generate 4 emergency response strategies focusing on:
+1. Immediate containment and damage control (0-24 hours)
+2. Root cause identification and elimination (24-72 hours)  
+3. Systematic process improvement (1-2 weeks)
+4. Long-term prevention and monitoring (30+ days)
+
+Requirements:
+- Each action must be executable within specified timeframes
+- Include specific personnel/department responsibilities
+- Provide measurable success criteria and KPIs
+- Focus on business continuity and risk mitigation
+- Address both immediate fixes and systemic improvements`;
+
+    } else if (insight.severity === 'warning') {
+      return `${baseContext}
+
+PREVENTIVE OPERATIONAL OPTIMIZATION:
+
+This warning-level insight indicates potential operational inefficiencies that could escalate if not addressed. The $${insight.dollarImpact?.toLocaleString() || 'estimated'} impact suggests proactive intervention opportunities.
+
+OPTIMIZATION STRATEGY:
+Generate 4 proactive improvement strategies focusing on:
+1. Process optimization and efficiency enhancement
+2. Performance monitoring and early warning systems
+3. Resource allocation and capacity management
+4. Stakeholder communication and coordination
+
+Requirements:
+- Target 2-4 week implementation timeline
+- Include specific metrics and monitoring approaches
+- Balance operational efficiency with cost management
+- Provide clear ROI justification for each recommendation
+- Address process standardization and documentation`;
+
+    } else {
+      return `${baseContext}
+
+STRATEGIC OPERATIONAL ENHANCEMENT:
+
+This informational insight presents opportunities for operational excellence and competitive advantage. Focus on sustainable improvements that enhance overall performance.
+
+STRATEGIC IMPROVEMENT:
+Generate 4 enhancement strategies focusing on:
+1. Operational excellence and best practice implementation
+2. Technology integration and automation opportunities
+3. Performance optimization and efficiency gains
+4. Innovation and competitive differentiation
+
+Requirements:
+- Focus on sustainable long-term improvements (30-90 days)
+- Include technology and process innovation opportunities
+- Provide strategic value beyond immediate operational gains
+- Balance innovation with operational stability
+- Include change management and adoption strategies`;
+    }
+  };
+
+  try {
+    const openaiUrl = process.env.OPENAI_API_URL || "https://api.openai.com/v1/chat/completions";
+    
+    const response = await fetch(openaiUrl, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${openaiApiKey}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        model: "gpt-4o-mini",
+        messages: [
+          {
+            role: "system",
+            content: "You are a world-class operations consultant with 20+ years of experience in 3PL and supply chain management. Provide specific, actionable recommendations that drive measurable operational improvements. Each recommendation should be a single, clear action (15-20 words max). No explanations or bullet points - just the actionable strategies that deliver operational excellence and business results."
+          },
+          {
+            role: "user", 
+            content: getPromptBySeverity()
+          }
+        ],
+        max_tokens: 500,
+        temperature: 0.2  // Lower temperature for more focused, practical recommendations
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`OpenAI API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const aiResponse = data.choices?.[0]?.message?.content;
+
+    if (!aiResponse) {
+      throw new Error("No response from OpenAI");
+    }
+
+    // This part of the code parses AI response into clean, actionable dashboard recommendations
+    const lines = aiResponse.split('\n')
+      .map(line => line.trim())
+      .filter(line => line.length > 0)
+      .map(line => {
+        // Remove any formatting characters and numbers
+        return line
+          .replace(/^\d+\.\s*/, '')    // Remove "1. "
+          .replace(/^[•-]\s*/, '')     // Remove "• " or "- "
+          .replace(/^\*+/, '')         // Remove asterisks
+          .replace(/\*+$/, '')         // Remove trailing asterisks
+          .replace(/\*\*/g, '')        // Remove **bold** formatting
+          .replace(/^\s*-\s*/, '')     // Remove leading dashes
+          .trim();
+      })
+      .filter(line => line.length > 10 && line.length < 150)  // Reasonable length for dashboard actions
+      .slice(0, 4);  // Max 4 recommendations
+
+    const recommendations = lines.length > 0 ? lines : [
+      'Implement real-time performance monitoring dashboard for key operational metrics',
+      'Establish standardized escalation procedures for critical issues and alerts',
+      'Deploy predictive analytics to identify and prevent operational bottlenecks',
+      'Create cross-functional response teams for rapid issue resolution'
+    ];
+
+    return recommendations;
+
+  } catch (error) {
+    console.error('❌ Dashboard insight AI recommendation generation failed:', error);
+    
+    // This part of the code provides high-quality fallback recommendations based on severity
+    const fallbackRecs = {
+      'critical': [
+        'Activate emergency response protocol and assemble crisis management team',
+        'Implement immediate containment measures to prevent further impact',
+        'Conduct urgent root cause analysis with all stakeholders',
+        'Deploy temporary workarounds while permanent solutions are developed'
+      ],
+      'warning': [
+        'Establish proactive monitoring and early warning alert systems',
+        'Optimize resource allocation and capacity management protocols',
+        'Implement process standardization and performance benchmarking',
+        'Develop stakeholder communication and escalation procedures'
+      ],
+      'info': [
+        'Deploy advanced analytics and performance optimization tools',
+        'Implement best practice sharing and knowledge management systems',
+        'Establish innovation labs for testing operational improvements',
+        'Create strategic partnerships for competitive advantage'
+      ]
+    };
+
+    return fallbackRecs[insight.severity as keyof typeof fallbackRecs] || fallbackRecs['warning'];
+  }
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "GET") {
     return res.status(405).json({ error: "Method not allowed" });
@@ -1150,6 +1355,58 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(500).json({
         success: false,
         error: "Failed to generate margin risk recommendations",
+        details: error instanceof Error ? error.message : "Unknown error",
+        timestamp: new Date().toISOString(),
+      });
+    }
+  }
+
+  // This part of the code handles dashboard insight recommendation requests
+  if (req.query.insightRecommendations === 'true') {
+    try {
+      console.log("📊 Dashboard API: Processing insight recommendation request...");
+      
+      const { insight, contextData } = req.query;
+      
+      if (!insight || !contextData) {
+        return res.status(400).json({
+          success: false,
+          error: "Insight and context data are required for recommendations",
+          timestamp: new Date().toISOString(),
+        });
+      }
+
+      const parsedInsight = JSON.parse(insight as string);
+      const parsedContextData = JSON.parse(contextData as string);
+
+      console.log(`🎯 Generating insight recommendations for: ${parsedInsight.title} - ${parsedInsight.severity} severity`);
+      
+      // Generate AI-powered dashboard insight recommendations
+      const recommendations = await generateDashboardInsightRecommendations(parsedInsight, parsedContextData);
+      
+      console.log(`✅ Generated ${recommendations.length} dashboard insight recommendations successfully`);
+      
+      return res.status(200).json({
+        success: true,
+        data: {
+          recommendations,
+          insight: parsedInsight.title,
+          generatedAt: new Date().toISOString(),
+          context: {
+            severity: parsedInsight.severity,
+            dollarImpact: parsedInsight.dollarImpact,
+            source: parsedInsight.source
+          }
+        },
+        message: "Dashboard insight recommendations generated successfully"
+      });
+
+    } catch (error) {
+      console.error("❌ Dashboard API Insight Recommendations Error:", error);
+      
+      return res.status(500).json({
+        success: false,
+        error: "Failed to generate dashboard insight recommendations",
         details: error instanceof Error ? error.message : "Unknown error",
         timestamp: new Date().toISOString(),
       });
