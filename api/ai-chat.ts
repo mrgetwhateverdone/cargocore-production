@@ -290,6 +290,7 @@ FORMATTING REQUIREMENTS:
 - Avoid bold markers, asterisks, or special formatting
 - Structure responses with numbered lists or bullet points using standard characters
 - Keep language professional but conversational
+- Provide comprehensive, complete responses without cutting off mid-sentence
 
 Remember: You have access to live TinyBird data including products, shipments, warehouses, brands, costs, and performance metrics. Use this data to provide insights that drive real business value.`
     },
@@ -350,9 +351,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     console.log("🤖 AI Chat API: Processing chat request...");
     
-    // This part of the code reads AI settings from request headers
-    const aiModel = req.headers['x-ai-model'] as string || "gpt-4";
-    const maxTokens = parseInt(req.headers['x-max-tokens'] as string) || 500;
+    // This part of the code reads AI settings from request headers with higher token limits
+    const aiModel = req.headers['x-ai-model'] as string || "gpt-4o-mini";
+    const maxTokens = parseInt(req.headers['x-max-tokens'] as string) || 1200; // Increased from 500 to 1200
     const contextLevel = req.headers['x-context-level'] as string || "full";
     
     console.log(`🎯 AI Settings: Model=${aiModel}, Tokens=${maxTokens}, Context=${contextLevel}`);
