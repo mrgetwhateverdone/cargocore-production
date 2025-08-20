@@ -314,7 +314,7 @@ export function InsightOverlay({ isOpen, onClose, insight, agentName = "Dashboar
             {isLoadingRecommendations ? (
               <div className="flex items-center justify-center py-8">
                 <Loader2 className="h-6 w-6 animate-spin text-blue-600 mr-2" />
-                <span className="text-gray-600">Generating world-class operational strategies...</span>
+                <span className="text-gray-600">Generating strategic recommendations...</span>
               </div>
             ) : (
               <div className="space-y-3">
