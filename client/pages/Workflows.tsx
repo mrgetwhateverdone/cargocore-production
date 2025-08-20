@@ -141,14 +141,8 @@ export default function Workflows() {
   return (
     <Layout>
       <div className="space-y-6">
-        {/* This part of the code renders the page header with title and refresh functionality */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Workflows</h1>
-            <p className="text-sm text-gray-500">
-              Last updated: {new Date().toLocaleString()}
-            </p>
-          </div>
+        {/* This part of the code renders the refresh button - header info is already in layout */}
+        <div className="flex justify-end">
           <button
             onClick={refreshWorkflows}
             className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
