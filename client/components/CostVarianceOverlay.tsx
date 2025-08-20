@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { X, TrendingUp, TrendingDown, AlertTriangle, DollarSign, Loader2, CheckCircle2 } from 'lucide-react';
-import { useWorkflowCreation } from './hooks/useWorkflows';
+import { useWorkflowCreation } from '../hooks/useWorkflows';
 import type { CostVarianceAnomaly } from '@/types/api';
 
 interface CostVarianceOverlayProps {
