@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EconomicKPIOverlay } from "@/components/EconomicKPIOverlay";
 import { EconomicIntelligenceKPISection } from "@/components/economic/EconomicIntelligenceKPISection";
+import { InsightsSection } from "@/components/dashboard/InsightsSection";
 import type { EconomicKPIDetail } from "@/types/api";
 import { 
   AlertTriangle, 
@@ -79,54 +80,14 @@ export default function EconomicIntelligence() {
             <EconomicIntelligenceKPISection kpis={data.kpis} isLoading={isLoading} />
 
             {/* Economic Intelligence Agent Section */}
-            {isPageAIEnabled('liveIntelligence') && data.insights.length > 0 && (
-              <div className="mb-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xl font-semibold text-gray-900">Economic Intelligence Agent</h2>
-                  <span className="text-sm text-gray-500">
-                    {data.insights.length} insights from Economic Intelligence Agent
-                  </span>
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {data.insights.map((insight) => (
-                    <Card
-                      key={insight.id}
-                      className={`${
-                        insight.severity === 'critical' 
-                          ? 'bg-red-50 border-red-200' 
-                          : insight.severity === 'warning'
-                          ? 'bg-yellow-50 border-yellow-200'
-                          : 'bg-blue-50 border-blue-200'
-                      }`}
-                    >
-                      <CardContent className="p-4">
-                        <div className="flex items-start justify-between mb-3">
-                          <div className="flex items-center">
-                            {insight.severity === 'critical' ? (
-                              <AlertTriangle className="h-5 w-5 text-red-600 mr-2" />
-                            ) : (
-                              <Info className="h-5 w-5 text-blue-600 mr-2" />
-                            )}
-                            <h3 className="font-semibold text-sm text-gray-900">
-                              {insight.title}
-                            </h3>
-                          </div>
-                        </div>
-                        
-                        <p className="text-sm text-gray-900 mb-3 leading-relaxed font-medium">
-                          {insight.description}
-                        </p>
-                        
-                        <div className="flex items-center text-sm font-medium text-red-600">
-                          <DollarSign className="h-4 w-4 mr-1" />
-                          <FormattedCurrency value={insight.dollarImpact} /> impact
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </div>
+            {isPageAIEnabled('liveIntelligence') && (
+              <InsightsSection
+                insights={data.insights}
+                isLoading={isLoading}
+                title="Economic Intelligence Agent"
+                subtitle={`${data.insights.length} insights from Economic Intelligence Agent`}
+                loadingMessage="Economic Intelligence Agent is analyzing global market conditions and business impact..."
+              />
             )}
 
             {/* Global Economic Intelligence Grid */}

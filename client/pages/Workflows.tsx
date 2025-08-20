@@ -141,16 +141,7 @@ export default function Workflows() {
   return (
     <Layout>
       <div className="space-y-6">
-        {/* This part of the code renders the refresh button - header info is already in layout */}
-        <div className="flex justify-end">
-          <button
-            onClick={refreshWorkflows}
-            className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            <RefreshCw className="h-4 w-4" />
-            <span>Refresh</span>
-          </button>
-        </div>
+
 
         {/* This part of the code displays the KPI cards with real-time workflow statistics */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">

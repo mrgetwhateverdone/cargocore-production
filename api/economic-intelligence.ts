@@ -674,10 +674,10 @@ async function generateKPIDetails(
 }
 
 /**
- * This part of the code generates business impact analysis using real TinyBird data
- * Dynamically analyzes operational data to provide actionable insights
+ * This part of the code generates AI-powered business impact analysis using real TinyBird data
+ * Uses world-class prompts to provide actionable strategic insights
  */
-function generateBusinessImpactAnalysis(
+async function generateBusinessImpactAnalysis(
   products: ProductData[],
   shipments: ShipmentData[],
   kpis: any,
@@ -772,6 +772,128 @@ function generateBusinessImpactAnalysis(
     }
   }
 
+  // This part of the code generates AI-powered executive summary and strategic insights
+  const openaiApiKey = process.env.OPENAI_API_KEY;
+  
+  if (openaiApiKey) {
+    try {
+      const contextData = {
+        totalProducts,
+        totalShipments,
+        unfulfillableSkus,
+        delayedShipments,
+        top3SupplierPercentage: Math.round(top3SupplierPercentage),
+        top3BrandPercentage: Math.round(top3BrandPercentage),
+        highCostPercentage: Math.round(highCostPercentage),
+        totalBrands,
+        avgUnitCost: Math.round(avgUnitCost),
+        ...kpis,
+        ...financialImpacts
+      };
+
+      const businessAnalysisPrompt = `
+WORLD-CLASS ECONOMIC INTELLIGENCE ANALYSIS
+
+You are a senior management consultant with 20+ years of experience in 3PL operations and economic intelligence. Analyze the following real operational data and provide strategic business impact analysis.
+
+OPERATIONAL DATA:
+- Total Products: ${totalProducts} SKUs (${unfulfillableSkus} inactive)
+- Total Shipments: ${totalShipments} (${delayedShipments} delayed)
+- Supplier Performance: ${kpis.supplierPerformance}%
+- Shipping Cost Impact: ${kpis.shippingCostImpact}%
+- Transportation Costs: ${kpis.transportationCosts}%
+- Supply Chain Health: ${kpis.supplyChainHealth}%
+- Logistics Cost Efficiency: ${kpis.logisticsCostEfficiency}%
+- Financial Impact: $${financialImpacts.totalFinancialRisk.toLocaleString()}
+- Brand Portfolio: ${totalBrands} brands (top 3: ${Math.round(top3BrandPercentage)}%)
+- Supplier Concentration: Top 3 suppliers represent ${Math.round(top3SupplierPercentage)}%
+- High-Cost Shipments: ${Math.round(highCostPercentage)}% exceed average cost
+
+PROVIDE:
+1. EXECUTIVE_SUMMARY: 3-4 sentences analyzing the overall operational health, critical risks, and strategic priorities (150-200 words)
+2. KEY_RISKS: 3-4 specific operational risks with quantified impact and urgency (each 15-25 words)
+3. OPPORTUNITY_AREAS: 3-4 actionable opportunities with potential value creation (each 15-25 words)
+
+FORMAT:
+Use | as delimiter:
+EXECUTIVE_SUMMARY|[summary]|KEY_RISKS|[risk1]|[risk2]|[risk3]|OPPORTUNITY_AREAS|[opp1]|[opp2]|[opp3]
+
+REQUIREMENTS:
+- Reference specific metrics and percentages from the data
+- Focus on financial impact and ROI potential
+- Provide actionable insights for C-level executives
+- Include urgency indicators for risks
+- Quantify opportunities where possible`;
+
+      const openaiUrl = process.env.OPENAI_API_URL || "https://api.openai.com/v1/chat/completions";
+      
+      const response = await fetch(openaiUrl, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${openaiApiKey}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          model: "gpt-4o-mini",
+          messages: [
+            {
+              role: "system",
+              content: "You are a world-class management consultant specializing in 3PL operations and economic intelligence. Provide data-driven strategic analysis with specific recommendations."
+            },
+            {
+              role: "user",
+              content: businessAnalysisPrompt
+            }
+          ],
+          max_tokens: 800,
+          temperature: 0.2
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const aiResponse = data.choices?.[0]?.message?.content;
+        
+        if (aiResponse) {
+          const parts = aiResponse.split('|');
+          
+          // Parse AI response
+          let aiExecutiveSummary = '';
+          let aiKeyRisks: string[] = [];
+          let aiOpportunityAreas: string[] = [];
+          
+          for (let i = 0; i < parts.length; i++) {
+            if (parts[i] === 'EXECUTIVE_SUMMARY' && parts[i + 1]) {
+              aiExecutiveSummary = parts[i + 1].trim();
+            } else if (parts[i] === 'KEY_RISKS') {
+              for (let j = i + 1; j < parts.length && parts[j] !== 'OPPORTUNITY_AREAS'; j++) {
+                if (parts[j].trim() && parts[j] !== 'KEY_RISKS') {
+                  aiKeyRisks.push(parts[j].trim());
+                }
+              }
+            } else if (parts[i] === 'OPPORTUNITY_AREAS') {
+              for (let j = i + 1; j < parts.length; j++) {
+                if (parts[j].trim() && parts[j] !== 'OPPORTUNITY_AREAS') {
+                  aiOpportunityAreas.push(parts[j].trim());
+                }
+              }
+            }
+          }
+          
+          // Use AI-generated content if available, otherwise fallback to calculated values
+          return {
+            executiveSummary: aiExecutiveSummary || `Real-time Analysis: Current operational data reveals ${keyRisks.length} critical risk factors requiring attention. With ${kpis.shippingCostImpact}% shipping cost impact and ${kpis.supplierPerformance}% supplier performance across ${totalShipments} shipments, strategic intervention can address ${unfulfillableSkus} inactive SKUs and optimize ${totalBrands} brand portfolio for enhanced operational resilience.`,
+            keyRisks: aiKeyRisks.length > 0 ? aiKeyRisks : keyRisks,
+            opportunityAreas: aiOpportunityAreas.length > 0 ? aiOpportunityAreas : opportunityAreas
+          };
+        }
+      }
+    } catch (error) {
+      console.error('AI business analysis generation failed:', error);
+    }
+  }
+
+  // Fallback to calculated values if AI generation fails
   return {
     executiveSummary: `Real-time Analysis: Current operational data reveals ${keyRisks.length} critical risk factors requiring attention. With ${kpis.shippingCostImpact}% shipping cost impact and ${kpis.supplierPerformance}% supplier performance across ${totalShipments} shipments, strategic intervention can address ${unfulfillableSkus} inactive SKUs and optimize ${totalBrands} brand portfolio for enhanced operational resilience.`,
     keyRisks,
@@ -821,7 +943,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const kpis = calculateEconomicKPIs(products, shipments);
     const financialImpacts = calculateFinancialImpacts(products, shipments);
     const insights = generateEconomicInsights(products, shipments, kpis, financialImpacts);
-    const businessImpact = generateBusinessImpactAnalysis(products, shipments, kpis, financialImpacts);
+    const businessImpact = await generateBusinessImpactAnalysis(products, shipments, kpis, financialImpacts);
     const kpiDetails = await generateKPIDetails(products, shipments, kpis, financialImpacts);
 
     const economicData = {

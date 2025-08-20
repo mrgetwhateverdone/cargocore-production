@@ -471,11 +471,7 @@ export default function Reports() {
     <Layout>
       <div className="min-h-screen bg-gray-50">
         <div className="max-w-7xl mx-auto space-y-8 p-6">
-          {/* Page Header */}
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Generate Reports</h1>
-            <p className="text-gray-600">Create comprehensive operational reports with AI-powered insights</p>
-          </div>
+
 
           {/* Quick Start Templates */}
           <div className="space-y-6">
