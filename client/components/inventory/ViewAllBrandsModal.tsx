@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import type { BrandPerformance } from "@/types/api";
+import { BrandInventoryOverlay } from "../BrandInventoryOverlay";
 
 interface ViewAllBrandsModalProps {
   brands: BrandPerformance[];
@@ -9,6 +10,61 @@ interface ViewAllBrandsModalProps {
 
 export function ViewAllBrandsModal({ brands, isOpen, onClose }: ViewAllBrandsModalProps) {
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedBrand, setSelectedBrand] = useState<BrandPerformance | null>(null);
+  const [isOverlayOpen, setIsOverlayOpen] = useState(false);
+  const [recommendations, setRecommendations] = useState<string[]>([]);
+  const [isLoadingRecommendations, setIsLoadingRecommendations] = useState(false);
+
+  // This part of the code handles clicking on brand cards to get AI recommendations
+  const handleBrandClick = async (brand: BrandPerformance) => {
+    setSelectedBrand(brand);
+    setIsOverlayOpen(true);
+    setIsLoadingRecommendations(true);
+    setRecommendations([]);
+
+    try {
+      // This part of the code calculates context data for AI recommendations
+      const contextData = {
+        totalBrands: brands.length,
+        portfolioValue: brands.reduce((sum, b) => sum + b.total_value, 0),
+        avgEfficiency: brands.reduce((sum, b) => sum + b.efficiency_score, 0) / brands.length,
+        topPerformers: brands.filter(b => b.efficiency_score >= 70).length,
+        totalSKUs: brands.reduce((sum, b) => sum + b.sku_count, 0)
+      };
+
+      const response = await fetch(`/api/inventory-data?brandRecommendations=true&brand=${encodeURIComponent(JSON.stringify(brand))}&contextData=${encodeURIComponent(JSON.stringify(contextData))}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch recommendations: ${response.status}`);
+      }
+
+      const data = await response.json();
+      setRecommendations(data.data.recommendations);
+    } catch (error) {
+      console.error('Failed to load brand inventory recommendations:', error);
+      // Set fallback recommendations
+      setRecommendations([
+        'Optimize SKU mix to focus on high-performing products',
+        'Implement inventory turnover analysis and slow-moving SKU review',
+        'Develop brand-specific pricing strategy to improve margins',
+        'Establish performance monitoring dashboards for brand KPIs'
+      ]);
+    } finally {
+      setIsLoadingRecommendations(false);
+    }
+  };
+
+  // This part of the code handles closing the overlay
+  const handleCloseOverlay = () => {
+    setIsOverlayOpen(false);
+    setSelectedBrand(null);
+    setRecommendations([]);
+  };
 
   // This part of the code formats currency values for display
   const formatCurrency = (value: number) => {
@@ -98,7 +154,9 @@ export function ViewAllBrandsModal({ brands, isOpen, onClose }: ViewAllBrandsMod
               return (
                 <div
                   key={brand.brand_name}
-                  className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                  onClick={() => handleBrandClick(brand)}
+                  className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-all hover:shadow-lg hover:scale-[1.02] hover:z-10 relative"
+                  title="Click for AI brand investment recommendations"
                 >
                   <div className="flex items-center space-x-4">
                     {/* This part of the code displays the rank badge */}
@@ -135,6 +193,15 @@ export function ViewAllBrandsModal({ brands, isOpen, onClose }: ViewAllBrandsMod
           )}
         </div>
       </div>
+
+      {/* This part of the code renders the brand inventory overlay with AI recommendations */}
+      <BrandInventoryOverlay
+        isOpen={isOverlayOpen}
+        onClose={handleCloseOverlay}
+        brand={selectedBrand}
+        recommendations={recommendations}
+        isLoadingRecommendations={isLoadingRecommendations}
+      />
     </div>
   );
 }
