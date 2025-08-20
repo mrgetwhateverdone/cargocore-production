@@ -844,6 +844,58 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
+  // This part of the code handles cost variance recommendation requests
+  if (req.query.recommendations === 'true') {
+    try {
+      console.log("💰 Dashboard API: Processing cost variance recommendation request...");
+      
+      const { anomaly, contextData } = req.query;
+      
+      if (!anomaly || !contextData) {
+        return res.status(400).json({
+          success: false,
+          error: "Anomaly and context data are required for recommendations",
+          timestamp: new Date().toISOString(),
+        });
+      }
+
+      const parsedAnomaly = JSON.parse(anomaly as string);
+      const parsedContextData = JSON.parse(contextData as string);
+
+      console.log(`🎯 Generating cost recommendations for: ${parsedAnomaly.type} - ${parsedAnomaly.title}`);
+      
+      // Generate AI-powered cost variance recommendations using existing function
+      const recommendations = await generateCostVarianceRecommendations(parsedAnomaly, parsedContextData);
+      
+      console.log(`✅ Generated ${recommendations.length} cost optimization recommendations successfully`);
+      
+      return res.status(200).json({
+        success: true,
+        data: {
+          recommendations,
+          anomaly: parsedAnomaly.title,
+          generatedAt: new Date().toISOString(),
+          context: {
+            type: parsedAnomaly.type,
+            severity: parsedAnomaly.severity,
+            financialImpact: parsedAnomaly.financialImpact
+          }
+        },
+        message: "Cost variance recommendations generated successfully"
+      });
+
+    } catch (error) {
+      console.error("❌ Dashboard API Cost Recommendations Error:", error);
+      
+      return res.status(500).json({
+        success: false,
+        error: "Failed to generate cost variance recommendations",
+        details: error instanceof Error ? error.message : "Unknown error",
+        timestamp: new Date().toISOString(),
+      });
+    }
+  }
+
   try {
     console.log(
       "📊 Vercel API: Fetching dashboard data with split environment variables...",

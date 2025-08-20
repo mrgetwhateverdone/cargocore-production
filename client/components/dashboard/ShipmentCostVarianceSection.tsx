@@ -34,15 +34,11 @@ export function ShipmentCostVarianceSection({
         warehouseCount: new Set(costVariances.map(a => a.warehouseId).filter(w => w)).size
       };
 
-      const response = await fetch('/api/cost-variance-recommendations', {
-        method: 'POST',
+      const response = await fetch(`/api/dashboard-data?recommendations=true&anomaly=${encodeURIComponent(JSON.stringify(anomaly))}&contextData=${encodeURIComponent(JSON.stringify(contextData))}`, {
+        method: 'GET',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          anomaly,
-          contextData
-        }),
       });
 
       if (!response.ok) {
