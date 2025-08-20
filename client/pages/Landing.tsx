@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/button';
-import { Check, BarChart3, Zap, Shield, TrendingUp, Users, DollarSign } from 'lucide-react';
+import { Check, BarChart3, Zap, Shield, TrendingUp, Users, DollarSign, Loader2 } from 'lucide-react';
 import { SignInButton, SignUpButton, UserButton, useUser } from '@clerk/clerk-react';
 
 /**
@@ -10,16 +10,28 @@ import { SignInButton, SignUpButton, UserButton, useUser } from '@clerk/clerk-re
  */
 export default function Landing() {
   const navigate = useNavigate();
-  const { isSignedIn, user } = useUser();
+  const { isSignedIn, user, isLoaded } = useUser();
 
   // This part of the code automatically redirects signed-in users to dashboard
-  // Only redirect on initial page load, not when navigating back to landing
+  // Only redirect after authentication state is fully loaded
   React.useEffect(() => {
-    if (isSignedIn && window.location.pathname === '/') {
+    if (isLoaded && isSignedIn && window.location.pathname === '/') {
       console.log('🔒 User is signed in on landing page, redirecting to dashboard...');
       navigate('/dashboard', { replace: true });
     }
-  }, [isSignedIn, navigate]);
+  }, [isLoaded, isSignedIn, navigate]);
+
+  // This part of the code shows loading state while authentication is being determined
+  if (!isLoaded) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin text-blue-600 mx-auto mb-4" />
+          <p className="text-gray-600">Loading CargoCore...</p>
+        </div>
+      </div>
+    );
+  }
 
   // This part of the code handles navigation to dashboard for signed-in users
   const handleGetDemo = () => {

@@ -38,6 +38,7 @@ import AIAssistant from "./pages/AIAssistant";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import { SmartRouter } from "./components/SmartRouter";
+import { ProtectedRoute } from "./components/ProtectedRoute";
 
 // Configure TanStack Query for real-time data
 const queryClient = new QueryClient({
@@ -77,7 +78,9 @@ const App = () => {
                     path="/dashboard" 
                     element={
                       <SignedIn>
-                        <Dashboard />
+                        <ProtectedRoute>
+                          <Dashboard />
+                        </ProtectedRoute>
                       </SignedIn>
                     } 
                   />
@@ -85,7 +88,9 @@ const App = () => {
                     path="/workflows" 
                     element={
                       <SignedIn>
-                        <Workflows />
+                        <ProtectedRoute>
+                          <Workflows />
+                        </ProtectedRoute>
                       </SignedIn>
                     } 
                   />
@@ -93,7 +98,9 @@ const App = () => {
                     path="/analytics" 
                     element={
                       <SignedIn>
-                        <Analytics />
+                        <ProtectedRoute>
+                          <Analytics />
+                        </ProtectedRoute>
                       </SignedIn>
                     } 
                   />
@@ -101,7 +108,9 @@ const App = () => {
                     path="/orders" 
                     element={
                       <SignedIn>
-                        <Orders />
+                        <ProtectedRoute>
+                          <Orders />
+                        </ProtectedRoute>
                       </SignedIn>
                     } 
                   />
@@ -109,7 +118,9 @@ const App = () => {
                     path="/inventory" 
                     element={
                       <SignedIn>
-                        <Inventory />
+                        <ProtectedRoute>
+                          <Inventory />
+                        </ProtectedRoute>
                       </SignedIn>
                     } 
                   />
@@ -117,7 +128,9 @@ const App = () => {
                     path="/warehouses" 
                     element={
                       <SignedIn>
-                        <Warehouses />
+                        <ProtectedRoute>
+                          <Warehouses />
+                        </ProtectedRoute>
                       </SignedIn>
                     } 
                   />
@@ -125,7 +138,9 @@ const App = () => {
                     path="/cost-management" 
                     element={
                       <SignedIn>
-                        <CostManagement />
+                        <ProtectedRoute>
+                          <CostManagement />
+                        </ProtectedRoute>
                       </SignedIn>
                     } 
                   />
@@ -133,7 +148,9 @@ const App = () => {
                   path="/intelligence"
                     element={
                       <SignedIn>
-                        <EconomicIntelligence />
+                        <ProtectedRoute>
+                          <EconomicIntelligence />
+                        </ProtectedRoute>
                       </SignedIn>
                     }
                   />
@@ -141,7 +158,9 @@ const App = () => {
                     path="/reports" 
                     element={
                       <SignedIn>
-                        <Reports />
+                        <ProtectedRoute>
+                          <Reports />
+                        </ProtectedRoute>
                       </SignedIn>
                     } 
                   />
@@ -149,7 +168,9 @@ const App = () => {
                     path="/assistant" 
                     element={
                       <SignedIn>
-                        <AIAssistant />
+                        <ProtectedRoute>
+                          <AIAssistant />
+                        </ProtectedRoute>
                       </SignedIn>
                     } 
                   />
@@ -157,7 +178,9 @@ const App = () => {
                     path="/settings" 
                     element={
                       <SignedIn>
-                        <Settings />
+                        <ProtectedRoute>
+                          <Settings />
+                        </ProtectedRoute>
                       </SignedIn>
                     } 
                   />
