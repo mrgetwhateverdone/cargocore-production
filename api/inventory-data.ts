@@ -391,9 +391,274 @@ function transformToEnhancedInventoryItems(products: ProductData[], shipments: S
     .sort((a, b) => b.total_value - a.total_value); // Sort by value descending
 }
 
+/**
+ * This part of the code generates world-class AI recommendations for brand inventory investment optimization
+ * Uses advanced prompts to provide specific, actionable brand management strategies
+ */
+async function generateBrandInventoryRecommendations(
+  brand: any,
+  contextData: { 
+    totalBrands: number; 
+    portfolioValue: number; 
+    avgEfficiency: number;
+    topPerformers: number;
+    totalSKUs: number;
+  }
+): Promise<string[]> {
+  const openaiApiKey = process.env.OPENAI_API_KEY;
+  
+  if (!openaiApiKey) {
+    console.warn('🤖 OpenAI API key not available, using fallback brand inventory recommendations');
+    return [
+      'Optimize SKU mix to focus on high-performing products',
+      'Implement inventory turnover analysis and slow-moving SKU review',
+      'Develop brand-specific pricing strategy to improve margins',
+      'Establish performance monitoring dashboards for brand KPIs'
+    ];
+  }
+
+  // This part of the code creates world-class prompts specific to brand performance levels
+  const getPromptByPerformance = () => {
+    if (brand.efficiency_score >= 85) {
+      return `HIGH-PERFORMING BRAND OPTIMIZATION:
+
+Brand Excellence Analysis:
+- Brand: ${brand.brand_name} (Top Performer)
+- Investment Value: $${brand.total_value.toLocaleString()}
+- Efficiency Score: ${brand.efficiency_score}% (Excellent)
+- SKU Portfolio: ${brand.sku_count} SKUs, $${brand.avg_value_per_sku.toFixed(2)} avg value/SKU
+- Portfolio Share: ${brand.portfolio_percentage}% of total investment
+- Total Units: ${brand.total_quantity.toLocaleString()} units
+
+Market Leadership Context:
+- Total brand portfolio: ${contextData.totalBrands} brands
+- Portfolio value: $${contextData.portfolioValue.toLocaleString()}
+- Top performers: ${contextData.topPerformers}/${contextData.totalBrands} brands (${brand.brand_name} included)
+- Average efficiency: ${contextData.avgEfficiency}%
+
+STRATEGIC EXPANSION: Generate 4 growth acceleration strategies:
+1. Premium line extension and market expansion
+2. Operational excellence and competitive advantage
+3. Strategic partnerships and channel optimization
+4. Innovation leadership and market positioning
+
+Requirements:
+- Focus on sustaining market leadership (6+ month strategy)
+- Target 15-25% value growth while maintaining efficiency
+- Leverage high performance for strategic advantage
+- Include innovation and competitive differentiation`;
+
+    } else if (brand.efficiency_score >= 70) {
+      return `SOLID BRAND ENHANCEMENT:
+
+Brand Growth Analysis:
+- Brand: ${brand.brand_name} (Strong Performer)
+- Investment Value: $${brand.total_value.toLocaleString()}
+- Efficiency Score: ${brand.efficiency_score}% (Good)
+- SKU Portfolio: ${brand.sku_count} SKUs, $${brand.avg_value_per_sku.toFixed(2)} avg value/SKU
+- Portfolio Weight: ${brand.portfolio_percentage}% of investment
+- Inventory Level: ${brand.total_quantity.toLocaleString()} units
+
+Performance Context:
+- Brand portfolio size: ${contextData.totalBrands} brands
+- Total portfolio value: $${contextData.portfolioValue.toLocaleString()}
+- Benchmark efficiency: ${contextData.avgEfficiency}%
+- Above-average performers: ${contextData.topPerformers}
+
+PERFORMANCE ACCELERATION: Generate 4 optimization strategies:
+1. Efficiency improvement and margin enhancement
+2. SKU portfolio optimization and mix refinement
+3. Inventory turnover acceleration and cost reduction
+4. Market positioning and competitive advantage
+
+Requirements:
+- Target 10-15% efficiency improvement over 90 days
+- Balance growth with operational excellence
+- Focus on measurable ROI and performance metrics
+- Include specific inventory and pricing optimizations`;
+
+    } else {
+      return `UNDERPERFORMING BRAND TURNAROUND:
+
+Brand Recovery Analysis:
+- Brand: ${brand.brand_name} (Requires Attention)
+- Investment Value: $${brand.total_value.toLocaleString()}
+- Efficiency Score: ${brand.efficiency_score}% (Below Target)
+- SKU Portfolio: ${brand.sku_count} SKUs, $${brand.avg_value_per_sku.toFixed(2)} avg value/SKU
+- Portfolio Impact: ${brand.portfolio_percentage}% of total investment
+- Stock Level: ${brand.total_quantity.toLocaleString()} units
+
+Critical Context:
+- Portfolio brands: ${contextData.totalBrands} total
+- Portfolio value at risk: $${contextData.portfolioValue.toLocaleString()}
+- Performance gap: ${contextData.avgEfficiency - brand.efficiency_score}% below average
+- Requires immediate intervention
+
+URGENT TURNAROUND: Generate 4 recovery strategies:
+1. Immediate cost reduction and efficiency improvement
+2. SKU rationalization and inventory optimization
+3. Pricing strategy review and margin recovery
+4. Performance monitoring and corrective actions
+
+Requirements:
+- Implement within 30 days for maximum impact
+- Target minimum 20% efficiency improvement
+- Focus on immediate cost savings and waste reduction
+- Include specific timelines and measurable outcomes`;
+    }
+  };
+
+  try {
+    const openaiUrl = process.env.OPENAI_API_URL || "https://api.openai.com/v1/chat/completions";
+    
+    const response = await fetch(openaiUrl, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${openaiApiKey}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        model: "gpt-4o-mini",
+        messages: [
+          {
+            role: "system",
+            content: "You are a world-class brand portfolio optimization expert with 20+ years of experience in inventory management and brand investment strategy. Provide specific, actionable recommendations that drive measurable brand performance improvements. Each recommendation should be a single, clear action (15-20 words max). No explanations or bullet points - just the actionable strategies that deliver business results."
+          },
+          {
+            role: "user", 
+            content: getPromptByPerformance()
+          }
+        ],
+        max_tokens: 500,
+        temperature: 0.2  // Lower temperature for more focused, practical recommendations
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`OpenAI API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const aiResponse = data.choices?.[0]?.message?.content;
+
+    if (!aiResponse) {
+      throw new Error("No response from OpenAI");
+    }
+
+    // This part of the code parses AI response into clean, actionable brand recommendations
+    const lines = aiResponse.split('\n')
+      .map(line => line.trim())
+      .filter(line => line.length > 0)
+      .map(line => {
+        // Remove any formatting characters and numbers
+        return line
+          .replace(/^\d+\.\s*/, '')    // Remove "1. "
+          .replace(/^[•-]\s*/, '')     // Remove "• " or "- "
+          .replace(/^\*+/, '')         // Remove asterisks
+          .replace(/\*+$/, '')         // Remove trailing asterisks
+          .replace(/\*\*/g, '')        // Remove **bold** formatting
+          .replace(/^\s*-\s*/, '')     // Remove leading dashes
+          .trim();
+      })
+      .filter(line => line.length > 10 && line.length < 150)  // Reasonable length for brand actions
+      .slice(0, 4);  // Max 4 recommendations
+
+    const recommendations = lines.length > 0 ? lines : [
+      'Implement SKU performance analysis and optimize product mix',
+      'Develop brand-specific pricing strategy to improve margins',
+      'Establish inventory turnover targets and monitoring systems',
+      'Create brand performance dashboard with actionable metrics'
+    ];
+
+    return recommendations;
+
+  } catch (error) {
+    console.error('❌ Brand inventory AI recommendation generation failed:', error);
+    
+    // This part of the code provides high-quality fallback recommendations based on efficiency
+    const fallbackRecs = {
+      'high': [
+        'Expand premium product lines to capitalize on brand strength',
+        'Develop strategic partnerships for market expansion opportunities',
+        'Implement innovation programs to maintain competitive advantage',
+        'Optimize inventory allocation to maximize profit margins'
+      ],
+      'medium': [
+        'Optimize SKU mix to focus on highest-performing products',
+        'Implement inventory turnover analysis and improvement plan',
+        'Develop pricing strategy to enhance brand profitability',
+        'Establish performance monitoring and optimization processes'
+      ],
+      'low': [
+        'Conduct immediate SKU profitability analysis and rationalization',
+        'Implement cost reduction initiatives across entire brand portfolio',
+        'Review pricing strategy and optimize for margin improvement',
+        'Establish performance recovery plan with measurable targets'
+      ]
+    };
+
+    const performanceLevel = brand.efficiency_score >= 70 ? 'high' : 
+                             brand.efficiency_score >= 50 ? 'medium' : 'low';
+    
+    return fallbackRecs[performanceLevel];
+  }
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "GET") {
     return res.status(405).json({ error: "Method not allowed" });
+  }
+
+  // This part of the code handles brand inventory recommendation requests
+  if (req.query.brandRecommendations === 'true') {
+    try {
+      console.log("📦 Inventory API: Processing brand inventory recommendation request...");
+      
+      const { brand, contextData } = req.query;
+      
+      if (!brand || !contextData) {
+        return res.status(400).json({
+          success: false,
+          error: "Brand and context data are required for recommendations",
+          timestamp: new Date().toISOString(),
+        });
+      }
+
+      const parsedBrand = JSON.parse(brand as string);
+      const parsedContextData = JSON.parse(contextData as string);
+
+      console.log(`🎯 Generating brand recommendations for: ${parsedBrand.brand_name} - ${parsedBrand.efficiency_score}% efficiency`);
+      
+      // Generate AI-powered brand inventory recommendations
+      const recommendations = await generateBrandInventoryRecommendations(parsedBrand, parsedContextData);
+      
+      console.log(`✅ Generated ${recommendations.length} brand investment optimization recommendations successfully`);
+      
+      return res.status(200).json({
+        success: true,
+        data: {
+          recommendations,
+          brand: parsedBrand.brand_name,
+          generatedAt: new Date().toISOString(),
+          context: {
+            efficiencyScore: parsedBrand.efficiency_score,
+            totalValue: parsedBrand.total_value,
+            portfolioPercentage: parsedBrand.portfolio_percentage
+          }
+        },
+        message: "Brand inventory recommendations generated successfully"
+      });
+
+    } catch (error) {
+      console.error("❌ Inventory API Brand Recommendations Error:", error);
+      
+      return res.status(500).json({
+        success: false,
+        error: "Failed to generate brand inventory recommendations",
+        details: error instanceof Error ? error.message : "Unknown error",
+        timestamp: new Date().toISOString(),
+      });
+    }
   }
 
   try {
