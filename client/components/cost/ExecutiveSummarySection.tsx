@@ -1,4 +1,6 @@
 import type { CostKPIs, CostCenter } from "@/types/api";
+import { useState, useEffect } from "react";
+import { Loader2 } from "lucide-react";
 
 interface ExecutiveSummarySectionProps {
   kpis: CostKPIs;
@@ -7,6 +9,52 @@ interface ExecutiveSummarySectionProps {
 }
 
 export function ExecutiveSummarySection({ kpis, costCenters, isLoading }: ExecutiveSummarySectionProps) {
+  const [aiSummary, setAiSummary] = useState<string>("");
+  const [isLoadingAI, setIsLoadingAI] = useState(false);
+
+  // This part of the code fetches AI-generated executive summary
+  useEffect(() => {
+    if (!isLoading && kpis && costCenters.length > 0) {
+      generateAIExecutiveSummary();
+    }
+  }, [isLoading, kpis, costCenters]);
+
+  const generateAIExecutiveSummary = async () => {
+    setIsLoadingAI(true);
+    
+    try {
+      const contextData = {
+        totalFacilities: kpis.totalCostCenters || 0,
+        avgEfficiency: kpis.costEfficiencyRate || 0,
+        topPerformers: kpis.topPerformingWarehouses || 0,
+        activeFacilities: costCenters.filter(c => c.status === 'Active').length,
+        totalMonthlyCosts: kpis.totalMonthlyCosts || 0,
+        needsAttention: (kpis.totalCostCenters || 0) - (kpis.topPerformingWarehouses || 0)
+      };
+
+      const response = await fetch('/api/cost-data?aiSummary=true', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ contextData })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setAiSummary(data.summary);
+      } else {
+        throw new Error('Failed to generate AI summary');
+      }
+    } catch (error) {
+      console.error('Failed to generate AI executive summary:', error);
+      // Fallback to calculated summary
+      setAiSummary("");
+    } finally {
+      setIsLoadingAI(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6 mb-6">
@@ -52,35 +100,50 @@ export function ExecutiveSummarySection({ kpis, costCenters, isLoading }: Execut
             Executive Summary
           </h3>
           
-          {/* This part of the code generates dynamic executive summary text */}
-          <div className="text-sm text-gray-700 space-y-2">
-            <p>
-              Cost Optimization Analysis from real TinyBird data reveals performance across{" "}
-              <span className="font-semibold text-gray-900">{totalFacilities}</span> facilities.{" "}
-              Average cost efficiency of{" "}
-              <span className={`font-semibold ${efficiencyStatus.color}`}>
-                {avgEfficiency.toFixed(1)}%
-              </span>{" "}
-              indicates {efficiencyStatus.text} operational performance across all operations.
-            </p>
-            
-            <p>
-              <span className="font-semibold text-green-600">{topPerformers}</span> warehouses 
-              performing above efficiency targets, while{" "}
-              <span className="font-semibold text-orange-600">{needsAttention}</span> facilities 
-              need operational attention.{" "}
-              <span className="font-semibold text-blue-600">{activeFacilities}</span> cost centers 
-              show recent activity from live warehouse throughput and shipment processing.
-            </p>
+          {/* This part of the code displays AI-generated executive summary */}
+          {isLoadingAI ? (
+            <div className="flex items-center space-x-2 py-4">
+              <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
+              <span className="text-sm text-gray-600">Generating strategic cost analysis...</span>
+            </div>
+          ) : (
+            <div className="text-sm text-gray-700 space-y-2">
+              {aiSummary ? (
+                <div className="whitespace-pre-line leading-relaxed">
+                  {aiSummary}
+                </div>
+              ) : (
+                <>
+                  <p>
+                    Cost optimization analysis reveals performance across{" "}
+                    <span className="font-semibold text-gray-900">{totalFacilities}</span> facilities.{" "}
+                    Average cost efficiency of{" "}
+                    <span className={`font-semibold ${efficiencyStatus.color}`}>
+                      {avgEfficiency.toFixed(1)}%
+                    </span>{" "}
+                    indicates {efficiencyStatus.text} operational performance across all operations.
+                  </p>
+                  
+                  <p>
+                    <span className="font-semibold text-green-600">{topPerformers}</span> warehouses 
+                    performing above efficiency targets, while{" "}
+                    <span className="font-semibold text-orange-600">{needsAttention}</span> facilities 
+                    need operational attention.{" "}
+                    <span className="font-semibold text-blue-600">{activeFacilities}</span> cost centers 
+                    show recent activity from live warehouse throughput and shipment processing.
+                  </p>
 
-            <p>
-              Cost analysis based on live warehouse throughput, SLA performance, and real shipment 
-              cost data. Monthly operational costs of{" "}
-              <span className="font-semibold text-gray-900">
-                ${(kpis.totalMonthlyCosts || 0).toLocaleString()}
-              </span>{" "}
-              reflect current operational scale and efficiency levels.
-            </p>
+                  <p>
+                    Monthly operational costs of{" "}
+                    <span className="font-semibold text-gray-900">
+                      ${(kpis.totalMonthlyCosts || 0).toLocaleString()}
+                    </span>{" "}
+                    reflect current operational scale and efficiency levels.
+                  </p>
+                </>
+              )}
+            </div>
+          )}
 
             {/* This part of the code shows performance breakdown */}
             <div className="mt-4 pt-4 border-t border-gray-100">

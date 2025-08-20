@@ -511,7 +511,128 @@ function generateCostInsights(
   return insights;
 }
 
+/**
+ * This part of the code generates AI-powered executive summary for cost management
+ * Uses world-class prompts to provide strategic cost analysis
+ */
+async function generateAIExecutiveSummary(contextData: any): Promise<string> {
+  const openaiApiKey = process.env.OPENAI_API_KEY;
+  
+  if (!openaiApiKey) {
+    console.warn('🤖 OpenAI API key not available, using fallback summary');
+    return '';
+  }
+
+  try {
+    const executiveSummaryPrompt = `
+WORLD-CLASS COST MANAGEMENT EXECUTIVE SUMMARY
+
+You are a senior CFO with 20+ years of experience in 3PL operations and cost optimization. Analyze the following operational cost data and provide a strategic executive summary for the board of directors.
+
+OPERATIONAL COST DATA:
+- Total Facilities: ${contextData.totalFacilities}
+- Average Cost Efficiency: ${contextData.avgEfficiency}%
+- Top Performing Warehouses: ${contextData.topPerformers}
+- Active Facilities: ${contextData.activeFacilities}
+- Facilities Needing Attention: ${contextData.needsAttention}
+- Monthly Operational Costs: $${contextData.totalMonthlyCosts.toLocaleString()}
+
+REQUIREMENTS:
+Generate a compelling executive summary (200-250 words) that:
+1. Opens with the most critical cost insight or opportunity
+2. Quantifies financial impact and operational efficiency
+3. Identifies specific cost optimization opportunities
+4. Provides strategic recommendations with ROI potential
+5. Includes urgency indicators for immediate action items
+6. Uses data-driven language appropriate for C-level executives
+
+FORMAT:
+Write in paragraph form with specific metrics woven naturally into the narrative. Focus on actionable insights that drive business value and cost optimization.
+
+TONE: Professional, strategic, data-driven, and focused on financial performance and operational excellence.`;
+
+    const openaiUrl = process.env.OPENAI_API_URL || "https://api.openai.com/v1/chat/completions";
+    
+    const response = await fetch(openaiUrl, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${openaiApiKey}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        model: "gpt-4o-mini",
+        messages: [
+          {
+            role: "system",
+            content: "You are a world-class CFO and operations consultant specializing in 3PL cost optimization and financial performance analysis. Provide strategic, data-driven executive summaries."
+          },
+          {
+            role: "user",
+            content: executiveSummaryPrompt
+          }
+        ],
+        max_tokens: 400,
+        temperature: 0.2
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`OpenAI API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const aiSummary = data.choices?.[0]?.message?.content;
+
+    if (!aiSummary) {
+      throw new Error("No response from OpenAI");
+    }
+
+    return aiSummary.trim();
+
+  } catch (error) {
+    console.error('❌ Cost Management AI summary generation failed:', error);
+    return '';
+  }
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  if (req.method === "POST" && req.query.aiSummary === 'true') {
+    try {
+      console.log("🤖 Cost Management API: Generating AI executive summary...");
+      
+      const { contextData } = req.body;
+      
+      if (!contextData) {
+        return res.status(400).json({
+          success: false,
+          error: "Context data is required for AI summary generation",
+          timestamp: new Date().toISOString(),
+        });
+      }
+
+      const aiSummary = await generateAIExecutiveSummary(contextData);
+      
+      console.log("✅ Cost Management AI summary generated successfully");
+      
+      return res.status(200).json({
+        success: true,
+        summary: aiSummary,
+        generatedAt: new Date().toISOString(),
+        message: "AI executive summary generated successfully"
+      });
+
+    } catch (error) {
+      console.error("❌ Cost Management AI Summary Error:", error);
+      
+      return res.status(500).json({
+        success: false,
+        error: "Failed to generate AI executive summary",
+        details: error instanceof Error ? error.message : "Unknown error",
+        timestamp: new Date().toISOString(),
+      });
+    }
+  }
+
   if (req.method !== "GET") {
     return res.status(405).json({ error: "Method not allowed" });
   }
