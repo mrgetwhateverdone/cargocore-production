@@ -41,22 +41,11 @@ export default function Warehouses() {
         {/* This part of the code renders warehouse sections organized in logical groups for better visual hierarchy */}
         {data && (
           <div className="space-y-8">
-            {/* Group 1: Performance Overview */}
-            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100">
-              <div className="flex items-center mb-6">
-                <span className="text-2xl mr-3">📊</span>
-                <div>
-                  <h2 className="text-xl font-semibold text-gray-900">Performance Overview</h2>
-                  <p className="text-sm text-gray-600">Key metrics and AI-powered insights</p>
-                </div>
-              </div>
-              
-              {/* KPI Cards - Essential performance metrics */}
-              <WarehouseKPISection kpis={data.kpis} isLoading={isLoading} />
+            {/* KPI Cards - Essential performance metrics */}
+            <WarehouseKPISection kpis={data.kpis} isLoading={isLoading} />
 
-              {/* AI Insights - Warehouse Agent insights */}
-              <InsightsSection insights={data.insights} isLoading={isLoading} />
-            </div>
+            {/* AI Insights - Warehouse Agent insights */}
+            <InsightsSection insights={data.insights} isLoading={isLoading} />
 
             {/* Group 2: Warehouse Operations */}
             <div className="bg-gradient-to-r from-gray-50 to-slate-50 rounded-xl p-6 border border-gray-200">
