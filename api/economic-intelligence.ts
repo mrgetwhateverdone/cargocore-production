@@ -297,40 +297,61 @@ async function generateAIRecommendations(
 
   // This part of the code creates specific prompts for each KPI type
   const prompts = {
-    'supplier-performance': `Analyze this supplier performance data and provide 4 specific, actionable recommendations:
+    'supplier-performance': `Based on supplier performance data (${contextData.performance}% on-time delivery, ${contextData.shipments} shipments, ${contextData.suppliers} suppliers), provide 2-4 clear, actionable recommendations.
 
-Current Data:
-- Total Shipments: ${contextData.shipments}
-- On-time Performance: ${contextData.performance}%
-- Total Suppliers: ${contextData.suppliers}
+Rules:
+- Each recommendation must be a single, clear action
+- No bullet points, asterisks, or formatting
+- No explanations or implementation details
+- 10-15 words maximum per recommendation
+- Focus on immediate, practical actions
 
-Focus on supplier relationship management, delivery optimization, and risk mitigation. Provide practical steps a 3PL operations manager can implement.`,
+Example format:
+Schedule monthly supplier performance review meetings
+Implement backup suppliers for critical delivery routes
+Negotiate delivery time buffers in all contracts`,
 
-    'shipping-cost-impact': `Analyze this shipping cost data and provide 4 cost optimization recommendations:
+    'shipping-cost-impact': `Based on shipping cost data (${contextData.performance}% cost impact, ${contextData.shipments} shipments), provide 2-4 clear, actionable recommendations.
 
-Current Data:
-- Cost Impact: ${contextData.performance}%
-- Total Shipments: ${contextData.shipments}
-- Supplier Network: ${contextData.suppliers} suppliers
+Rules:
+- Each recommendation must be a single, clear action
+- No bullet points, asterisks, or formatting
+- No explanations or implementation details
+- 10-15 words maximum per recommendation
+- Focus on cost reduction actions
 
-Focus on cost reduction, shipping optimization, and efficiency improvements.`,
+Example format:
+Consolidate shipments to achieve volume discounts
+Negotiate regional carrier contracts for better rates
+Implement route optimization software for delivery planning`,
 
-    'transportation-costs': `Analyze this transportation data and provide 4 optimization recommendations:
+    'transportation-costs': `Based on transportation data (${contextData.performance}% cost trend, ${contextData.shipments} shipments), provide 2-4 clear, actionable recommendations.
 
-Current Data:
-- Transportation Cost Trend: ${contextData.performance}%
-- Total Shipments: ${contextData.shipments}
+Rules:
+- Each recommendation must be a single, clear action
+- No bullet points, asterisks, or formatting
+- No explanations or implementation details
+- 10-15 words maximum per recommendation
+- Focus on transportation efficiency
 
-Focus on route optimization, carrier relationships, and cost efficiency.`,
+Example format:
+Optimize load planning to reduce empty miles
+Review carrier contracts for better rate negotiations
+Implement freight consolidation for smaller shipments`,
 
-    'supply-chain-health': `Analyze this supply chain health data and provide 4 improvement recommendations:
+    'supply-chain-health': `Based on supply chain health data (${contextData.performance}% health score, ${contextData.shipments} shipments, ${contextData.suppliers} suppliers), provide 2-4 clear, actionable recommendations.
 
-Current Data:
-- Health Score: ${contextData.performance}%
-- Total Shipments: ${contextData.shipments}
-- Supplier Base: ${contextData.suppliers} suppliers
+Rules:
+- Each recommendation must be a single, clear action
+- No bullet points, asterisks, or formatting
+- No explanations or implementation details
+- 10-15 words maximum per recommendation
+- Focus on supply chain improvements
 
-Focus on supply chain resilience, visibility, and performance optimization.`
+Example format:
+Diversify supplier base to reduce concentration risk
+Implement real-time inventory tracking across all locations
+Establish contingency plans for critical supplier disruptions`
   };
 
   try {
@@ -347,7 +368,7 @@ Focus on supply chain resilience, visibility, and performance optimization.`
         messages: [
           {
             role: "system",
-            content: "You are an expert 3PL operations consultant. Provide 4 specific, actionable recommendations. Each should be a clear action item that can be implemented within 30-90 days. Be concise and practical."
+            content: "You are an expert 3PL operations consultant. Provide 2-4 clean, actionable recommendations. CRITICAL: No bullet points, no asterisks, no formatting. Each recommendation should be one simple sentence. No explanations or implementation details. Keep each under 15 words."
           },
           {
             role: "user", 
@@ -370,20 +391,31 @@ Focus on supply chain resilience, visibility, and performance optimization.`
       throw new Error("No response from OpenAI");
     }
 
-    // This part of the code parses AI response into actionable recommendations
-    const lines = aiResponse.split('\n').filter(line => line.trim());
-    const recommendations = lines
-      .filter(line => /^\d+\./.test(line.trim()) || line.includes('•') || line.includes('-'))
-      .map(line => line.replace(/^\d+\.\s*/, '').replace(/^[•-]\s*/, '').trim())
-      .filter(rec => rec.length > 10)
-      .slice(0, 4);
+    // This part of the code parses AI response into clean actionable recommendations
+    const lines = aiResponse.split('\n')
+      .map(line => line.trim())
+      .filter(line => line.length > 0)
+      .map(line => {
+        // Remove any formatting characters and numbers
+        return line
+          .replace(/^\d+\.\s*/, '')    // Remove "1. "
+          .replace(/^[•-]\s*/, '')     // Remove "• " or "- "
+          .replace(/^\*+/, '')         // Remove asterisks
+          .replace(/\*+$/, '')         // Remove trailing asterisks
+          .replace(/\*\*/g, '')        // Remove **bold** formatting
+          .replace(/^\s*-\s*/, '')     // Remove leading dashes
+          .trim();
+      })
+      .filter(line => line.length > 5 && line.length < 100)  // Reasonable length
+      .slice(0, 4);  // Max 4 recommendations
 
-    return recommendations.length > 0 ? recommendations : [
-      'Implement performance monitoring dashboard',
-      'Review supplier contracts and SLAs', 
-      'Optimize operational processes',
-      'Establish performance benchmarks'
+    const recommendations = lines.length > 0 ? lines : [
+      'Schedule monthly supplier performance review meetings',
+      'Implement backup suppliers for critical delivery routes',
+      'Negotiate delivery time buffers in all contracts'
     ];
+
+    return recommendations;
 
   } catch (error) {
     console.error('❌ AI recommendation generation failed:', error);
