@@ -24,7 +24,7 @@ interface SidebarProps {
 }
 
 const navigation = [
-  { name: 'Dashboard', icon: LayoutDashboard, href: '/' },
+  { name: 'Dashboard', icon: LayoutDashboard, href: '/dashboard' },
   { name: 'Workflows', icon: GitBranch, href: '/workflows' },
   { name: 'Analytics', icon: ChartNoAxesColumn, href: '/analytics' },
   { name: 'Orders', icon: Package, href: '/orders' },
@@ -75,7 +75,9 @@ export function Sidebar({ collapsed = false, onToggle, className, mobile = false
       {/* Navigation Menu */}
       <nav className="flex-1 px-2 py-4 space-y-1 overflow-y-auto">
         {navigation.map((item) => {
-          const isActive = location.pathname === item.href
+          // This part of the code handles active state for dashboard and root routes
+          const isActive = location.pathname === item.href || 
+                          (item.href === '/dashboard' && location.pathname === '/')
           const Icon = item.icon
           
           return (
