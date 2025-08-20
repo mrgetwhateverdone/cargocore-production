@@ -163,7 +163,7 @@ export default function AIAssistant() {
         </div>
 
         {/* This part of the code creates the main chat layout - clean and accessible */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 md:gap-6 items-stretch">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 md:gap-6 items-stretch h-[calc(100vh-12rem)]">
           
           {/* This part of the code creates the chat conversation area */}
           <div className="lg:col-span-3">
@@ -174,7 +174,7 @@ export default function AIAssistant() {
               <CardContent className="p-0 flex-1 flex flex-col">
                 
                 {/* This part of the code creates the scrollable message area */}
-                <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0">
                   {messages.length === 0 ? (
                     <div className="flex items-center justify-center h-full text-center">
                       <div className="space-y-3">
@@ -276,7 +276,7 @@ export default function AIAssistant() {
                   Get instant insights about your operations
                 </p>
               </CardHeader>
-              <CardContent className="p-4 space-y-3 flex-1 flex flex-col">
+              <CardContent className="p-4 space-y-3 flex-1 flex flex-col overflow-y-auto">
                 {quickActions.map((action) => (
                   <Button
                     key={action.id}
