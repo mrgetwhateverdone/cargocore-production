@@ -839,6 +839,214 @@ Requirements:
   }
 }
 
+/**
+ * This part of the code generates world-class AI recommendations for margin risk alerts
+ * Uses advanced prompts to provide specific, actionable margin optimization strategies
+ */
+async function generateMarginRiskRecommendations(
+  marginRisk: MarginRiskAlert,
+  contextData: { 
+    totalBrands: number; 
+    avgMargin: number; 
+    totalImpact: number;
+    highRiskBrands: number;
+    totalSKUs: number;
+  }
+): Promise<string[]> {
+  const openaiApiKey = process.env.OPENAI_API_KEY;
+  
+  if (!openaiApiKey) {
+    console.warn('🤖 OpenAI API key not available, using fallback margin recommendations');
+    return [
+      'Review pricing strategy and implement margin-based pricing tiers',
+      'Optimize product mix by focusing on high-margin SKUs',
+      'Negotiate better supplier terms and volume discounts',
+      'Implement SKU rationalization to eliminate low-margin products'
+    ];
+  }
+
+  // This part of the code creates world-class prompts specific to margin risk levels
+  const prompts = {
+    'High': `HIGH MARGIN RISK OPTIMIZATION:
+
+Brand Performance Crisis:
+- Brand: ${marginRisk.brandName}
+- Current Margin: ${marginRisk.currentMargin}% (Critical Level)
+- Risk Score: ${marginRisk.riskScore}/100
+- Financial Impact: $${marginRisk.financialImpact.toLocaleString()}
+- SKU Portfolio: ${marginRisk.skuCount} SKUs, $${marginRisk.avgUnitCost.toFixed(2)} avg cost
+- Inactive Rate: ${marginRisk.inactivePercentage}%
+- Risk Drivers: ${marginRisk.primaryDrivers.join(', ')}
+
+Portfolio Context:
+- Total brands under management: ${contextData.totalBrands}
+- Portfolio average margin: ${contextData.avgMargin}%
+- High-risk brands requiring intervention: ${contextData.highRiskBrands}
+- Total impact across portfolio: $${contextData.totalImpact.toLocaleString()}
+
+URGENT: Generate 4 immediate margin recovery strategies focusing on:
+1. Emergency pricing adjustments and cost reduction
+2. SKU portfolio optimization and rationalization
+3. Supplier renegotiation and cost management
+4. Revenue optimization and product mix strategy
+
+Requirements:
+- Implement within 2 weeks for maximum impact
+- Target minimum 5-10% margin improvement
+- Focus on high-velocity, high-impact actions
+- Include specific financial targets and timelines`,
+
+    'Medium': `MEDIUM MARGIN RISK PREVENTION:
+
+Brand Performance Warning:
+- Brand: ${marginRisk.brandName}
+- Current Margin: ${marginRisk.currentMargin}% (Warning Level)
+- Risk Score: ${marginRisk.riskScore}/100
+- Potential Impact: $${marginRisk.financialImpact.toLocaleString()}
+- SKU Analysis: ${marginRisk.skuCount} SKUs, $${marginRisk.avgUnitCost.toFixed(2)} avg cost
+- Portfolio Health: ${marginRisk.inactivePercentage}% inactive SKUs
+- Contributing Factors: ${marginRisk.primaryDrivers.join(', ')}
+
+Strategic Context:
+- Brand portfolio size: ${contextData.totalBrands} brands
+- Benchmark margin: ${contextData.avgMargin}%
+- At-risk brands: ${contextData.highRiskBrands}
+- Portfolio risk exposure: $${contextData.totalImpact.toLocaleString()}
+
+Generate 4 proactive margin protection strategies:
+1. Pricing optimization and margin enhancement
+2. Cost structure analysis and supplier management
+3. Product portfolio mix optimization
+4. Operational efficiency improvements
+
+Requirements:
+- Prevent margin erosion before it becomes critical
+- Target 3-5% margin improvement over 90 days
+- Balance growth with profitability
+- Include measurable KPIs and success metrics`,
+
+    'Low': `LOW MARGIN RISK OPTIMIZATION:
+
+Brand Performance Monitoring:
+- Brand: ${marginRisk.brandName}
+- Current Margin: ${marginRisk.currentMargin}% (Stable Level)
+- Risk Score: ${marginRisk.riskScore}/100
+- Optimization Opportunity: $${marginRisk.financialImpact.toLocaleString()}
+- SKU Metrics: ${marginRisk.skuCount} SKUs, $${marginRisk.avgUnitCost.toFixed(2)} avg cost
+- Portfolio Efficiency: ${marginRisk.inactivePercentage}% inactive rate
+- Enhancement Areas: ${marginRisk.primaryDrivers.join(', ')}
+
+Portfolio Leadership Context:
+- Total brand portfolio: ${contextData.totalBrands}
+- Average margin benchmark: ${contextData.avgMargin}%
+- Optimization potential: $${contextData.totalImpact.toLocaleString()}
+
+Generate 4 margin enhancement strategies for sustained growth:
+1. Strategic pricing and value-based positioning
+2. Advanced cost optimization and efficiency gains
+3. Portfolio expansion and premium product development
+4. Competitive advantage and market positioning
+
+Requirements:
+- Focus on sustainable competitive advantage
+- Target 2-3% additional margin improvement
+- Long-term strategic value creation (6+ months)
+- Include innovation and growth opportunities`
+  };
+
+  try {
+    const openaiUrl = process.env.OPENAI_API_URL || "https://api.openai.com/v1/chat/completions";
+    
+    const response = await fetch(openaiUrl, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${openaiApiKey}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        model: "gpt-4o-mini",
+        messages: [
+          {
+            role: "system",
+            content: "You are a world-class margin optimization expert with 20+ years of experience in retail and 3PL profitability management. Provide specific, actionable recommendations that drive measurable margin improvements. Each recommendation should be a single, clear action (15-20 words max). No explanations or bullet points - just the actionable steps that deliver financial results."
+          },
+          {
+            role: "user", 
+            content: prompts[marginRisk.riskLevel as keyof typeof prompts] || prompts['Medium']
+          }
+        ],
+        max_tokens: 500,
+        temperature: 0.2  // Lower temperature for more focused, practical recommendations
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`OpenAI API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const aiResponse = data.choices?.[0]?.message?.content;
+
+    if (!aiResponse) {
+      throw new Error("No response from OpenAI");
+    }
+
+    // This part of the code parses AI response into clean, actionable margin recommendations
+    const lines = aiResponse.split('\n')
+      .map(line => line.trim())
+      .filter(line => line.length > 0)
+      .map(line => {
+        // Remove any formatting characters and numbers
+        return line
+          .replace(/^\d+\.\s*/, '')    // Remove "1. "
+          .replace(/^[•-]\s*/, '')     // Remove "• " or "- "
+          .replace(/^\*+/, '')         // Remove asterisks
+          .replace(/\*+$/, '')         // Remove trailing asterisks
+          .replace(/\*\*/g, '')        // Remove **bold** formatting
+          .replace(/^\s*-\s*/, '')     // Remove leading dashes
+          .trim();
+      })
+      .filter(line => line.length > 10 && line.length < 150)  // Reasonable length for margin actions
+      .slice(0, 4);  // Max 4 recommendations
+
+    const recommendations = lines.length > 0 ? lines : [
+      'Implement dynamic pricing strategy based on margin thresholds',
+      'Conduct SKU profitability analysis and eliminate low-margin products',
+      'Negotiate volume-based supplier discounts and payment terms',
+      'Develop premium product lines to improve overall margin mix'
+    ];
+
+    return recommendations;
+
+  } catch (error) {
+    console.error('❌ Margin risk AI recommendation generation failed:', error);
+    
+    // This part of the code provides high-quality fallback recommendations based on risk level
+    const fallbackRecs = {
+      'High': [
+        'Implement emergency pricing increases on highest-volume SKUs',
+        'Suspend orders for negative-margin products immediately',
+        'Renegotiate supplier terms with 30-day deadline',
+        'Conduct urgent SKU profitability audit and rationalization'
+      ],
+      'Medium': [
+        'Review and optimize pricing strategy across product portfolio',
+        'Implement ABC analysis to focus on high-margin SKU growth',
+        'Negotiate annual supplier contracts with better terms',
+        'Develop margin improvement roadmap with quarterly targets'
+      ],
+      'Low': [
+        'Enhance value-based pricing for premium product positioning',
+        'Explore operational efficiency gains to reduce costs',
+        'Investigate new supplier partnerships for cost advantages',
+        'Develop higher-margin product line extensions'
+      ]
+    };
+
+    return fallbackRecs[marginRisk.riskLevel as keyof typeof fallbackRecs] || fallbackRecs['Medium'];
+  }
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "GET") {
     return res.status(405).json({ error: "Method not allowed" });
@@ -890,6 +1098,58 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(500).json({
         success: false,
         error: "Failed to generate cost variance recommendations",
+        details: error instanceof Error ? error.message : "Unknown error",
+        timestamp: new Date().toISOString(),
+      });
+    }
+  }
+
+  // This part of the code handles margin risk recommendation requests
+  if (req.query.marginRecommendations === 'true') {
+    try {
+      console.log("💰 Dashboard API: Processing margin risk recommendation request...");
+      
+      const { marginRisk, contextData } = req.query;
+      
+      if (!marginRisk || !contextData) {
+        return res.status(400).json({
+          success: false,
+          error: "Margin risk and context data are required for recommendations",
+          timestamp: new Date().toISOString(),
+        });
+      }
+
+      const parsedMarginRisk = JSON.parse(marginRisk as string);
+      const parsedContextData = JSON.parse(contextData as string);
+
+      console.log(`🎯 Generating margin recommendations for: ${parsedMarginRisk.brandName} - ${parsedMarginRisk.riskLevel} risk`);
+      
+      // Generate AI-powered margin risk recommendations
+      const recommendations = await generateMarginRiskRecommendations(parsedMarginRisk, parsedContextData);
+      
+      console.log(`✅ Generated ${recommendations.length} margin optimization recommendations successfully`);
+      
+      return res.status(200).json({
+        success: true,
+        data: {
+          recommendations,
+          brand: parsedMarginRisk.brandName,
+          generatedAt: new Date().toISOString(),
+          context: {
+            riskLevel: parsedMarginRisk.riskLevel,
+            currentMargin: parsedMarginRisk.currentMargin,
+            financialImpact: parsedMarginRisk.financialImpact
+          }
+        },
+        message: "Margin risk recommendations generated successfully"
+      });
+
+    } catch (error) {
+      console.error("❌ Dashboard API Margin Recommendations Error:", error);
+      
+      return res.status(500).json({
+        success: false,
+        error: "Failed to generate margin risk recommendations",
         details: error instanceof Error ? error.message : "Unknown error",
         timestamp: new Date().toISOString(),
       });
