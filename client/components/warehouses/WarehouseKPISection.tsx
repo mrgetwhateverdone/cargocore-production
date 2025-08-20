@@ -20,7 +20,8 @@ export function WarehouseKPISection({ kpis, isLoading }: WarehouseKPISectionProp
       unit: "%",
       description: "Average SLA percentage across all warehouses",
       icon: BarChart3,
-      color: "text-blue-600",
+      color: "text-gray-900",
+      iconColor: "text-blue-600",
       bgColor: "bg-blue-50",
     },
     {
@@ -29,7 +30,8 @@ export function WarehouseKPISection({ kpis, isLoading }: WarehouseKPISectionProp
       unit: "",
       description: "Total active orders across all warehouses",
       icon: Package,
-      color: "text-green-600", 
+      color: "text-gray-900", 
+      iconColor: "text-green-600",
       bgColor: "bg-green-50",
     },
     {
@@ -38,7 +40,8 @@ export function WarehouseKPISection({ kpis, isLoading }: WarehouseKPISectionProp
       unit: "h",
       description: "Average fulfillment time in hours",
       icon: Clock,
-      color: "text-orange-600",
+      color: "text-gray-900",
+      iconColor: "text-orange-600",
       bgColor: "bg-orange-50",
     },
     {
@@ -47,7 +50,8 @@ export function WarehouseKPISection({ kpis, isLoading }: WarehouseKPISectionProp
       unit: "",
       description: "Total inbound throughput across warehouses", 
       icon: Truck,
-      color: "text-purple-600",
+      color: "text-gray-900",
+      iconColor: "text-purple-600",
       bgColor: "bg-purple-50",
     },
   ];
@@ -88,7 +92,7 @@ export function WarehouseKPISection({ kpis, isLoading }: WarehouseKPISectionProp
                 </p>
               </div>
               <div className={`p-2 rounded-lg ${kpi.bgColor}`}>
-                <kpi.icon className={`h-6 w-6 ${kpi.color}`} />
+                <kpi.icon className={`h-6 w-6 ${kpi.iconColor}`} />
               </div>
             </div>
 

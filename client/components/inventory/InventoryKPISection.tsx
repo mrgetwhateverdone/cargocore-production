@@ -18,7 +18,7 @@ export function InventoryKPISection({ kpis, isLoading }: InventoryKPISectionProp
       icon: Package,
       iconColor: "text-blue-600",
       className: "bg-white",
-      colorClass: "text-blue-600",
+      colorClass: "text-gray-900",
       format: (val: number | null) => formatNumber(val),
     },
     {
@@ -28,7 +28,7 @@ export function InventoryKPISection({ kpis, isLoading }: InventoryKPISectionProp
       icon: DollarSign,
       iconColor: "text-green-600",
       className: "bg-white",
-      colorClass: "text-green-600",
+      colorClass: "text-gray-900",
       format: formatCurrency,
     },
     {
@@ -38,7 +38,7 @@ export function InventoryKPISection({ kpis, isLoading }: InventoryKPISectionProp
       icon: AlertTriangle,
       iconColor: "text-orange-600",
       className: "bg-white",
-      colorClass: kpis.lowStockAlerts > 0 ? "text-orange-600" : "text-gray-600",
+      colorClass: "text-gray-900",
       format: (val: number | null) => formatNumber(val),
     },
     {
@@ -48,7 +48,7 @@ export function InventoryKPISection({ kpis, isLoading }: InventoryKPISectionProp
       icon: XCircle,
       iconColor: "text-red-600",
       className: "bg-white",
-      colorClass: kpis.inactiveSKUs > 0 ? "text-red-600" : "text-gray-600",
+      colorClass: "text-gray-900",
       format: (val: number | null) => formatNumber(val),
     },
   ];

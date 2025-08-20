@@ -17,7 +17,7 @@ export function OrdersKPISection({ kpis, isLoading }: OrdersKPISectionProps) {
       icon: ShoppingCart,
       iconColor: "text-blue-600",
       className: "bg-white",
-      colorClass: "text-blue-600",
+      colorClass: "text-gray-900",
     },
     {
       title: "At-Risk Orders",
@@ -26,7 +26,7 @@ export function OrdersKPISection({ kpis, isLoading }: OrdersKPISectionProps) {
       icon: AlertTriangle,
       iconColor: "text-red-600",
       className: "bg-white",
-      colorClass: kpis.atRiskOrders > 0 ? "text-red-600" : "text-gray-600",
+      colorClass: "text-gray-900",
     },
     {
       title: "Open POs",
@@ -35,7 +35,7 @@ export function OrdersKPISection({ kpis, isLoading }: OrdersKPISectionProps) {
       icon: FileText,
       iconColor: "text-green-600",
       className: "bg-white",
-      colorClass: "text-green-600",
+      colorClass: "text-gray-900",
     },
     {
       title: "Unfulfillable SKUs",
@@ -44,7 +44,7 @@ export function OrdersKPISection({ kpis, isLoading }: OrdersKPISectionProps) {
       icon: XCircle,
       iconColor: "text-orange-600",
       className: "bg-white",
-      colorClass: kpis.unfulfillableSKUs > 0 ? "text-orange-600" : "text-gray-600",
+      colorClass: "text-gray-900",
     },
   ];
 
