@@ -1,6 +1,23 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 
 /**
+ * This part of the code cleans up markdown formatting from AI responses
+ * Removes bold markers and other formatting that shouldn't be displayed literally
+ */
+function cleanMarkdownFormatting(text: string): string {
+  return text
+    // Remove bold markers
+    .replace(/\*\*(.*?)\*\*/g, '$1')
+    // Remove italic markers  
+    .replace(/\*(.*?)\*/g, '$1')
+    // Remove any remaining asterisks
+    .replace(/\*/g, '')
+    // Clean up extra spaces
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/**
  * This part of the code provides reports data endpoint for Vercel serverless deployment
  * Uses proven patterns from working pages and avoids past implementation issues
  */
@@ -390,12 +407,12 @@ async function generateReportInsights(
       return parsed.map((insight: any, index: number) => ({
         id: `report-insight-${index + 1}`,
         type: "report_analysis",
-        title: insight.title || "Report Analysis",
-        description: insight.description || "",
+        title: cleanMarkdownFormatting(insight.title || "Report Analysis"),
+        description: cleanMarkdownFormatting(insight.description || ""),
         severity: insight.severity || "medium",
         dollarImpact: insight.dollarImpact || 0,
         source: "reports_agent" as const,
-        suggestedActions: insight.suggestedActions || [],
+        suggestedActions: (insight.suggestedActions || []).map((action: string) => cleanMarkdownFormatting(action)),
         timestamp: new Date().toISOString(),
       }));
     } catch (parseError) {

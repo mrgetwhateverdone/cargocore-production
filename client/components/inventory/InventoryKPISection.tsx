@@ -1,6 +1,7 @@
 import type { InventoryKPIs } from "@/types/api";
 import { formatCurrency, formatNumber } from "@/lib/utils";
 import { Package, DollarSign, AlertTriangle, XCircle } from "lucide-react";
+import { evaluateKPIStatus, renderKPIWarningIcon } from "@/lib/kpiThresholds";
 
 interface InventoryKPISectionProps {
   kpis: InventoryKPIs;

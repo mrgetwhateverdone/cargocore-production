@@ -1,6 +1,23 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 
 /**
+ * This part of the code cleans up markdown formatting from AI responses
+ * Removes bold markers and other formatting that shouldn't be displayed literally
+ */
+function cleanMarkdownFormatting(text: string): string {
+  return text
+    // Remove bold markers
+    .replace(/\*\*(.*?)\*\*/g, '$1')
+    // Remove italic markers  
+    .replace(/\*(.*?)\*/g, '$1')
+    // Remove any remaining asterisks
+    .replace(/\*/g, '')
+    // Clean up extra spaces
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/**
  * This part of the code provides analytics data endpoint for Vercel serverless deployment
  * Ensuring consistency with dashboard data while providing analytics-specific metrics
  */
@@ -471,7 +488,13 @@ CRITICAL: suggestedActions must be:
       const data = await response.json();
       const content = data.choices?.[0]?.message?.content;
       if (content) {
-        return JSON.parse(content);
+        const parsed = JSON.parse(content);
+        return parsed.map((insight: any) => ({
+          ...insight,
+          title: cleanMarkdownFormatting(insight.title || ''),
+          description: cleanMarkdownFormatting(insight.description || ''),
+          suggestedActions: (insight.suggestedActions || []).map((action: string) => cleanMarkdownFormatting(action))
+        }));
       }
     }
   } catch (error) {

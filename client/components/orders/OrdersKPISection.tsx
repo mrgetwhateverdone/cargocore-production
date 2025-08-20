@@ -1,6 +1,7 @@
 import type { OrdersKPIs } from "@/types/api";
 import { formatNumber } from "@/lib/utils";
 import { ShoppingCart, AlertTriangle, FileText, XCircle } from "lucide-react";
+import { evaluateKPIStatus, renderKPIWarningIcon } from "@/lib/kpiThresholds";
 
 interface OrdersKPISectionProps {
   kpis: OrdersKPIs;
@@ -18,6 +19,7 @@ export function OrdersKPISection({ kpis, isLoading }: OrdersKPISectionProps) {
       iconColor: "text-blue-600",
       className: "bg-white",
       colorClass: "text-gray-900",
+      thresholdKey: null, // No threshold for this metric
     },
     {
       title: "At-Risk Orders",
@@ -27,6 +29,7 @@ export function OrdersKPISection({ kpis, isLoading }: OrdersKPISectionProps) {
       iconColor: "text-red-600",
       className: "bg-white",
       colorClass: "text-gray-900",
+      thresholdKey: "at_risk_orders",
     },
     {
       title: "Open POs",
@@ -36,6 +39,7 @@ export function OrdersKPISection({ kpis, isLoading }: OrdersKPISectionProps) {
       iconColor: "text-green-600",
       className: "bg-white",
       colorClass: "text-gray-900",
+      thresholdKey: null, // No threshold for this metric
     },
     {
       title: "Unfulfillable SKUs",
@@ -45,6 +49,7 @@ export function OrdersKPISection({ kpis, isLoading }: OrdersKPISectionProps) {
       iconColor: "text-orange-600",
       className: "bg-white",
       colorClass: "text-gray-900",
+      thresholdKey: "unfulfillable_skus",
     },
   ];
 
@@ -82,6 +87,8 @@ export function OrdersKPISection({ kpis, isLoading }: OrdersKPISectionProps) {
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
       {kpiCards.map((kpi, index) => {
         const IconComponent = kpi.icon;
+        const status = kpi.thresholdKey ? evaluateKPIStatus(kpi.thresholdKey, kpi.value) : 'normal';
+        
         return (
           <div
             key={index}
@@ -89,7 +96,10 @@ export function OrdersKPISection({ kpis, isLoading }: OrdersKPISectionProps) {
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-500">{kpi.title}</p>
+                <p className="text-sm font-medium text-gray-500">
+                  {kpi.title}
+                  {!isLoading && renderKPIWarningIcon(status)}
+                </p>
                 <p className={`text-2xl font-bold ${kpi.colorClass}`}>
                   {formatValue(kpi.value)}
                 </p>

@@ -10,6 +10,23 @@
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
+/**
+ * This part of the code cleans up markdown formatting from AI responses
+ * Removes bold markers and other formatting that shouldn't be displayed literally
+ */
+function cleanMarkdownFormatting(text: string): string {
+  return text
+    // Remove bold markers
+    .replace(/\*\*(.*?)\*\*/g, '$1')
+    // Remove italic markers  
+    .replace(/\*(.*?)\*/g, '$1')
+    // Remove any remaining asterisks
+    .replace(/\*/g, '')
+    // Clean up extra spaces
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 // Type definitions
 interface OrderData {
   order_id: string;
@@ -182,7 +199,7 @@ async function generateAIOrderSuggestion(
     // Create structured suggestion response
     const suggestion: OrderSuggestion = {
       orderId: orderData.order_id,
-      suggestion: aiSuggestion.trim(),
+      suggestion: cleanMarkdownFormatting(aiSuggestion),
       priority: context.priority,
       actionable: true,
       estimatedImpact: context.estimatedImpact,
@@ -338,7 +355,7 @@ function generateFallbackSuggestion(
 
   return {
     orderId: orderData.order_id,
-    suggestion: suggestion.trim(),
+    suggestion: cleanMarkdownFormatting(suggestion),
     priority: context.priority,
     actionable: true,
     estimatedImpact: context.estimatedImpact,

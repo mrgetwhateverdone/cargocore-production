@@ -1,5 +1,22 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
 
+/**
+ * This part of the code cleans up markdown formatting from AI responses
+ * Removes bold markers and other formatting that shouldn't be displayed literally
+ */
+function cleanMarkdownFormatting(text: string): string {
+  return text
+    // Remove bold markers
+    .replace(/\*\*(.*?)\*\*/g, '$1')
+    // Remove italic markers  
+    .replace(/\*(.*?)\*/g, '$1')
+    // Remove any remaining asterisks
+    .replace(/\*/g, '')
+    // Clean up extra spaces
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 interface ProductData {
   product_id: string;
   product_name: string;
@@ -179,7 +196,11 @@ ${operationalContext}`
       });
       
       if (Array.isArray(insights) && insights.length > 0) {
-        return insights.slice(0, 3); // Ensure max 3 insights
+        return insights.slice(0, 3).map((insight: any) => ({
+          ...insight,
+          title: cleanMarkdownFormatting(insight.title || ''),
+          content: cleanMarkdownFormatting(insight.content || '')
+        })); // Ensure max 3 insights with cleaned markdown
       }
     } catch (parseError) {
       console.error('❌ Failed to parse AI response as JSON:', parseError);
@@ -317,8 +338,8 @@ function parseTextResponseToInsights(content: string, template: any): ReportInsi
   const sections = content.split('\n\n').filter(section => section.trim().length > 0);
   
   return sections.slice(0, 3).map((section, index) => ({
-    title: `${template.name} Insight ${index + 1}`,
-    content: section.trim(),
+    title: cleanMarkdownFormatting(`${template.name} Insight ${index + 1}`),
+    content: cleanMarkdownFormatting(section.trim()),
     priority: index === 0 ? 'high' as const : 'medium' as const,
     category: 'operational' as const
   }));
