@@ -145,27 +145,26 @@ export function ExecutiveSummarySection({ kpis, costCenters, isLoading }: Execut
             </div>
           )}
 
-            {/* This part of the code shows performance breakdown */}
-            <div className="mt-4 pt-4 border-t border-gray-100">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
-                <div className="text-center">
-                  <div className="text-lg font-semibold text-green-600">
-                    {topPerformers}
-                  </div>
-                  <div className="text-gray-500">High Performers</div>
+          {/* This part of the code shows performance breakdown */}
+          <div className="mt-4 pt-4 border-t border-gray-100">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+              <div className="text-center">
+                <div className="text-lg font-semibold text-green-600">
+                  {topPerformers}
                 </div>
-                <div className="text-center">
-                  <div className="text-lg font-semibold text-blue-600">
-                    {activeFacilities}
-                  </div>
-                  <div className="text-gray-500">Active Facilities</div>
+                <div className="text-gray-500">High Performers</div>
+              </div>
+              <div className="text-center">
+                <div className="text-lg font-semibold text-blue-600">
+                  {activeFacilities}
                 </div>
-                <div className="text-center">
-                  <div className={`text-lg font-semibold ${efficiencyStatus.color}`}>
-                    {avgEfficiency.toFixed(1)}%
-                  </div>
-                  <div className="text-gray-500">Avg Efficiency</div>
+                <div className="text-gray-500">Active Facilities</div>
+              </div>
+              <div className="text-center">
+                <div className={`text-lg font-semibold ${efficiencyStatus.color}`}>
+                  {avgEfficiency.toFixed(1)}%
                 </div>
+                <div className="text-gray-500">Avg Efficiency</div>
               </div>
             </div>
           </div>
