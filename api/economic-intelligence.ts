@@ -275,9 +275,155 @@ function generateEconomicInsights(
 }
 
 /**
- * This part of the code generates detailed KPI information for overlays
+ * This part of the code generates real AI recommendations for Economic Intelligence KPIs
+ * Uses OpenAI to analyze data and provide actionable insights for workflow creation
  */
-function generateKPIDetails(
+async function generateAIRecommendations(
+  kpiId: string,
+  kpiData: any,
+  contextData: { shipments: number; performance: number; suppliers: number }
+): Promise<string[]> {
+  const openaiApiKey = process.env.OPENAI_API_KEY;
+  
+  if (!openaiApiKey) {
+    console.warn('🤖 OpenAI API key not available, using fallback recommendations');
+    return [
+      'Implement performance monitoring dashboard',
+      'Review supplier contracts and SLAs',
+      'Optimize delivery routes and schedules',
+      'Establish backup supplier relationships'
+    ];
+  }
+
+  // This part of the code creates specific prompts for each KPI type
+  const prompts = {
+    'supplier-performance': `Analyze this supplier performance data and provide 4 specific, actionable recommendations:
+
+Current Data:
+- Total Shipments: ${contextData.shipments}
+- On-time Performance: ${contextData.performance}%
+- Total Suppliers: ${contextData.suppliers}
+
+Focus on supplier relationship management, delivery optimization, and risk mitigation. Provide practical steps a 3PL operations manager can implement.`,
+
+    'shipping-cost-impact': `Analyze this shipping cost data and provide 4 cost optimization recommendations:
+
+Current Data:
+- Cost Impact: ${contextData.performance}%
+- Total Shipments: ${contextData.shipments}
+- Supplier Network: ${contextData.suppliers} suppliers
+
+Focus on cost reduction, shipping optimization, and efficiency improvements.`,
+
+    'transportation-costs': `Analyze this transportation data and provide 4 optimization recommendations:
+
+Current Data:
+- Transportation Cost Trend: ${contextData.performance}%
+- Total Shipments: ${contextData.shipments}
+
+Focus on route optimization, carrier relationships, and cost efficiency.`,
+
+    'supply-chain-health': `Analyze this supply chain health data and provide 4 improvement recommendations:
+
+Current Data:
+- Health Score: ${contextData.performance}%
+- Total Shipments: ${contextData.shipments}
+- Supplier Base: ${contextData.suppliers} suppliers
+
+Focus on supply chain resilience, visibility, and performance optimization.`
+  };
+
+  try {
+    const openaiUrl = process.env.OPENAI_API_URL || "https://api.openai.com/v1/chat/completions";
+    
+    const response = await fetch(openaiUrl, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${openaiApiKey}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        model: "gpt-4o-mini",
+        messages: [
+          {
+            role: "system",
+            content: "You are an expert 3PL operations consultant. Provide 4 specific, actionable recommendations. Each should be a clear action item that can be implemented within 30-90 days. Be concise and practical."
+          },
+          {
+            role: "user", 
+            content: prompts[kpiId as keyof typeof prompts] || prompts['supplier-performance']
+          }
+        ],
+        max_tokens: 400,
+        temperature: 0.3
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`OpenAI API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const aiResponse = data.choices?.[0]?.message?.content;
+
+    if (!aiResponse) {
+      throw new Error("No response from OpenAI");
+    }
+
+    // This part of the code parses AI response into actionable recommendations
+    const lines = aiResponse.split('\n').filter(line => line.trim());
+    const recommendations = lines
+      .filter(line => /^\d+\./.test(line.trim()) || line.includes('•') || line.includes('-'))
+      .map(line => line.replace(/^\d+\.\s*/, '').replace(/^[•-]\s*/, '').trim())
+      .filter(rec => rec.length > 10)
+      .slice(0, 4);
+
+    return recommendations.length > 0 ? recommendations : [
+      'Implement performance monitoring dashboard',
+      'Review supplier contracts and SLAs', 
+      'Optimize operational processes',
+      'Establish performance benchmarks'
+    ];
+
+  } catch (error) {
+    console.error('❌ AI recommendation generation failed:', error);
+    
+    // This part of the code provides fallback recommendations
+    const fallbackRecs = {
+      'supplier-performance': [
+        'Implement supplier scorecards for performance tracking',
+        'Negotiate delivery time buffers in contracts',
+        'Establish backup suppliers for critical SKUs',
+        'Review and optimize supplier communication processes'
+      ],
+      'shipping-cost-impact': [
+        'Consolidate shipments to reduce per-unit costs',
+        'Negotiate volume discounts with carriers',
+        'Implement route optimization software',
+        'Review shipping zone strategies'
+      ],
+      'transportation-costs': [
+        'Optimize load planning and consolidation',
+        'Negotiate better carrier rates',
+        'Implement transportation management system',
+        'Review delivery scheduling efficiency'
+      ],
+      'supply-chain-health': [
+        'Implement end-to-end supply chain visibility',
+        'Diversify supplier base to reduce risk',
+        'Establish performance monitoring KPIs',
+        'Create contingency plans for disruptions'
+      ]
+    };
+
+    return fallbackRecs[kpiId as keyof typeof fallbackRecs] || fallbackRecs['supplier-performance'];
+  }
+}
+
+/**
+ * This part of the code generates detailed KPI information for overlays with real AI recommendations
+ */
+async function generateKPIDetails(
   products: ProductData[],
   shipments: ShipmentData[],
   kpis: any,
@@ -287,6 +433,49 @@ function generateKPIDetails(
   const totalProducts = products.length;
   const activeProducts = products.filter(p => p.active).length;
   
+  // This part of the code generates AI recommendations for each KPI
+  const supplierCount = new Set(shipments.map(s => s.supplier).filter(s => s)).size;
+  
+  const [
+    supplierRecommendations,
+    shippingRecommendations, 
+    transportationRecommendations,
+    supplyChainRecommendations,
+    logisticsRecommendations,
+    delayRecommendations
+  ] = await Promise.all([
+    generateAIRecommendations('supplier-performance', kpis, {
+      shipments: totalShipments,
+      performance: kpis.supplierPerformance,
+      suppliers: supplierCount
+    }),
+    generateAIRecommendations('shipping-cost-impact', kpis, {
+      shipments: totalShipments,
+      performance: kpis.shippingCostImpact,
+      suppliers: supplierCount
+    }),
+    generateAIRecommendations('transportation-costs', kpis, {
+      shipments: totalShipments,
+      performance: kpis.transportationCosts,
+      suppliers: supplierCount
+    }),
+    generateAIRecommendations('supply-chain-health', kpis, {
+      shipments: totalShipments,
+      performance: kpis.supplyChainHealth,
+      suppliers: supplierCount
+    }),
+    generateAIRecommendations('supplier-performance', kpis, {
+      shipments: totalShipments,
+      performance: kpis.logisticsCostEfficiency,
+      suppliers: supplierCount
+    }),
+    generateAIRecommendations('supplier-performance', kpis, {
+      shipments: totalShipments,
+      performance: kpis.supplierDelayRate,
+      suppliers: supplierCount
+    })
+  ]);
+
   return {
     supplierPerformance: {
       id: 'supplier-performance',
@@ -303,7 +492,7 @@ function generateKPIDetails(
         },
         {
           label: 'Total Suppliers',
-          value: new Set(shipments.map(s => s.supplier).filter(s => s)).size,
+          value: supplierCount,
           description: 'Unique suppliers in your network'
         },
         {
@@ -312,12 +501,7 @@ function generateKPIDetails(
           description: 'Percentage of shipments experiencing delays'
         }
       ],
-      recommendations: [
-        'Focus on improving relationships with consistently late suppliers',
-        'Implement supplier scorecards to track performance trends',
-        'Consider backup suppliers for critical SKUs',
-        'Negotiate delivery time buffers in contracts'
-      ]
+      recommendations: supplierRecommendations
     },
     
     shippingCostImpact: {
@@ -344,12 +528,7 @@ function generateKPIDetails(
           description: 'Average cost per unit across all shipments'
         }
       ],
-      recommendations: [
-        'Analyze shipping routes for optimization opportunities',
-        'Consolidate shipments to reduce per-unit costs',
-        'Negotiate volume discounts with logistics providers',
-        'Consider alternative shipping methods for non-urgent deliveries'
-      ]
+      recommendations: shippingRecommendations
     },
     
     supplyChainHealth: {
@@ -376,12 +555,7 @@ function generateKPIDetails(
           description: 'Percentage of shipments with quantity discrepancies'
         }
       ],
-      recommendations: [
-        'Improve inventory forecasting accuracy',
-        'Implement stricter quality control processes',
-        'Review supplier contracts for quantity guarantees',
-        'Enhance communication with suppliers on expected quantities'
-      ]
+      recommendations: supplyChainRecommendations
     },
     
     transportationCosts: {
@@ -408,12 +582,7 @@ function generateKPIDetails(
           description: 'Transportation cost efficiency compared to standard rates'
         }
       ],
-      recommendations: [
-        'Analyze shipping routes for cost optimization',
-        'Negotiate regional carrier contracts',
-        'Consider freight consolidation opportunities',
-        'Evaluate alternative transportation modes'
-      ]
+      recommendations: transportationRecommendations
     },
     
     logisticsCostEfficiency: {
@@ -440,12 +609,7 @@ function generateKPIDetails(
           description: 'Overall logistics efficiency assessment'
         }
       ],
-      recommendations: [
-        'Optimize warehouse layouts for faster processing',
-        'Implement automation for high-volume operations',
-        'Review staffing levels during peak periods',
-        'Streamline order fulfillment processes'
-      ]
+      recommendations: logisticsRecommendations
     },
     
     supplierDelayRate: {
@@ -472,12 +636,7 @@ function generateKPIDetails(
           description: 'Potential impact on operations and customer service'
         }
       ],
-      recommendations: [
-        'Identify and address consistently late suppliers',
-        'Implement early warning systems for potential delays',
-        'Develop contingency plans for critical deliveries',
-        'Negotiate more realistic delivery timelines'
-      ]
+      recommendations: delayRecommendations
     }
   };
 }
@@ -631,7 +790,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const financialImpacts = calculateFinancialImpacts(products, shipments);
     const insights = generateEconomicInsights(products, shipments, kpis, financialImpacts);
     const businessImpact = generateBusinessImpactAnalysis(products, shipments, kpis, financialImpacts);
-    const kpiDetails = generateKPIDetails(products, shipments, kpis, financialImpacts);
+    const kpiDetails = await generateKPIDetails(products, shipments, kpis, financialImpacts);
 
     const economicData = {
       kpis,
