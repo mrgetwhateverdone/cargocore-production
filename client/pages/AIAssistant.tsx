@@ -144,20 +144,21 @@ export default function AIAssistant() {
     <Layout>
       <div className="max-w-7xl mx-auto space-y-4 md:space-y-6">
 
-
-        {/* This part of the code creates the main chat layout - clean and accessible */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 md:gap-6 items-stretch h-[calc(100vh-12rem)]">
+        {/* This part of the code creates the main chat layout with fixed height container */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 md:gap-6">
           
-          {/* This part of the code creates the chat conversation area */}
+          {/* This part of the code creates the chat conversation area with strict height control */}
           <div className="lg:col-span-3">
-            <Card className="bg-white shadow-sm rounded-lg overflow-hidden h-full flex flex-col">
+            <Card className="bg-white shadow-sm rounded-lg overflow-hidden">
               <CardHeader className="border-b border-gray-200 pb-4 flex-shrink-0">
                 <CardTitle className="text-lg font-semibold text-gray-900">Conversation</CardTitle>
               </CardHeader>
-              <CardContent className="p-0 flex-1 flex flex-col">
+              
+              {/* This part of the code creates a fixed-height container for the entire chat */}
+              <div className="h-[calc(100vh-16rem)] flex flex-col">
                 
-                {/* This part of the code creates the scrollable message area */}
-                <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0">
+                {/* This part of the code creates the scrollable message area with controlled height */}
+                <div className="flex-1 overflow-y-auto p-4 space-y-4">
                   {messages.length === 0 ? (
                     <div className="flex items-center justify-center h-full text-center">
                       <div className="space-y-3">
@@ -171,49 +172,51 @@ export default function AIAssistant() {
                       </div>
                     </div>
                   ) : (
-                    messages.map((message, index) => (
-                      <div
-                        key={index}
-                        className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                      >
+                    <>
+                      {messages.map((message, index) => (
                         <div
-                          className={`max-w-[80%] p-3 rounded-lg ${
-                            message.role === 'user'
-                              ? 'bg-blue-600 text-white'
-                              : 'bg-gray-50 text-gray-900 border border-gray-200'
-                          }`}
+                          key={index}
+                          className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
                         >
-                          <p className="whitespace-pre-wrap text-sm leading-relaxed">
-                            {message.content}
-                          </p>
-                          {message.timestamp && (
-                            <p className={`text-xs mt-2 ${
-                              message.role === 'user' ? 'text-blue-100' : 'text-gray-500'
-                            }`}>
-                              {new Date(message.timestamp).toLocaleTimeString()}
+                          <div
+                            className={`max-w-[80%] p-3 rounded-lg ${
+                              message.role === 'user'
+                                ? 'bg-blue-600 text-white'
+                                : 'bg-gray-50 text-gray-900 border border-gray-200'
+                            }`}
+                          >
+                            <p className="whitespace-pre-wrap text-sm leading-relaxed">
+                              {message.content}
                             </p>
-                          )}
+                            {message.timestamp && (
+                              <p className={`text-xs mt-2 ${
+                                message.role === 'user' ? 'text-blue-100' : 'text-gray-500'
+                              }`}>
+                                {new Date(message.timestamp).toLocaleTimeString()}
+                              </p>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    ))
+                      ))}
+                      
+                      {/* This part of the code shows loading indicator when AI is responding */}
+                      {isLoading && (
+                        <div className="flex justify-start">
+                          <div className="bg-gray-50 border border-gray-200 p-3 rounded-lg flex items-center space-x-2">
+                            <LoadingSpinner size="sm" />
+                            <span className="text-sm text-gray-600">CargoCore AI is thinking...</span>
+                          </div>
+                        </div>
+                      )}
+                      
+                      <div ref={messagesEndRef} />
+                    </>
                   )}
-                  
-                  {/* This part of the code shows loading indicator when AI is responding */}
-                  {isLoading && (
-                    <div className="flex justify-start">
-                      <div className="bg-gray-50 border border-gray-200 p-3 rounded-lg flex items-center space-x-2">
-                        <LoadingSpinner size="sm" />
-                        <span className="text-sm text-gray-600">CargoCore AI is thinking...</span>
-                      </div>
-                    </div>
-                  )}
-                  
-                  <div ref={messagesEndRef} />
                 </div>
 
                 {/* This part of the code shows error messages if they occur */}
                 {error && (
-                  <div className="p-4 border-t border-gray-200">
+                  <div className="p-4 border-t border-gray-200 flex-shrink-0">
                     <ErrorDisplay 
                       message={error} 
                       onRetry={() => setError(null)}
@@ -221,7 +224,7 @@ export default function AIAssistant() {
                   </div>
                 )}
 
-                {/* This part of the code creates the message input area - always visible */}
+                {/* This part of the code creates the message input area - always visible at bottom */}
                 <div className="border-t border-gray-200 p-4 bg-gray-50 rounded-b-lg flex-shrink-0">
                   <div className="flex space-x-3">
                     <Textarea
@@ -237,7 +240,7 @@ export default function AIAssistant() {
                     <Button
                       onClick={() => sendMessage(inputMessage)}
                       disabled={!inputMessage.trim() || isLoading}
-                      className="px-4 py-2 h-auto bg-blue-600 hover:bg-blue-700 rounded-lg"
+                      className="px-4 py-2 h-auto bg-blue-600 hover:bg-blue-700 rounded-lg flex-shrink-0"
                     >
                       <Send className="h-4 w-4" />
                     </Button>
@@ -246,54 +249,60 @@ export default function AIAssistant() {
                     Press Enter to send, Shift + Enter for new line
                   </p>
                 </div>
-              </CardContent>
+              </div>
             </Card>
           </div>
 
-          {/* This part of the code creates the quick actions sidebar */}
+          {/* This part of the code creates the quick actions sidebar with matching height */}
           <div className="lg:col-span-1">
-            <Card className="bg-white shadow-sm rounded-lg overflow-hidden h-full flex flex-col">
+            <Card className="bg-white shadow-sm rounded-lg overflow-hidden">
               <CardHeader className="border-b border-gray-200 pb-4 flex-shrink-0">
                 <CardTitle className="text-lg font-semibold text-gray-900">Quick Actions</CardTitle>
                 <p className="text-sm text-gray-600">
                   Get instant insights about your operations
                 </p>
               </CardHeader>
-              <CardContent className="p-4 space-y-3 flex-1 flex flex-col overflow-y-auto">
-                {quickActions.map((action) => (
-                  <Button
-                    key={action.id}
-                    variant="outline"
-                    className="w-full h-auto p-3 hover:bg-gray-50 border-gray-200 bg-white min-h-[60px]"
-                    onClick={() => handleQuickAction(action)}
-                    disabled={isLoading}
-                  >
-                    <div className="flex items-start gap-3 w-full text-left">
-                      <div className={`p-1.5 rounded ${action.color} text-white flex-shrink-0`}>
-                        {action.icon}
+              
+              {/* This part of the code creates a fixed-height sidebar content area */}
+              <div className="h-[calc(100vh-18rem)] flex flex-col">
+                <CardContent className="p-4 space-y-3 flex-1 overflow-y-auto">
+                  {quickActions.map((action) => (
+                    <Button
+                      key={action.id}
+                      variant="outline"
+                      className="w-full h-auto p-3 hover:bg-gray-50 border-gray-200 bg-white min-h-[60px]"
+                      onClick={() => handleQuickAction(action)}
+                      disabled={isLoading}
+                    >
+                      <div className="flex items-start gap-3 w-full text-left">
+                        <div className={`p-1.5 rounded ${action.color} text-white flex-shrink-0`}>
+                          {action.icon}
+                        </div>
+                        <span className="text-sm font-medium leading-relaxed text-gray-900 flex-1 whitespace-normal">
+                          {action.label}
+                        </span>
                       </div>
-                      <span className="text-sm font-medium leading-relaxed text-gray-900 flex-1 whitespace-normal">
-                        {action.label}
-                      </span>
-                    </div>
-                  </Button>
-                ))}
+                    </Button>
+                  ))}
+                </CardContent>
                 
-                {/* This part of the code shows operational context indicator */}
-                <div className="mt-auto p-3 bg-blue-50 rounded-lg border border-blue-200">
-                  <div className="flex items-start space-x-2">
-                    <div className="p-1 bg-blue-500 rounded text-white">
-                      <BarChart3 className="h-3 w-3" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-xs font-medium text-blue-900">Real-Time Context</p>
-                      <p className="text-xs text-blue-700 mt-1">
-                        AI has access to your live products, shipments, warehouse performance, and brand analytics
-                      </p>
+                {/* This part of the code shows operational context indicator at bottom */}
+                <div className="p-4 flex-shrink-0">
+                  <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                    <div className="flex items-start space-x-2">
+                      <div className="p-1 bg-blue-500 rounded text-white">
+                        <BarChart3 className="h-3 w-3" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-xs font-medium text-blue-900">Real-Time Context</p>
+                        <p className="text-xs text-blue-700 mt-1">
+                          AI has access to your live products, shipments, warehouse performance, and brand analytics
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </CardContent>
+              </div>
             </Card>
           </div>
         </div>
