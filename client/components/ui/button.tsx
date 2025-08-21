@@ -18,12 +18,20 @@ const buttonVariants = cva(
           "bg-secondary text-secondary-foreground hover:bg-secondary/80",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
+        // This part of the code adds standardized workflow button variants
+        workflow: "bg-blue-100 text-blue-600 border border-blue-300 hover:bg-blue-200 focus:ring-blue-500",
+        "workflow-primary": "bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500",
+        success: "bg-green-100 text-green-600 border border-green-300 hover:bg-green-200 focus:ring-green-500",
+        warning: "bg-yellow-100 text-yellow-700 border border-yellow-300 hover:bg-yellow-200 focus:ring-yellow-500",
+        danger: "bg-red-100 text-red-600 border border-red-300 hover:bg-red-200 focus:ring-red-500",
       },
       size: {
         default: "h-10 px-4 py-2",
         sm: "h-9 rounded-md px-3",
         lg: "h-11 rounded-md px-8",
         icon: "h-10 w-10",
+        xs: "h-7 px-2 py-1 text-xs",
+        "workflow-sm": "h-8 px-3 py-1.5 text-xs",
       },
     },
     defaultVariants: {

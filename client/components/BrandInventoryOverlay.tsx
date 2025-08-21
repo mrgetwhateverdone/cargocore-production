@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { X, TrendingUp, Package, DollarSign, Loader2, CheckCircle2, Target } from 'lucide-react';
 import { useWorkflowCreation } from '../hooks/useWorkflows';
+import { ProgressBar } from './ui/progress-bar';
 import type { BrandPerformance } from '@/types/api';
 
 interface BrandInventoryOverlayProps {
@@ -232,27 +233,14 @@ export function BrandInventoryOverlay({
           <div className="mb-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-3">Efficiency Analysis</h3>
             <div className="bg-gray-50 rounded-lg p-4">
-              <div className="flex items-center justify-between mb-2">
-                <span className="font-medium text-gray-900">Efficiency Score</span>
-                <span className={`text-xl font-bold ${
-                  brand.efficiency_score >= 85 ? 'text-green-600' :
-                  brand.efficiency_score >= 70 ? 'text-blue-600' :
-                  brand.efficiency_score >= 50 ? 'text-yellow-600' : 'text-red-600'
-                }`}>
-                  {brand.efficiency_score}%
-                </span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
-                <div 
-                  className={`h-2 rounded-full ${
-                    brand.efficiency_score >= 85 ? 'bg-green-500' :
-                    brand.efficiency_score >= 70 ? 'bg-blue-500' :
-                    brand.efficiency_score >= 50 ? 'bg-yellow-500' : 'bg-red-500'
-                  }`}
-                  style={{ width: `${Math.min(brand.efficiency_score, 100)}%` }}
-                ></div>
-              </div>
-              <p className="text-sm text-gray-600 mt-2">
+              <ProgressBar
+                value={brand.efficiency_score}
+                label="Efficiency Score"
+                showPercentage={true}
+                size="md"
+                className="mb-3"
+              />
+              <p className="text-sm text-gray-600">
                 {brand.efficiency_score >= 85 ? 'Excellent performance - brand is maximizing ROI' :
                  brand.efficiency_score >= 70 ? 'Good performance - minor optimization opportunities' :
                  brand.efficiency_score >= 50 ? 'Moderate performance - improvement needed' :

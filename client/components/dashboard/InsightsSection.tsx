@@ -1,7 +1,7 @@
 import { TriangleAlert, Info, Target, DollarSign, Plus } from "lucide-react";
 import { useState } from "react";
 import type { AIInsight } from "@/types/api";
-import { InsightOverlay } from "../InsightOverlay";
+import { UnifiedOverlay } from "../ui/UnifiedOverlay";
 import { useWorkflowCreation } from "../../hooks/useWorkflows";
 import { BrainIcon } from "../ui/BrainIcon";
 import { useSettingsIntegration } from "@/hooks/useSettingsIntegration";
@@ -214,13 +214,23 @@ export function InsightsSection({
         </div>
       )}
 
-      {/* This part of the code renders the insight overlay when an insight is selected */}
+      {/* This part of the code renders the unified overlay when an insight is selected */}
       {selectedInsight && (
-        <InsightOverlay
+        <UnifiedOverlay
           isOpen={!!selectedInsight}
           onClose={() => setSelectedInsight(null)}
-          insight={selectedInsight}
+          data={{
+            id: selectedInsight.id,
+            title: selectedInsight.title,
+            description: selectedInsight.description,
+            severity: selectedInsight.severity,
+            dollarImpact: selectedInsight.dollarImpact,
+            source: selectedInsight.source,
+            createdAt: selectedInsight.createdAt,
+          }}
+          overlayType="insight"
           agentName="AI Agent"
+          recommendations={selectedInsight.suggestedActions || []}
         />
       )}
     </div>
