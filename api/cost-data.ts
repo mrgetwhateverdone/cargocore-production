@@ -1,5 +1,7 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import type { CostKPIs, CostCenter, CostData, AIInsight, SupplierPerformance, HistoricalCostTrend } from "../client/types/api";
+// Import safe formatters to prevent null reference crashes
+import { safeCleanMarkdown, safeDollarFormat, safeFormatAIText } from '../lib/safe-formatters';
 
 /**
  * This part of the code provides cost management data endpoint for Vercel serverless deployment
@@ -429,16 +431,144 @@ function calculateHistoricalTrends(shipments: ShipmentData[]): HistoricalCostTre
 }
 
 /**
- * This part of the code would generate cost insights, but we now use centralized AI engine
- * NO FALLBACK DATA - Return empty array for cost insights
+ * This part of the code generates real AI insights for cost management
+ * Uses OpenAI to analyze cost data and provide actionable insights
+ */
+async function generateRealCostInsights(
+  shipments: ShipmentData[],
+  kpis: CostKPIs,
+  costCenters: CostCenter[]
+): Promise<AIInsight[]> {
+  const openaiApiKey = process.env.OPENAI_API_KEY;
+  
+  if (!openaiApiKey) {
+    console.warn('🤖 OpenAI API key not available for cost insights');
+    return [];
+  }
+
+  try {
+    const totalCostCenters = costCenters.length;
+    const totalShipments = shipments.length;
+    const highCostCenters = costCenters.filter(c => c.cost_efficiency < 70).length;
+    const inactiveCenters = costCenters.filter(c => c.status === 'Inactive').length;
+    const avgCostPerShipment = totalShipments > 0 ? costCenters.reduce((sum, c) => sum + c.cost_per_shipment, 0) / totalCostCenters : 0;
+
+    const costAnalysisPrompt = `
+WORLD-CLASS COST MANAGEMENT INSIGHT ANALYSIS
+
+You are a senior operations consultant specializing in 3PL cost optimization. Analyze the following cost management data and generate 2-3 critical insights with specific financial impact.
+
+COST MANAGEMENT DATA:
+- Total Monthly Costs: $${kpis.totalMonthlyCosts.toLocaleString()}
+- Cost Efficiency Rate: ${kpis.costEfficiencyRate}%
+- Top Performing Warehouses: ${kpis.topPerformingWarehouses}/${kpis.totalCostCenters}
+- Total Cost Centers: ${kpis.totalCostCenters}
+- Active Facilities: ${kpis.activeCostCenters}
+- Inactive Facilities: ${inactiveCenters}
+- Monthly Throughput: ${kpis.monthlyThroughput} units
+- High-Cost Centers: ${highCostCenters}
+- Average Cost per Shipment: $${avgCostPerShipment.toFixed(2)}
+- Total Shipments: ${totalShipments}
+
+REQUIREMENTS:
+Generate 2-3 insights in JSON format with:
+- title: Clear, specific problem or opportunity (8-12 words)
+- description: Detailed analysis with metrics (40-60 words)
+- severity: "critical" | "warning" | "info"
+- dollarImpact: Estimated financial impact (number)
+- suggestedActions: Array of 2-3 specific actions (10-15 words each)
+
+Focus on:
+1. Cost efficiency optimization opportunities
+2. Underperforming warehouse facilities
+3. Process improvement recommendations
+4. Financial impact quantification
+
+FORMAT: Return valid JSON array only, no additional text.
+
+Example:
+[{
+  "title": "High-Cost Warehouse Operations Impacting Margins",
+  "description": "Analysis reveals 3 warehouses operating at 45% efficiency below industry standards, contributing to $125,000 monthly cost overruns.",
+  "severity": "critical",
+  "dollarImpact": 125000,
+  "suggestedActions": ["Implement lean operations audit for underperforming facilities", "Renegotiate supplier contracts for volume discounts", "Deploy automated inventory management systems"]
+}]`;
+
+    const openaiUrl = process.env.OPENAI_API_URL || "https://api.openai.com/v1/chat/completions";
+    
+    const response = await fetch(openaiUrl, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${openaiApiKey}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        model: "gpt-4o-mini",
+        messages: [
+          {
+            role: "system",
+            content: "You are a world-class cost management consultant. Generate specific, actionable insights with quantified financial impact. Return only valid JSON array."
+          },
+          {
+            role: "user",
+            content: costAnalysisPrompt
+          }
+        ],
+        max_tokens: 1200,
+        temperature: 0.3
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`OpenAI API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const aiResponse = data.choices?.[0]?.message?.content;
+
+    if (!aiResponse) {
+      throw new Error("No response from OpenAI");
+    }
+
+    // Parse the JSON response
+    try {
+      const parsed = JSON.parse(aiResponse);
+      
+      if (Array.isArray(parsed)) {
+        return parsed.map((insight: any, index: number) => ({
+          id: `cost-insight-${Date.now()}-${index}`,
+          type: "cost_optimization",
+          title: safeFormatAIText(insight.title) || "Cost Optimization Opportunity",
+          description: safeFormatAIText(insight.description) || "",
+          severity: insight.severity || "info",
+          dollarImpact: typeof insight.dollarImpact === 'number' ? insight.dollarImpact : 0,
+          suggestedActions: insight.suggestedActions ? insight.suggestedActions.map((action: string) => safeFormatAIText(action)) : [],
+          createdAt: new Date().toISOString(),
+          source: "cost_agent" as const,
+        }));
+      }
+    } catch (parseError) {
+      console.error('❌ Failed to parse AI cost insights response:', parseError);
+    }
+
+    return [];
+
+  } catch (error) {
+    console.error('❌ Cost Management AI insight generation failed:', error);
+    return [];
+  }
+}
+
+/**
+ * Legacy function kept for compatibility 
  */
 function generateCostInsights(
   shipments: ShipmentData[],
   kpis: CostKPIs,
   costCenters: CostCenter[]
 ): AIInsight[] {
-  // NO FALLBACK DATA - Insights come from centralized AI engine only
-  // Frontend will display "Check OpenAI Connection" message
+  // NO FALLBACK DATA - Return empty array, real insights come from generateRealCostInsights
   return [];
 }
 
@@ -537,7 +667,7 @@ TONE: Professional, strategic, data-driven, and focused on financial performance
       throw new Error("No response from OpenAI");
     }
 
-    return cleanMarkdownFormatting(aiSummary);
+    return safeCleanMarkdown(aiSummary);
 
   } catch (error) {
     console.error('❌ Cost Management AI summary generation failed:', error);
@@ -635,7 +765,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const costCenters = calculateCostCenters(shipments);
     const supplierPerformance = calculateSupplierPerformance(shipments);
     const historicalTrends = calculateHistoricalTrends(shipments);
-    const insights = generateCostInsights(shipments, kpis, costCenters);
+    const insights = await generateRealCostInsights(shipments, kpis, costCenters);
 
     const costData: CostData = {
       kpis,

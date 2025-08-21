@@ -5,6 +5,9 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
  * Uses real TinyBird data to calculate supplier performance, cost trends, and business impacts
  */
 
+// Import safe formatters to prevent null reference crashes
+import { safeCleanMarkdown, safeDollarFormat, safeFormatAIText } from '../lib/safe-formatters';
+
 // TinyBird Product API Response - standardized interface
 interface ProductData {
   company_id: string;
@@ -882,9 +885,9 @@ REQUIREMENTS:
           
           // Use AI-generated content if available, otherwise fallback to calculated values
           return {
-            executiveSummary: aiExecutiveSummary || `Real-time Analysis: Current operational data reveals ${keyRisks.length} critical risk factors requiring attention. With ${kpis.shippingCostImpact}% shipping cost impact and ${kpis.supplierPerformance}% supplier performance across ${totalShipments} shipments, strategic intervention can address ${unfulfillableSkus} inactive SKUs and optimize ${totalBrands} brand portfolio for enhanced operational resilience.`,
-            keyRisks: aiKeyRisks.length > 0 ? aiKeyRisks : keyRisks,
-            opportunityAreas: aiOpportunityAreas.length > 0 ? aiOpportunityAreas : opportunityAreas
+            executiveSummary: safeFormatAIText(aiExecutiveSummary) || `Real-time Analysis: Current operational data reveals ${keyRisks.length} critical risk factors requiring attention. With ${kpis.shippingCostImpact}% shipping cost impact and ${kpis.supplierPerformance}% supplier performance across ${totalShipments} shipments, strategic intervention can address ${unfulfillableSkus} inactive SKUs and optimize ${totalBrands} brand portfolio for enhanced operational resilience.`,
+            keyRisks: aiKeyRisks.length > 0 ? aiKeyRisks.map(risk => safeFormatAIText(risk)) : keyRisks,
+            opportunityAreas: aiOpportunityAreas.length > 0 ? aiOpportunityAreas.map(opp => safeFormatAIText(opp)) : opportunityAreas
           };
         }
       }
@@ -896,8 +899,8 @@ REQUIREMENTS:
   // Fallback to calculated values if AI generation fails
   return {
     executiveSummary: `Real-time Analysis: Current operational data reveals ${keyRisks.length} critical risk factors requiring attention. With ${kpis.shippingCostImpact}% shipping cost impact and ${kpis.supplierPerformance}% supplier performance across ${totalShipments} shipments, strategic intervention can address ${unfulfillableSkus} inactive SKUs and optimize ${totalBrands} brand portfolio for enhanced operational resilience.`,
-    keyRisks,
-    opportunityAreas
+    keyRisks: keyRisks.map(risk => safeFormatAIText(risk)),
+    opportunityAreas: opportunityAreas.map(opp => safeFormatAIText(opp))
   };
 }
 
