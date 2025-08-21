@@ -427,55 +427,9 @@ CRITICAL: suggestedActions must be:
     console.error("Orders AI analysis failed:", error);
   }
 
-  // This part of the code generates fallback order insights when AI fails
-  const insights = [];
-  
-  if (kpis.atRiskOrders > 0) {
-    insights.push({
-      type: "warning",
-      title: "At-Risk Orders Detected",
-      description: `${kpis.atRiskOrders} orders are currently at risk due to delays or SLA breaches. Immediate attention required to prevent customer impact.`,
-      severity: kpis.atRiskOrders > 10 ? "critical" : "warning",
-      dollarImpact: inboundIntelligence.valueAtRisk,
-      suggestedActions: [
-        "Review all at-risk orders for expedited processing",
-        "Contact customers proactively about potential delays",
-        "Implement daily status tracking for critical orders"
-      ]
-    });
-  }
-  
-  if (inboundIntelligence.delayedShipments.percentage > 20) {
-    insights.push({
-      type: "critical",
-      title: "High Delay Rate",
-      description: `${inboundIntelligence.delayedShipments.percentage.toFixed(1)}% of shipments are delayed with an average delay of ${inboundIntelligence.avgDelayDays} days. Review supplier performance and logistics routing.`,
-      severity: "critical",
-      dollarImpact: Math.round(inboundIntelligence.valueAtRisk * 0.8),
-      suggestedActions: [
-        "Audit top 3 suppliers causing delays",
-        "Implement alternative routing for critical shipments",
-        "Negotiate stricter SLAs with underperforming suppliers"
-      ]
-    });
-  }
-  
-  if (inboundIntelligence.geopoliticalRisks) {
-    insights.push({
-      type: "info",
-      title: "Geopolitical Risk Assessment",
-      description: `${inboundIntelligence.geopoliticalRisks.affectedShipments} shipments from risk-prone regions (${inboundIntelligence.geopoliticalRisks.riskCountries.join(', ')}). Consider supply chain diversification.`,
-      severity: "info",
-      dollarImpact: 0,
-      suggestedActions: [
-        `Identify backup suppliers outside ${inboundIntelligence.geopoliticalRisks.riskCountries.join(', ')}`,
-        "Create contingency plans for affected shipments",
-        "Review insurance coverage for geopolitical risks"
-      ]
-    });
-  }
-  
-  return insights;
+  // NO FALLBACK DATA - Return empty array if AI fails
+  // Frontend will display "Check OpenAI Connection" message
+  return [];
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {

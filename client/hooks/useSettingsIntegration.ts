@@ -32,8 +32,9 @@ export function useSettingsIntegration() {
       ? settings.display.numberFormat 
       : 2;
 
+    // This part of the code formats currency without unnecessary decimals for whole numbers
     const formatted = Math.abs(amount).toLocaleString('en-US', {
-      minimumFractionDigits: decimals,
+      minimumFractionDigits: Number.isInteger(amount) ? 0 : decimals,
       maximumFractionDigits: decimals
     });
 

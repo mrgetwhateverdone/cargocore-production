@@ -429,86 +429,17 @@ function calculateHistoricalTrends(shipments: ShipmentData[]): HistoricalCostTre
 }
 
 /**
- * This part of the code generates enhanced cost management insights
+ * This part of the code would generate cost insights, but we now use centralized AI engine
+ * NO FALLBACK DATA - Return empty array for cost insights
  */
 function generateCostInsights(
   shipments: ShipmentData[],
   kpis: CostKPIs,
   costCenters: CostCenter[]
 ): AIInsight[] {
-  const insights: AIInsight[] = [];
-  
-  if (shipments.length === 0) {
-    insights.push({
-      id: "cost-insight-1",
-      title: "Information Not Available",
-      description: "Cost management data is not available. Data source connection required.",
-      severity: "info" as const,
-      dollarImpact: 0,
-      suggestedActions: ["Check data source connection"],
-      createdAt: new Date().toISOString(),
-      source: "cost_agent" as const,
-    });
-    return insights;
-  }
-
-  // This part of the code generates SLA performance insight
-  if (kpis.avgSLAPerformance < 85) {
-    insights.push({
-      id: "cost-insight-sla",
-      title: "SLA Performance Below Target",
-      description: `Average SLA performance is ${kpis.avgSLAPerformance}%, below the 85% target. Poor SLA performance increases operational costs through customer service overhead and potential contract penalties.`,
-      severity: "warning" as const,
-      dollarImpact: Math.round((85 - kpis.avgSLAPerformance) * 100), // Simple cost estimate
-      suggestedActions: [
-        "Review warehouse operational procedures",
-        "Analyze delayed shipment patterns",
-        "Implement performance improvement initiatives"
-      ],
-      createdAt: new Date().toISOString(),
-      source: "cost_agent" as const,
-    });
-  }
-
-  // This part of the code generates warehouse utilization insight
-  const inactiveWarehouses = costCenters.filter(w => w.status === 'Inactive').length;
-  if (inactiveWarehouses > 0) {
-    insights.push({
-      id: "cost-insight-utilization",
-      title: "Underutilized Warehouse Capacity",
-      description: `${inactiveWarehouses} of ${kpis.totalWarehouses} warehouses show minimal activity in the last 30 days. Underutilized facilities represent fixed costs without proportional revenue generation.`,
-      severity: "warning" as const,
-      dollarImpact: inactiveWarehouses * 5000, // Estimated monthly fixed costs
-      suggestedActions: [
-        "Review warehouse consolidation opportunities",
-        "Analyze demand patterns by facility",
-        "Consider cost reallocation strategies"
-      ],
-      createdAt: new Date().toISOString(),
-      source: "cost_agent" as const,
-    });
-  }
-
-  // This part of the code generates throughput efficiency insight
-  if (kpis.monthlyThroughput > 0) {
-    const avgThroughputPerWarehouse = Math.round(kpis.monthlyThroughput / kpis.totalWarehouses);
-    insights.push({
-      id: "cost-insight-efficiency",
-      title: "Warehouse Throughput Analysis",
-      description: `Current throughput averages ${avgThroughputPerWarehouse.toLocaleString()} units per warehouse monthly. Optimizing throughput distribution can reduce per-unit handling costs.`,
-      severity: "info" as const,
-      dollarImpact: 0,
-      suggestedActions: [
-        "Analyze throughput distribution patterns",
-        "Identify high-performing warehouse practices",
-        "Implement best practices across facilities"
-      ],
-      createdAt: new Date().toISOString(),
-      source: "cost_agent" as const,
-    });
-  }
-
-  return insights;
+  // NO FALLBACK DATA - Insights come from centralized AI engine only
+  // Frontend will display "Check OpenAI Connection" message
+  return [];
 }
 
 /**

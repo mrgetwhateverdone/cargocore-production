@@ -515,55 +515,9 @@ CRITICAL: suggestedActions must be:
     console.error("Analytics AI analysis failed:", error);
   }
 
-  // This part of the code generates fallback analytics insights when AI fails
-  const insights: AnalyticsInsight[] = [];
-  
-  if (kpis.orderVolumeGrowth < -10) {
-    insights.push({
-      type: "warning",
-      title: "Declining Order Volume",
-      description: `Order volume has decreased by ${Math.abs(kpis.orderVolumeGrowth).toFixed(1)}% compared to previous period. This trend requires immediate attention to maintain business growth.`,
-      severity: "warning",
-      dollarImpact: 0, // No mock values - real impact calculation not available
-      suggestedActions: [
-        "Analyze customer churn patterns for top brands",
-        "Review pricing strategy against market conditions",
-        "Implement customer retention campaigns"
-      ]
-    });
-  }
-  
-  if (kpis.fulfillmentEfficiency < 80) {
-    insights.push({
-      type: "critical",
-      title: "Low Fulfillment Efficiency",
-      description: `Fulfillment efficiency at ${kpis.fulfillmentEfficiency.toFixed(1)}% is below optimal levels. Focus on process improvements to reach 90%+ efficiency.`,
-      severity: "critical",
-      dollarImpact: 0, // No mock values - real impact calculation not available
-      suggestedActions: [
-        "Audit warehouse processes for bottlenecks",
-        "Implement staff training on efficiency best practices",
-        "Review technology systems for automation opportunities"
-      ]
-    });
-  }
-  
-  if (brandPerformance.totalBrands > 5) {
-    insights.push({
-      type: "info",
-      title: "Brand Portfolio Diversification",
-      description: `Portfolio includes ${brandPerformance.totalBrands} brands with ${brandPerformance.topBrand.name} leading with ${brandPerformance.topBrand.skuCount} SKUs. Consider brand consolidation strategies.`,
-      severity: "info",
-      dollarImpact: 0, // No mock values - real impact calculation not available
-      suggestedActions: [
-        `Monitor ${brandPerformance.topBrand.name} performance for concentration risk`,
-        "Analyze profitability by brand to identify consolidation opportunities",
-        "Schedule quarterly brand portfolio review"
-      ]
-    });
-  }
-  
-  return insights;
+  // NO FALLBACK DATA - Return empty array if AI fails
+  // Frontend will display "Check OpenAI Connection" message
+  return [];
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {

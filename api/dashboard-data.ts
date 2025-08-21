@@ -356,52 +356,9 @@ CRITICAL: suggestedActions must be:
     console.error("OpenAI analysis failed:", error);
   }
 
-  // This part of the code generates data-driven insights with real financial impact when AI fails
-  const insights: InsightData[] = [];
-  const financialImpacts = calculateFinancialImpacts(products, shipments);
-  
-  const atRiskCount = shipments.filter(
-    (shipment) =>
-      shipment.expected_quantity !== shipment.received_quantity ||
-      shipment.status === "cancelled",
-  ).length;
-  
-  const atRiskPercentage = shipments.length > 0 ? (atRiskCount / shipments.length * 100).toFixed(1) : 0;
-  
-  // Only include insights if they represent actual issues or notable conditions
-  if (atRiskCount > 0 && financialImpacts.quantityDiscrepancyImpact > 0) {
-    insights.push({
-      type: "warning",
-      title: "Quantity Discrepancy Impact",
-      description: `${atRiskCount} shipments (${atRiskPercentage}%) have quantity discrepancies with financial impact of $${financialImpacts.quantityDiscrepancyImpact.toLocaleString()}.`,
-      severity: financialImpacts.quantityDiscrepancyImpact > 10000 ? "critical" : "warning",
-      dollarImpact: financialImpacts.quantityDiscrepancyImpact,
-    });
-  }
-  
-  if (financialImpacts.cancelledShipmentsImpact > 0) {
-    const cancelledCount = shipments.filter(s => s.status === "cancelled").length;
-    insights.push({
-      type: "warning", 
-      title: "Cancelled Shipments Impact",
-      description: `${cancelledCount} cancelled shipments represent $${financialImpacts.cancelledShipmentsImpact.toLocaleString()} in lost inventory value.`,
-      severity: financialImpacts.cancelledShipmentsImpact > 5000 ? "critical" : "warning",
-      dollarImpact: financialImpacts.cancelledShipmentsImpact,
-    });
-  }
-  
-  const inactiveProducts = products.filter((p) => !p.active).length;
-  if (inactiveProducts > 0 && financialImpacts.inactiveProductsValue > 0) {
-    insights.push({
-      type: "info",
-      title: "Inactive Product Revenue Loss",
-      description: `${inactiveProducts} inactive products represent potential monthly revenue loss of $${financialImpacts.inactiveProductsValue.toLocaleString()}.`,
-      severity: "info",
-      dollarImpact: financialImpacts.inactiveProductsValue,
-    });
-  }
-  
-  return insights;
+  // NO FALLBACK DATA - Return empty array if AI fails
+  // Frontend will display "Check OpenAI Connection" message
+  return [];
 }
 
 /**
@@ -1240,29 +1197,9 @@ Requirements:
   } catch (error) {
     console.error('❌ Dashboard insight AI recommendation generation failed:', error);
     
-    // This part of the code provides high-quality fallback recommendations based on severity
-    const fallbackRecs = {
-      'critical': [
-        'Activate emergency response protocol and assemble crisis management team',
-        'Implement immediate containment measures to prevent further impact',
-        'Conduct urgent root cause analysis with all stakeholders',
-        'Deploy temporary workarounds while permanent solutions are developed'
-      ],
-      'warning': [
-        'Establish proactive monitoring and early warning alert systems',
-        'Optimize resource allocation and capacity management protocols',
-        'Implement process standardization and performance benchmarking',
-        'Develop stakeholder communication and escalation procedures'
-      ],
-      'info': [
-        'Deploy advanced analytics and performance optimization tools',
-        'Implement best practice sharing and knowledge management systems',
-        'Establish innovation labs for testing operational improvements',
-        'Create strategic partnerships for competitive advantage'
-      ]
-    };
-
-    return fallbackRecs[insight.severity as keyof typeof fallbackRecs] || fallbackRecs['warning'];
+    // NO FALLBACK RECOMMENDATIONS - Return empty array if AI fails
+    console.log('❌ Dashboard insight AI recommendation generation failed - no fallback provided');
+    return [];
   }
 }
 

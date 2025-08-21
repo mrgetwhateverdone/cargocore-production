@@ -202,12 +202,14 @@ export function InsightsSection({
         ))}
       </div>
 
-      {filteredInsights.length === 0 && (
-        <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 text-center">
-          <Info className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-          <p className="text-sm text-gray-500">
-            No insights available. AI analysis will appear here when data is
-            processed.
+      {filteredInsights.length === 0 && !isLoading && (
+        <div className="bg-orange-50 border border-orange-200 rounded-lg p-6 text-center">
+          <TriangleAlert className="h-8 w-8 text-orange-400 mx-auto mb-2" />
+          <p className="text-sm text-orange-600 font-medium mb-1">
+            Check OpenAI Connection
+          </p>
+          <p className="text-xs text-orange-500">
+            AI insights are unavailable. Verify OpenAI API key configuration in Vercel environment variables.
           </p>
         </div>
       )}

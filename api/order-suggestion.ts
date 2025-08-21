@@ -224,8 +224,14 @@ async function generateAIOrderSuggestion(
   } catch (error) {
     console.error('❌ OpenAI API call failed:', error);
     
-    // Fallback to rule-based suggestion
-    return generateFallbackSuggestion(orderData, context);
+    // NO FALLBACK - Return error suggestion for user to check connection
+    return {
+      orderId: orderData.order_id,
+      suggestion: "Check OpenAI Connection - AI analysis unavailable",
+      priority: "medium",
+      actionable: false,
+      estimatedImpact: "Connection Required",
+    };
   }
 }
 
@@ -343,35 +349,6 @@ Provide tactical decisions with confidence scores and specific implementation st
 }
 
 /**
- * Generate fallback suggestion when AI is unavailable
+ * REMOVED: generateFallbackSuggestion function
+ * No more fallback data - all suggestions must come from OpenAI or show connection error
  */
-function generateFallbackSuggestion(
-  orderData: OrderData,
-  context: any
-): OrderSuggestion {
-  let suggestion = '';
-
-  if (context.issues.length > 0) {
-    suggestion = `Order ${orderData.order_id} requires attention: ${context.issues.join(', ')}. `;
-    
-    if (context.issues.includes('SLA breach')) {
-      suggestion += 'Escalate to expedite processing and notify customer of delay. ';
-    }
-    
-    if (context.issues.includes('quantity shortfall')) {
-      suggestion += 'Investigate supplier delivery and consider partial fulfillment. ';
-    }
-    
-    suggestion += 'Review with operations team for process improvements.';
-  } else {
-    suggestion = `Order ${orderData.order_id} is progressing normally. Monitor for on-time delivery and maintain standard processing workflow.`;
-  }
-
-  return {
-    orderId: orderData.order_id,
-    suggestion: fixDollarImpactFormatting(cleanMarkdownFormatting(suggestion)),
-    priority: context.priority,
-    actionable: true,
-    estimatedImpact: context.estimatedImpact,
-  };
-}
