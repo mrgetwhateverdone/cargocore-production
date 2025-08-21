@@ -156,20 +156,33 @@ function calculateFinancialImpacts(products: ProductData[], shipments: ShipmentD
   };
 }
 
-/**
- * This part of the code fixes dollar impact formatting in AI responses
- * Removes unnecessary .00 decimals and ensures proper spacing before "impact"
- */
-function fixDollarImpactFormatting(text: string): string {
+// Safe formatters to prevent null reference crashes - inline to avoid import issues
+function safeCleanMarkdown(text: string | null | undefined): string {
+  if (!text || typeof text !== 'string') {
+    return '';
+  }
   return text
-    // Fix dollar amounts followed by "impact" (e.g., "$3,149,821.00impact" → "$3,149,821 impact")
+    .replace(/\*\*(.*?)\*\*/g, '$1')
+    .replace(/\*(.*?)\*/g, '$1')
+    .replace(/\*/g, '')
+    .replace(/^Executive Summary:\s*/i, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function safeDollarFormat(text: string | null | undefined): string {
+  if (!text || typeof text !== 'string') {
+    return '';
+  }
+  return text
     .replace(/\$([0-9,]+)\.00impact/g, '$$$1 impact')
-    // Fix dollar amounts with cents followed by "impact" (preserve cents)
     .replace(/\$([0-9,]+\.[0-9]{1,2})impact/g, '$$$1 impact')
-    // Fix dollar amounts with no decimal followed by "impact" (e.g., "$1,028,350impact" → "$1,028,350 impact")
     .replace(/\$([0-9,]+)impact/g, '$$$1 impact')
-    // Fix cases where there's already a space but .00 needs removal
     .replace(/\$([0-9,]+)\.00\s+impact/g, '$$$1 impact');
+}
+
+function safeFormatAIText(text: string | null | undefined): string {
+  return safeDollarFormat(safeCleanMarkdown(text));
 }
 
 /**
@@ -1486,8 +1499,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }),
       insights: insights.map((insight, index) => ({
         id: `insight-${index}`,
-        title: fixDollarImpactFormatting(insight.title),
-        description: fixDollarImpactFormatting(insight.description),
+        title: safeFormatAIText(insight.title),
+        description: safeFormatAIText(insight.description),
         severity:
           insight.severity === "critical"
             ? ("critical" as const)
