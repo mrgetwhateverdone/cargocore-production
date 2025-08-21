@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { X, TrendingUp, TrendingDown, AlertTriangle, CheckCircle, Loader2, CheckCircle2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { X, TrendingUp, AlertTriangle, CheckCircle, Loader2, CheckCircle2 } from 'lucide-react';
 import { useWorkflowCreation } from '../hooks/useWorkflows';
 
 interface EconomicKPIOverlayProps {
@@ -26,7 +26,7 @@ interface EconomicKPIOverlayProps {
  * Shows detailed analysis and allows adding AI recommendations to workflows
  */
 export function EconomicKPIOverlay({ isOpen, onClose, kpi }: EconomicKPIOverlayProps) {
-  const { createWorkflow, creating } = useWorkflowCreation();
+  const { createWorkflow } = useWorkflowCreation();
   const [processingActionId, setProcessingActionId] = useState<number | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
   // This part of the code handles escape key and prevents body scroll
@@ -86,12 +86,12 @@ export function EconomicKPIOverlay({ isOpen, onClose, kpi }: EconomicKPIOverlayP
           type: 'create_workflow',
           target: 'economic_intelligence',
           values: [recommendation],
-          priority: (kpi.status === 'critical' ? 'critical' :
-                    kpi.status === 'warning' ? 'high' : 'medium') as 'low' | 'medium' | 'high' | 'critical',
+          priority: (kpi?.status === 'critical' ? 'critical' :
+                    kpi?.status === 'warning' ? 'high' : 'medium') as 'low' | 'medium' | 'high' | 'critical',
         },
         source: 'ai_insight',
-        sourceId: kpi.id || `economic-kpi-${Date.now()}`,
-        insightTitle: `${kpi.title}: ${recommendation}`,
+        sourceId: kpi?.id || `economic-kpi-${Date.now()}`,
+        insightTitle: `${kpi?.title}: ${recommendation}`,
       });
       
       setShowSuccess(true);

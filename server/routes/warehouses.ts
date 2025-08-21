@@ -136,7 +136,7 @@ function calculateWarehouseData(products: ProductData[], shipments: ShipmentData
   });
 
   // This part of the code calculates performance metrics for each warehouse
-  const warehousesData = [];
+  const warehousesData: any[] = [];
 
   warehouseGroups.forEach((data, warehouseId) => {
     const { supplierName, shipments: warehouseShipments, products: warehouseProducts, location } = data;
@@ -483,7 +483,7 @@ async function fetchShipmentsInternal() {
  * Main warehouse data endpoint
  * This part of the code orchestrates all warehouse analytics and returns comprehensive data
  */
-export const getWarehousesData: RequestHandler = async (req, res) => {
+export const getWarehousesData: RequestHandler = async (_req, res) => {
   try {
     console.log("🏭 Server: Starting comprehensive warehouse data fetch...");
 

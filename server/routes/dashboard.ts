@@ -73,7 +73,7 @@ interface TinyBirdResponse<T> {
  * Secure TinyBird Products API proxy
  * Environment keys not exposed to client
  */
-export const getProductsData: RequestHandler = async (req, res) => {
+export const getProductsData: RequestHandler = async (_req, res) => {
   try {
     console.log("🔒 Server: Fetching TinyBird products data securely...");
 
@@ -122,7 +122,7 @@ export const getProductsData: RequestHandler = async (req, res) => {
  * Secure TinyBird Shipments API proxy
  * Environment keys not exposed to client
  */
-export const getShipmentsData: RequestHandler = async (req, res) => {
+export const getShipmentsData: RequestHandler = async (_req, res) => {
   try {
     console.log("🔒 Server: Fetching TinyBird shipments data securely...");
 
@@ -171,7 +171,7 @@ export const getShipmentsData: RequestHandler = async (req, res) => {
  * Secure OpenAI Insights generation proxy
  * API key not exposed to client
  */
-export const generateInsights: RequestHandler = async (req, res) => {
+export const generateInsights: RequestHandler = async (req, res): Promise<void> => {
   try {
     console.log("🔒 Server: Generating AI insights securely...");
 
@@ -238,7 +238,7 @@ export const generateInsights: RequestHandler = async (req, res) => {
  * Combined dashboard data endpoint
  * Fetches all data server-side and returns processed result
  */
-export const getDashboardData: RequestHandler = async (req, res) => {
+export const getDashboardData: RequestHandler = async (_req, res) => {
   try {
     console.log("🔒 Server: Fetching complete dashboard data securely...");
 
@@ -398,12 +398,12 @@ async function generateInsightsInternal(data: any) {
 }
 
 function buildAnalysisPrompt(data: any): string {
-  const { warehouseInventory, kpis, products, shipments } = data;
+  const { products, shipments } = data;
   
   const financialImpacts = calculateFinancialImpacts(products, shipments);
   const totalProducts = products.length;
   const totalShipments = shipments.length;
-  const activeProducts = products.filter((p: ProductData) => p.active).length;
+  const _activeProducts = products.filter((p: ProductData) => p.active).length;
   const inactiveProducts = products.filter((p: ProductData) => !p.active).length;
   const atRiskShipments = shipments.filter((s: ShipmentData) => s.expected_quantity !== s.received_quantity).length;
   const cancelledShipments = shipments.filter((s: ShipmentData) => s.status === "cancelled").length;
@@ -627,7 +627,7 @@ function detectAnomalies(products: ProductData[], shipments: ShipmentData[]) {
  * Analytics data endpoint
  * Fetches and processes data for the analytics dashboard
  */
-export const getAnalyticsData: RequestHandler = async (req, res) => {
+export const getAnalyticsData: RequestHandler = async (_req, res) => {
   try {
     console.log("🔒 Server: Fetching complete analytics data securely...");
 
@@ -733,7 +733,7 @@ function calculateAnalyticsKPIs(products: ProductData[], shipments: ShipmentData
   };
 }
 
-function calculatePerformanceMetrics(products: ProductData[], shipments: ShipmentData[]) {
+function calculatePerformanceMetrics(_products: ProductData[], shipments: ShipmentData[]) {
   // This part of the code calculates order volume trend metrics
   const recentShipments = shipments.filter(s => {
     const shipmentDate = new Date(s.created_date);
@@ -830,7 +830,7 @@ function calculateOperationalBreakdown(products: ProductData[], shipments: Shipm
   };
 }
 
-function calculateBrandPerformance(products: ProductData[], shipments: ShipmentData[]) {
+function calculateBrandPerformance(products: ProductData[], _shipments: ShipmentData[]) {
   // This part of the code groups products by brand and calculates performance metrics
   const brandGroups = new Map<string, { skuCount: number; totalQuantity: number }>();
   
@@ -906,7 +906,7 @@ async function generateAnalyticsInsightsInternal(data: any) {
 }
 
 function buildAnalyticsPrompt(data: any): string {
-  const { kpis, performanceMetrics, brandPerformance, products, shipments } = data;
+  const { kpis, performanceMetrics, brandPerformance } = data;
   
   return `
 You are a 3PL analytics specialist. Analyze this analytics data and generate 2-3 actionable insights focused on performance trends and optimization opportunities.

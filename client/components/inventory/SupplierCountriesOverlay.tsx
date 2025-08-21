@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { X, Globe, MapPin } from 'lucide-react';
 
 interface SupplierCountriesOverlayProps {
@@ -44,7 +44,7 @@ export function SupplierCountriesOverlay({ isOpen, onClose, supplier }: Supplier
   };
 
   // This part of the code generates supply chain analysis based on country count
-  const getSupplyChainAnalysis = (countryCount: number, riskLevel: string) => {
+  const getSupplyChainAnalysis = (countryCount: number, _riskLevel: string) => {
     if (countryCount >= 20) {
       return `Geographic diversification across ${countryCount} countries provides excellent supply chain resilience and reduces dependency risk. This global distribution strategy minimizes potential disruptions from regional issues.`;
     } else if (countryCount >= 10) {

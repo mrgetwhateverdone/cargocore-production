@@ -1,4 +1,4 @@
-import React from 'react';
+
 
 /**
  * This part of the code creates the footer component with Heft IQ branding

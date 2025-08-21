@@ -1,7 +1,7 @@
 // This part of the code creates a comprehensive overlay system for displaying AI insights with workflow integration
 // It provides detailed analysis views and allows users to convert insights into actionable workflows
 
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { X, AlertTriangle, TrendingUp, DollarSign, Loader2, CheckCircle } from 'lucide-react';
 import { useWorkflowCreation } from '../hooks/useWorkflows';
 import { useDashboardData } from '../hooks/useDashboardData';
@@ -25,7 +25,7 @@ interface InsightOverlayProps {
 
 // This part of the code renders the main insight overlay with full-screen modal design
 export function InsightOverlay({ isOpen, onClose, insight, agentName = "Dashboard Agent" }: InsightOverlayProps) {
-  const { createWorkflow, creating } = useWorkflowCreation();
+  const { createWorkflow } = useWorkflowCreation();
   const { data: dashboardData } = useDashboardData();
   const [processingActionId, setProcessingActionId] = useState<number | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);

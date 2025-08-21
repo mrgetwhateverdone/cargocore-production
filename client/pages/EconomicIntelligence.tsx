@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EconomicKPIOverlay } from "@/components/EconomicKPIOverlay";
 import { EconomicIntelligenceKPISection } from "@/components/economic/EconomicIntelligenceKPISection";
 import { InsightsSection } from "@/components/dashboard/InsightsSection";
-import type { EconomicKPIDetail } from "@/types/api";
+import type { EconomicKPIDetail, EconomicIntelligenceData } from "@/types/api";
 import { 
   AlertTriangle, 
   Info, 
@@ -28,6 +28,9 @@ import {
  */
 export default function EconomicIntelligence() {
   const { data, isLoading, error, refetch } = useEconomicIntelligenceData();
+  
+  // This part of the code ensures proper type safety for the data
+  const economicData = data as EconomicIntelligenceData | undefined;
   const { isPageAIEnabled } = useSettingsIntegration();
   const [selectedKPI, setSelectedKPI] = useState<EconomicKPIDetail | null>(null);
 
@@ -64,7 +67,7 @@ export default function EconomicIntelligence() {
       <div className="max-w-7xl mx-auto space-y-4 md:space-y-6">
 
         {isLoading && (
-          <LoadingState message="Loading economic intelligence data..." />
+          <LoadingState message="Loading economic intelligence economicData..." />
         )}
 
         {error && (
@@ -74,18 +77,18 @@ export default function EconomicIntelligence() {
           />
         )}
 
-        {data && (
+        {economicData && (
           <>
             {/* Economic Intelligence KPI Section */}
-            <EconomicIntelligenceKPISection kpis={data.kpis} isLoading={isLoading} />
+            <EconomicIntelligenceKPISection kpis={economicData.kpis} isLoading={isLoading} />
 
             {/* Economic Intelligence Agent Section */}
             {isPageAIEnabled('liveIntelligence') && (
               <InsightsSection
-                insights={data.insights}
+                insights={economicData.insights}
                 isLoading={isLoading}
                 title="Economic Intelligence Agent"
-                subtitle={`${data.insights.length} insights from Economic Intelligence Agent`}
+                subtitle={`${economicData.insights.length} insights from Economic Intelligence Agent`}
                 loadingMessage="Economic Intelligence Agent is analyzing global market conditions and business impact..."
               />
             )}
@@ -95,179 +98,179 @@ export default function EconomicIntelligence() {
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-semibold text-gray-900">Global Economic Intelligence</h2>
                 <span className="text-sm text-gray-500">
-                  Last updated: {data.lastUpdated ? new Date(data.lastUpdated).toLocaleTimeString() : 'N/A'}
+                  Last updated: {economicData.lastUpdated ? new Date(economicData.lastUpdated).toLocaleTimeString() : 'N/A'}
                 </span>
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <Card className={`${data.kpis.supplierPerformance < 70 ? 'bg-red-50 border-red-200' : data.kpis.supplierPerformance < 90 ? 'bg-yellow-50 border-yellow-200' : 'bg-green-50 border-green-200'}`}>
+                <Card className={`${economicData.kpis.supplierPerformance < 70 ? 'bg-red-50 border-red-200' : economicData.kpis.supplierPerformance < 90 ? 'bg-yellow-50 border-yellow-200' : 'bg-green-50 border-green-200'}`}>
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between mb-2">
                       <h3 className="font-semibold text-sm text-gray-900">Supplier Performance Index</h3>
-                      <Badge className={getStatusColor(data.kpis.supplierPerformance, 'performance')}>
-                        {getStatusText(data.kpis.supplierPerformance, 'performance')}
+                      <Badge className={getStatusColor(economicData.kpis.supplierPerformance, 'performance')}>
+                        {getStatusText(economicData.kpis.supplierPerformance, 'performance')}
                       </Badge>
                     </div>
-                    <div className={`text-2xl font-bold mb-1 ${data.kpis.supplierPerformance < 70 ? 'text-red-600' : data.kpis.supplierPerformance < 90 ? 'text-yellow-600' : 'text-green-600'}`}>
-                      {data.kpis.supplierPerformance}/100
+                    <div className={`text-2xl font-bold mb-1 ${economicData.kpis.supplierPerformance < 70 ? 'text-red-600' : economicData.kpis.supplierPerformance < 90 ? 'text-yellow-600' : 'text-green-600'}`}>
+                      {economicData.kpis.supplierPerformance}/100
                     </div>
                     <p className="text-xs text-gray-600 mb-3">
                       Your supplier delivery performance and reliability metrics
                     </p>
-                    <div className={`w-full rounded-full h-2 mb-2 ${data.kpis.supplierPerformance < 70 ? 'bg-red-200' : data.kpis.supplierPerformance < 90 ? 'bg-yellow-200' : 'bg-green-200'}`}>
+                    <div className={`w-full rounded-full h-2 mb-2 ${economicData.kpis.supplierPerformance < 70 ? 'bg-red-200' : economicData.kpis.supplierPerformance < 90 ? 'bg-yellow-200' : 'bg-green-200'}`}>
                       <div 
-                        className={`h-2 rounded-full ${data.kpis.supplierPerformance < 70 ? 'bg-red-600' : data.kpis.supplierPerformance < 90 ? 'bg-yellow-600' : 'bg-green-600'}`}
-                        style={{ width: `${data.kpis.supplierPerformance}%` }}
+                        className={`h-2 rounded-full ${economicData.kpis.supplierPerformance < 70 ? 'bg-red-600' : economicData.kpis.supplierPerformance < 90 ? 'bg-yellow-600' : 'bg-green-600'}`}
+                        style={{ width: `${economicData.kpis.supplierPerformance}%` }}
                       ></div>
                     </div>
                     <button 
-                      onClick={() => setSelectedKPI(data.kpiDetails?.supplierPerformance || null)}
-                      className={`text-xs hover:underline ${data.kpis.supplierPerformance < 70 ? 'text-red-600' : data.kpis.supplierPerformance < 90 ? 'text-yellow-600' : 'text-green-600'}`}
+                      onClick={() => setSelectedKPI(economicData.kpiDetails?.supplierPerformance || null)}
+                      className={`text-xs hover:underline ${economicData.kpis.supplierPerformance < 70 ? 'text-red-600' : economicData.kpis.supplierPerformance < 90 ? 'text-yellow-600' : 'text-green-600'}`}
                     >
                       Click for details
                     </button>
                   </CardContent>
                 </Card>
 
-                <Card className={`${data.kpis.shippingCostImpact > 130 ? 'bg-red-50 border-red-200' : data.kpis.shippingCostImpact > 110 ? 'bg-yellow-50 border-yellow-200' : 'bg-green-50 border-green-200'}`}>
+                <Card className={`${economicData.kpis.shippingCostImpact > 130 ? 'bg-red-50 border-red-200' : economicData.kpis.shippingCostImpact > 110 ? 'bg-yellow-50 border-yellow-200' : 'bg-green-50 border-green-200'}`}>
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between mb-2">
                       <h3 className="font-semibold text-sm text-gray-900">Shipping Cost Impact</h3>
-                      <Badge className={getStatusColor(data.kpis.shippingCostImpact, 'cost')}>
-                        {getStatusText(data.kpis.shippingCostImpact, 'cost')}
+                      <Badge className={getStatusColor(economicData.kpis.shippingCostImpact, 'cost')}>
+                        {getStatusText(economicData.kpis.shippingCostImpact, 'cost')}
                       </Badge>
                     </div>
-                    <div className={`text-2xl font-bold mb-1 ${data.kpis.shippingCostImpact > 130 ? 'text-red-600' : data.kpis.shippingCostImpact > 110 ? 'text-yellow-600' : 'text-green-600'}`}>
-                      {data.kpis.shippingCostImpact}%
+                    <div className={`text-2xl font-bold mb-1 ${economicData.kpis.shippingCostImpact > 130 ? 'text-red-600' : economicData.kpis.shippingCostImpact > 110 ? 'text-yellow-600' : 'text-green-600'}`}>
+                      {economicData.kpis.shippingCostImpact}%
                     </div>
                     <p className="text-xs text-gray-600 mb-3">
                       Impact of shipping costs on your operational expenses
                     </p>
-                    <div className={`w-full rounded-full h-2 mb-2 ${data.kpis.shippingCostImpact > 130 ? 'bg-red-200' : data.kpis.shippingCostImpact > 110 ? 'bg-yellow-200' : 'bg-green-200'}`}>
+                    <div className={`w-full rounded-full h-2 mb-2 ${economicData.kpis.shippingCostImpact > 130 ? 'bg-red-200' : economicData.kpis.shippingCostImpact > 110 ? 'bg-yellow-200' : 'bg-green-200'}`}>
                       <div 
-                        className={`h-2 rounded-full ${data.kpis.shippingCostImpact > 130 ? 'bg-red-600' : data.kpis.shippingCostImpact > 110 ? 'bg-yellow-600' : 'bg-green-600'}`}
-                        style={{ width: `${Math.min(data.kpis.shippingCostImpact, 200) / 2}%` }}
+                        className={`h-2 rounded-full ${economicData.kpis.shippingCostImpact > 130 ? 'bg-red-600' : economicData.kpis.shippingCostImpact > 110 ? 'bg-yellow-600' : 'bg-green-600'}`}
+                        style={{ width: `${Math.min(economicData.kpis.shippingCostImpact, 200) / 2}%` }}
                       ></div>
                     </div>
                     <button 
-                      onClick={() => setSelectedKPI(data.kpiDetails?.shippingCostImpact || null)}
-                      className={`text-xs hover:underline ${data.kpis.shippingCostImpact > 130 ? 'text-red-600' : data.kpis.shippingCostImpact > 110 ? 'text-yellow-600' : 'text-green-600'}`}
+                      onClick={() => setSelectedKPI(economicData.kpiDetails?.shippingCostImpact || null)}
+                      className={`text-xs hover:underline ${economicData.kpis.shippingCostImpact > 130 ? 'text-red-600' : economicData.kpis.shippingCostImpact > 110 ? 'text-yellow-600' : 'text-green-600'}`}
                     >
                       Click for details
                     </button>
                   </CardContent>
                 </Card>
 
-                <Card className={`${data.kpis.transportationCosts > 130 ? 'bg-red-50 border-red-200' : data.kpis.transportationCosts > 110 ? 'bg-yellow-50 border-yellow-200' : 'bg-green-50 border-green-200'}`}>
+                <Card className={`${economicData.kpis.transportationCosts > 130 ? 'bg-red-50 border-red-200' : economicData.kpis.transportationCosts > 110 ? 'bg-yellow-50 border-yellow-200' : 'bg-green-50 border-green-200'}`}>
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between mb-2">
                       <h3 className="font-semibold text-sm text-gray-900">Transportation Cost Index</h3>
-                      <Badge className={getStatusColor(data.kpis.transportationCosts, 'cost')}>
-                        {getStatusText(data.kpis.transportationCosts, 'cost')}
+                      <Badge className={getStatusColor(economicData.kpis.transportationCosts, 'cost')}>
+                        {getStatusText(economicData.kpis.transportationCosts, 'cost')}
                       </Badge>
                     </div>
-                    <div className={`text-2xl font-bold mb-1 ${data.kpis.transportationCosts > 130 ? 'text-red-600' : data.kpis.transportationCosts > 110 ? 'text-yellow-600' : 'text-green-600'}`}>
-                      {data.kpis.transportationCosts}%
+                    <div className={`text-2xl font-bold mb-1 ${economicData.kpis.transportationCosts > 130 ? 'text-red-600' : economicData.kpis.transportationCosts > 110 ? 'text-yellow-600' : 'text-green-600'}`}>
+                      {economicData.kpis.transportationCosts}%
                     </div>
                     <p className="text-xs text-gray-600 mb-3">
                       Transportation cost trends affecting your deliveries
                     </p>
-                    <div className={`w-full rounded-full h-2 mb-2 ${data.kpis.transportationCosts > 130 ? 'bg-red-200' : data.kpis.transportationCosts > 110 ? 'bg-yellow-200' : 'bg-green-200'}`}>
+                    <div className={`w-full rounded-full h-2 mb-2 ${economicData.kpis.transportationCosts > 130 ? 'bg-red-200' : economicData.kpis.transportationCosts > 110 ? 'bg-yellow-200' : 'bg-green-200'}`}>
                       <div 
-                        className={`h-2 rounded-full ${data.kpis.transportationCosts > 130 ? 'bg-red-600' : data.kpis.transportationCosts > 110 ? 'bg-yellow-600' : 'bg-green-600'}`}
-                        style={{ width: `${Math.min(data.kpis.transportationCosts, 200) / 2}%` }}
+                        className={`h-2 rounded-full ${economicData.kpis.transportationCosts > 130 ? 'bg-red-600' : economicData.kpis.transportationCosts > 110 ? 'bg-yellow-600' : 'bg-green-600'}`}
+                        style={{ width: `${Math.min(economicData.kpis.transportationCosts, 200) / 2}%` }}
                       ></div>
                     </div>
                     <button 
-                      onClick={() => setSelectedKPI(data.kpiDetails?.transportationCosts || null)}
-                      className={`text-xs hover:underline ${data.kpis.transportationCosts > 130 ? 'text-red-600' : data.kpis.transportationCosts > 110 ? 'text-yellow-600' : 'text-green-600'}`}
+                      onClick={() => setSelectedKPI(economicData.kpiDetails?.transportationCosts || null)}
+                      className={`text-xs hover:underline ${economicData.kpis.transportationCosts > 130 ? 'text-red-600' : economicData.kpis.transportationCosts > 110 ? 'text-yellow-600' : 'text-green-600'}`}
                     >
                       Click for details
                     </button>
                   </CardContent>
                 </Card>
 
-                <Card className={`${data.kpis.supplyChainHealth < 70 ? 'bg-red-50 border-red-200' : data.kpis.supplyChainHealth < 90 ? 'bg-yellow-50 border-yellow-200' : 'bg-green-50 border-green-200'}`}>
+                <Card className={`${economicData.kpis.supplyChainHealth < 70 ? 'bg-red-50 border-red-200' : economicData.kpis.supplyChainHealth < 90 ? 'bg-yellow-50 border-yellow-200' : 'bg-green-50 border-green-200'}`}>
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between mb-2">
                       <h3 className="font-semibold text-sm text-gray-900">Supply Chain Health</h3>
-                      <Badge className={getStatusColor(data.kpis.supplyChainHealth, 'health')}>
-                        {getStatusText(data.kpis.supplyChainHealth, 'health')}
+                      <Badge className={getStatusColor(economicData.kpis.supplyChainHealth, 'health')}>
+                        {getStatusText(economicData.kpis.supplyChainHealth, 'health')}
                       </Badge>
                     </div>
-                    <div className={`text-2xl font-bold mb-1 ${data.kpis.supplyChainHealth < 70 ? 'text-red-600' : data.kpis.supplyChainHealth < 90 ? 'text-yellow-600' : 'text-green-600'}`}>
-                      {data.kpis.supplyChainHealth}/100
+                    <div className={`text-2xl font-bold mb-1 ${economicData.kpis.supplyChainHealth < 70 ? 'text-red-600' : economicData.kpis.supplyChainHealth < 90 ? 'text-yellow-600' : 'text-green-600'}`}>
+                      {economicData.kpis.supplyChainHealth}/100
                     </div>
                     <p className="text-xs text-gray-600 mb-3">
                       Overall health of your supply chain operations
                     </p>
-                    <div className={`w-full rounded-full h-2 mb-2 ${data.kpis.supplyChainHealth < 70 ? 'bg-red-200' : data.kpis.supplyChainHealth < 90 ? 'bg-yellow-200' : 'bg-green-200'}`}>
+                    <div className={`w-full rounded-full h-2 mb-2 ${economicData.kpis.supplyChainHealth < 70 ? 'bg-red-200' : economicData.kpis.supplyChainHealth < 90 ? 'bg-yellow-200' : 'bg-green-200'}`}>
                       <div 
-                        className={`h-2 rounded-full ${data.kpis.supplyChainHealth < 70 ? 'bg-red-600' : data.kpis.supplyChainHealth < 90 ? 'bg-yellow-600' : 'bg-green-600'}`}
-                        style={{ width: `${data.kpis.supplyChainHealth}%` }}
+                        className={`h-2 rounded-full ${economicData.kpis.supplyChainHealth < 70 ? 'bg-red-600' : economicData.kpis.supplyChainHealth < 90 ? 'bg-yellow-600' : 'bg-green-600'}`}
+                        style={{ width: `${economicData.kpis.supplyChainHealth}%` }}
                       ></div>
                     </div>
                     <button 
-                      onClick={() => setSelectedKPI(data.kpiDetails?.supplyChainHealth || null)}
-                      className={`text-xs hover:underline ${data.kpis.supplyChainHealth < 70 ? 'text-red-600' : data.kpis.supplyChainHealth < 90 ? 'text-yellow-600' : 'text-green-600'}`}
+                      onClick={() => setSelectedKPI(economicData.kpiDetails?.supplyChainHealth || null)}
+                      className={`text-xs hover:underline ${economicData.kpis.supplyChainHealth < 70 ? 'text-red-600' : economicData.kpis.supplyChainHealth < 90 ? 'text-yellow-600' : 'text-green-600'}`}
                     >
                       Click for details
                     </button>
                   </CardContent>
                 </Card>
 
-                <Card className={`${data.kpis.logisticsCostEfficiency > 130 ? 'bg-red-50 border-red-200' : data.kpis.logisticsCostEfficiency > 110 ? 'bg-yellow-50 border-yellow-200' : 'bg-green-50 border-green-200'}`}>
+                <Card className={`${economicData.kpis.logisticsCostEfficiency > 130 ? 'bg-red-50 border-red-200' : economicData.kpis.logisticsCostEfficiency > 110 ? 'bg-yellow-50 border-yellow-200' : 'bg-green-50 border-green-200'}`}>
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between mb-2">
                       <h3 className="font-semibold text-sm text-gray-900">Logistics Cost Efficiency</h3>
-                      <Badge className={getStatusColor(data.kpis.logisticsCostEfficiency, 'cost')}>
-                        {getStatusText(data.kpis.logisticsCostEfficiency, 'cost')}
+                      <Badge className={getStatusColor(economicData.kpis.logisticsCostEfficiency, 'cost')}>
+                        {getStatusText(economicData.kpis.logisticsCostEfficiency, 'cost')}
                       </Badge>
                     </div>
-                    <div className={`text-2xl font-bold mb-1 ${data.kpis.logisticsCostEfficiency > 130 ? 'text-red-600' : data.kpis.logisticsCostEfficiency > 110 ? 'text-yellow-600' : 'text-green-600'}`}>
-                      {data.kpis.logisticsCostEfficiency}%
+                    <div className={`text-2xl font-bold mb-1 ${economicData.kpis.logisticsCostEfficiency > 130 ? 'text-red-600' : economicData.kpis.logisticsCostEfficiency > 110 ? 'text-yellow-600' : 'text-green-600'}`}>
+                      {economicData.kpis.logisticsCostEfficiency}%
                     </div>
                     <p className="text-xs text-gray-600 mb-3">
                       Efficiency of your logistics and shipping operations
                     </p>
-                    <div className={`w-full rounded-full h-2 mb-2 ${data.kpis.logisticsCostEfficiency > 130 ? 'bg-red-200' : data.kpis.logisticsCostEfficiency > 110 ? 'bg-yellow-200' : 'bg-green-200'}`}>
+                    <div className={`w-full rounded-full h-2 mb-2 ${economicData.kpis.logisticsCostEfficiency > 130 ? 'bg-red-200' : economicData.kpis.logisticsCostEfficiency > 110 ? 'bg-yellow-200' : 'bg-green-200'}`}>
                       <div 
-                        className={`h-2 rounded-full ${data.kpis.logisticsCostEfficiency > 130 ? 'bg-red-600' : data.kpis.logisticsCostEfficiency > 110 ? 'bg-yellow-600' : 'bg-green-600'}`}
-                        style={{ width: `${Math.min(data.kpis.logisticsCostEfficiency, 200) / 2}%` }}
+                        className={`h-2 rounded-full ${economicData.kpis.logisticsCostEfficiency > 130 ? 'bg-red-600' : economicData.kpis.logisticsCostEfficiency > 110 ? 'bg-yellow-600' : 'bg-green-600'}`}
+                        style={{ width: `${Math.min(economicData.kpis.logisticsCostEfficiency, 200) / 2}%` }}
                       ></div>
                     </div>
                     <button 
-                      onClick={() => setSelectedKPI(data.kpiDetails?.logisticsCostEfficiency || null)}
-                      className={`text-xs hover:underline ${data.kpis.logisticsCostEfficiency > 130 ? 'text-red-600' : data.kpis.logisticsCostEfficiency > 110 ? 'text-yellow-600' : 'text-green-600'}`}
+                      onClick={() => setSelectedKPI(economicData.kpiDetails?.logisticsCostEfficiency || null)}
+                      className={`text-xs hover:underline ${economicData.kpis.logisticsCostEfficiency > 130 ? 'text-red-600' : economicData.kpis.logisticsCostEfficiency > 110 ? 'text-yellow-600' : 'text-green-600'}`}
                     >
                       Click for details
                     </button>
                   </CardContent>
                 </Card>
 
-                <Card className={`${data.kpis.supplierDelayRate > 20 ? 'bg-red-50 border-red-200' : data.kpis.supplierDelayRate > 10 ? 'bg-yellow-50 border-yellow-200' : 'bg-green-50 border-green-200'}`}>
+                <Card className={`${economicData.kpis.supplierDelayRate > 20 ? 'bg-red-50 border-red-200' : economicData.kpis.supplierDelayRate > 10 ? 'bg-yellow-50 border-yellow-200' : 'bg-green-50 border-green-200'}`}>
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between mb-2">
                       <h3 className="font-semibold text-sm text-gray-900">Supplier Delay Rate</h3>
-                      <Badge className={`${data.kpis.supplierDelayRate > 20 ? 'bg-red-100 text-red-800' : data.kpis.supplierDelayRate > 10 ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'}`}>
-                        {data.kpis.supplierDelayRate > 20 ? 'CRITICAL' : data.kpis.supplierDelayRate > 10 ? 'WARNING' : 'GOOD'}
+                      <Badge className={`${economicData.kpis.supplierDelayRate > 20 ? 'bg-red-100 text-red-800' : economicData.kpis.supplierDelayRate > 10 ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'}`}>
+                        {economicData.kpis.supplierDelayRate > 20 ? 'CRITICAL' : economicData.kpis.supplierDelayRate > 10 ? 'WARNING' : 'GOOD'}
                       </Badge>
                     </div>
-                    <div className={`text-2xl font-bold mb-1 ${data.kpis.supplierDelayRate > 20 ? 'text-red-600' : data.kpis.supplierDelayRate > 10 ? 'text-yellow-600' : 'text-green-600'}`}>
-                      {data.kpis.supplierDelayRate}%
+                    <div className={`text-2xl font-bold mb-1 ${economicData.kpis.supplierDelayRate > 20 ? 'text-red-600' : economicData.kpis.supplierDelayRate > 10 ? 'text-yellow-600' : 'text-green-600'}`}>
+                      {economicData.kpis.supplierDelayRate}%
                     </div>
                     <p className="text-xs text-gray-600 mb-3">
                       Percentage of suppliers experiencing delays
                     </p>
-                    <div className={`w-full rounded-full h-2 mb-2 ${data.kpis.supplierDelayRate > 20 ? 'bg-red-200' : data.kpis.supplierDelayRate > 10 ? 'bg-yellow-200' : 'bg-green-200'}`}>
+                    <div className={`w-full rounded-full h-2 mb-2 ${economicData.kpis.supplierDelayRate > 20 ? 'bg-red-200' : economicData.kpis.supplierDelayRate > 10 ? 'bg-yellow-200' : 'bg-green-200'}`}>
                       <div 
-                        className={`h-2 rounded-full ${data.kpis.supplierDelayRate > 20 ? 'bg-red-600' : data.kpis.supplierDelayRate > 10 ? 'bg-yellow-600' : 'bg-green-600'}`}
-                        style={{ width: `${data.kpis.supplierDelayRate}%` }}
+                        className={`h-2 rounded-full ${economicData.kpis.supplierDelayRate > 20 ? 'bg-red-600' : economicData.kpis.supplierDelayRate > 10 ? 'bg-yellow-600' : 'bg-green-600'}`}
+                        style={{ width: `${economicData.kpis.supplierDelayRate}%` }}
                       ></div>
                     </div>
                     <button 
-                      onClick={() => setSelectedKPI(data.kpiDetails?.supplierDelayRate || null)}
-                      className={`text-xs hover:underline ${data.kpis.supplierDelayRate > 20 ? 'text-red-600' : data.kpis.supplierDelayRate > 10 ? 'text-yellow-600' : 'text-green-600'}`}
+                      onClick={() => setSelectedKPI(economicData.kpiDetails?.supplierDelayRate || null)}
+                      className={`text-xs hover:underline ${economicData.kpis.supplierDelayRate > 20 ? 'text-red-600' : economicData.kpis.supplierDelayRate > 10 ? 'text-yellow-600' : 'text-green-600'}`}
                     >
                       Click for details
                     </button>
@@ -287,7 +290,7 @@ export default function EconomicIntelligence() {
                 </CardHeader>
                 <CardContent>
                   <p className="text-gray-900 leading-relaxed font-medium">
-                    {data.businessImpact.executiveSummary}
+                    {economicData.businessImpact.executiveSummary}
                   </p>
                 </CardContent>
               </Card>
@@ -300,7 +303,7 @@ export default function EconomicIntelligence() {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-3">
-                      {data.businessImpact.keyRisks.map((risk, index) => (
+                      {economicData.businessImpact.keyRisks.map((risk: string, index: number) => (
                         <div key={index} className="flex items-start">
                           <AlertTriangle className="h-4 w-4 text-red-600 mt-1 mr-2 flex-shrink-0" />
                           <span className="text-sm text-gray-900 font-medium">{risk}</span>
@@ -317,7 +320,7 @@ export default function EconomicIntelligence() {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-3">
-                      {data.businessImpact.opportunityAreas.map((opportunity, index) => (
+                      {economicData.businessImpact.opportunityAreas.map((opportunity: string, index: number) => (
                         <div key={index} className="flex items-start">
                           <Target className="h-4 w-4 text-green-600 mt-1 mr-2 flex-shrink-0" />
                           <span className="text-sm text-gray-900 font-medium">{opportunity}</span>

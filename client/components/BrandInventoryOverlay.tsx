@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { X, TrendingUp, Package, DollarSign, Loader2, CheckCircle2, Target } from 'lucide-react';
 import { useWorkflowCreation } from '../hooks/useWorkflows';
 import type { BrandPerformance } from '@/types/api';
@@ -22,7 +22,7 @@ export function BrandInventoryOverlay({
   recommendations,
   isLoadingRecommendations 
 }: BrandInventoryOverlayProps) {
-  const { createWorkflow, creating } = useWorkflowCreation();
+  const { createWorkflow } = useWorkflowCreation();
   const [processingActionId, setProcessingActionId] = useState<number | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
 

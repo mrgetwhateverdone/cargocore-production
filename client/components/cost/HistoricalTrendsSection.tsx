@@ -74,7 +74,7 @@ export function HistoricalTrendsSection({ historicalTrends, isLoading }: Histori
 
   // This part of the code prepares data for simple visualization
   const maxCost = Math.max(...historicalTrends.map(t => t.total_cost));
-  const minCost = Math.min(...historicalTrends.map(t => t.total_cost));
+      const _minCost = Math.min(...historicalTrends.map(t => t.total_cost));
 
   return (
     <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6 mb-6">

@@ -691,7 +691,7 @@ export class EnhancedPDFServiceV2 {
   /**
    * Fallback insights for error cases
    */
-  private generateFallbackInsights(reportData: any): any[] {
+  private generateFallbackInsights(_reportData: any): any[] {
     return [
       {
         title: 'Data Analysis Complete',

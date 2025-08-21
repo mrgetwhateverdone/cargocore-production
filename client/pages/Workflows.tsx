@@ -1,15 +1,15 @@
 // This part of the code creates the complete Workflows page with KPIs, management interface, and real-time updates
 // It provides comprehensive workflow tracking with status management and automatic refresh capabilities
 
-import React, { useState } from 'react';
-import { RefreshCw, Plus, Bot, Settings, Calendar, Trash2, Play, CheckCircle, Clock } from 'lucide-react';
+import { useState } from 'react';
+import { Plus, Bot, Settings, Calendar, Trash2, Play, CheckCircle, Clock } from 'lucide-react';
 import { Layout } from '../components/layout/Layout';
 import { useWorkflows } from '../hooks/useWorkflows';
 import { CreatedWorkflow } from '../utils/workflowStorage';
 import { BrainIcon } from '../components/ui/BrainIcon';
 
 export default function Workflows() {
-  const { workflows, loading, stats, workflowsByStatus, updateWorkflowStatus, removeWorkflow, refreshWorkflows } = useWorkflows();
+  const { loading, stats, workflowsByStatus, updateWorkflowStatus, removeWorkflow } = useWorkflows();
   const [activeTab, setActiveTab] = useState<'todo' | 'inProgress' | 'completed'>('todo');
 
   // This part of the code handles workflow status transitions with immediate state updates

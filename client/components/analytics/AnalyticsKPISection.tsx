@@ -60,7 +60,7 @@ export function AnalyticsKPISection({ kpis, isLoading }: AnalyticsKPISectionProp
   };
 
   // This part of the code determines color based on KPI type and value
-  const getValueColor = (value: number | null, title: string, showIndicator: boolean) => {
+  const getValueColor = (value: number | null, _title: string, showIndicator: boolean) => {
     if (value === null || value === undefined) return "text-gray-500";
     
     if (showIndicator) {

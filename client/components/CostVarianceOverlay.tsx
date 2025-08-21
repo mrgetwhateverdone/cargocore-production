@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { X, TrendingUp, TrendingDown, AlertTriangle, DollarSign, Loader2, CheckCircle2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { X, TrendingUp, AlertTriangle, DollarSign, Loader2, CheckCircle2 } from 'lucide-react';
 import { useWorkflowCreation } from '../hooks/useWorkflows';
 import type { CostVarianceAnomaly } from '@/types/api';
 
@@ -22,7 +22,7 @@ export function CostVarianceOverlay({
   recommendations,
   isLoadingRecommendations 
 }: CostVarianceOverlayProps) {
-  const { createWorkflow, creating } = useWorkflowCreation();
+  const { createWorkflow } = useWorkflowCreation();
   const [processingActionId, setProcessingActionId] = useState<number | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
 

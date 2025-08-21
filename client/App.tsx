@@ -11,7 +11,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ThemeProvider } from "next-themes";
 import { SettingsProvider } from "@/contexts/SettingsContext";
-import { ClerkProvider, SignedIn, SignedOut } from "@clerk/clerk-react";
+import { ClerkProvider, SignedIn } from "@clerk/clerk-react";
 
 console.log("🚀 CargoCore: App.tsx loading...");
 

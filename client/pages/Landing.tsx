@@ -2,7 +2,7 @@ import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { Check, BarChart3, Zap, Shield, TrendingUp, Users, DollarSign, Loader2 } from 'lucide-react';
-import { SignInButton, SignUpButton, UserButton, useUser } from '@clerk/clerk-react';
+import { SignInButton, UserButton, useUser } from '@clerk/clerk-react';
 
 /**
  * This part of the code creates the main landing page with HubSpot-inspired design
@@ -10,7 +10,7 @@ import { SignInButton, SignUpButton, UserButton, useUser } from '@clerk/clerk-re
  */
 export default function Landing() {
   const navigate = useNavigate();
-  const { isSignedIn, user, isLoaded } = useUser();
+  const { isSignedIn, isLoaded } = useUser();
 
   // This part of the code automatically redirects signed-in users to dashboard
   // Only redirect after authentication state is fully loaded

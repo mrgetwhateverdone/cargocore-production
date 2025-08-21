@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { X, TrendingUp, TrendingDown, AlertTriangle, Target, Loader2, CheckCircle2 } from 'lucide-react';
 import { useWorkflowCreation } from '../hooks/useWorkflows';
 import type { MarginRiskAlert } from '@/types/api';
@@ -22,7 +22,7 @@ export function MarginRiskOverlay({
   recommendations,
   isLoadingRecommendations 
 }: MarginRiskOverlayProps) {
-  const { createWorkflow, creating } = useWorkflowCreation();
+  const { createWorkflow } = useWorkflowCreation();
   const [processingActionId, setProcessingActionId] = useState<number | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
 

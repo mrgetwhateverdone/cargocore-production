@@ -5,7 +5,7 @@ import { ErrorDisplay } from "@/components/ui/error-display";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { 
   Download, 
@@ -403,7 +403,7 @@ export default function Reports() {
         <CardContent className="p-6 h-full flex flex-col">
           {/* Icon and Status Badge */}
           <div className="flex items-start justify-between mb-4">
-            <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${colorClasses[template.color] || colorClasses.blue}`}>
+            <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${colorClasses[template.color as keyof typeof colorClasses] || colorClasses.blue}`}>
               {template.icon}
             </div>
             {template.available ? (
@@ -819,7 +819,7 @@ export default function Reports() {
                 {/* Quick Generate Button */}
                 <Button 
                   onClick={handleGeneratePDF}
-                  disabled={isGenerating || !data || (selectedTemplate && !insightsReady && !insightsError)}
+                  disabled={!!(isGenerating || !data || (selectedTemplate && !insightsReady && !insightsError))}
                   className={`px-8 py-3 text-lg ${
                     selectedTemplate && !insightsReady 
                       ? "bg-gray-400 text-gray-600 cursor-not-allowed" 

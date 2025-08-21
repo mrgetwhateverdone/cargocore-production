@@ -98,13 +98,13 @@ export class PDFGenerationService {
     // CargoCore logo/title
     this.doc.setFontSize(24);
     this.doc.setTextColor(this.primaryColor);
-    this.doc.setFont(undefined, 'bold');
+    this.doc.setFont('helvetica', 'bold');
     this.doc.text('CargoCore', this.pageWidth - this.margin, 25, { align: 'right' });
     
     // Subtitle
     this.doc.setFontSize(10);
     this.doc.setTextColor(this.secondaryColor);
-    this.doc.setFont(undefined, 'normal');
+    this.doc.setFont('helvetica', 'normal');
     this.doc.text('3PL Operations Platform', this.pageWidth - this.margin, 32, { align: 'right' });
     
     // Blue line separator
@@ -118,11 +118,11 @@ export class PDFGenerationService {
   /**
    * This part of the code adds the report title and metadata section
    */
-  private addReportTitle(reportData: ReportData): void {
+  private addReportTitle(_reportData: ReportData): void {
     // Report title
     this.doc.setFontSize(20);
     this.doc.setTextColor('#1f2937');
-    this.doc.setFont(undefined, 'bold');
+    this.doc.setFont('helvetica', 'bold');
     this.doc.text(reportData.template.name, this.margin, this.currentY);
     
     this.currentY += 15;
@@ -130,7 +130,7 @@ export class PDFGenerationService {
     // Report metadata
     this.doc.setFontSize(10);
     this.doc.setTextColor(this.secondaryColor);
-    this.doc.setFont(undefined, 'normal');
+    this.doc.setFont('helvetica', 'normal');
     
     const metadata = [
       `Report Period: ${reportData.reportPeriod}`,
@@ -149,7 +149,7 @@ export class PDFGenerationService {
   /**
    * This part of the code adds the KPIs section with formatted metrics
    */
-  private addKPIsSection(kpis: ReportKPIs): void {
+  private addKPIsSection(_kpis: ReportKPIs): void {
     this.addSectionTitle('Key Performance Indicators');
     
     const kpiData = [
@@ -189,7 +189,7 @@ export class PDFGenerationService {
   /**
    * This part of the code adds data tables based on the report template type
    */
-  private addDataTables(reportData: ReportData): void {
+  private addDataTables(_reportData: ReportData): void {
     const templateId = reportData.template.id;
     
     switch (templateId) {
@@ -490,7 +490,7 @@ export class PDFGenerationService {
   /**
    * This part of the code adds AI insights section at the bottom
    */
-  private addAIInsights(insights: any[]): void {
+  private addAIInsights(_insights: any[]): void {
     if (!insights || insights.length === 0) {
       return;
     }
@@ -513,14 +513,14 @@ export class PDFGenerationService {
       // Insight title
       this.doc.setFontSize(11);
       this.doc.setTextColor('#1f2937');
-      this.doc.setFont(undefined, 'bold');
+      this.doc.setFont('helvetica', 'bold');
       this.doc.text(`${index + 1}. ${insight.title}`, this.margin, this.currentY);
       this.currentY += 8;
 
       // Insight description
       this.doc.setFontSize(9);
       this.doc.setTextColor('#374151');
-      this.doc.setFont(undefined, 'normal');
+      this.doc.setFont('helvetica', 'normal');
       const descriptionLines = this.doc.splitTextToSize(insight.description, this.pageWidth - (this.margin * 2));
       this.doc.text(descriptionLines, this.margin, this.currentY);
       this.currentY += descriptionLines.length * 4 + 5;
@@ -529,14 +529,14 @@ export class PDFGenerationService {
       if (insight.suggestedActions && insight.suggestedActions.length > 0) {
         this.doc.setFontSize(8);
         this.doc.setTextColor(this.primaryColor);
-        this.doc.setFont(undefined, 'bold');
+        this.doc.setFont('helvetica', 'bold');
         this.doc.text('Recommended Actions:', this.margin, this.currentY);
         this.currentY += 5;
 
-        insight.suggestedActions.forEach((action: string, actionIndex: number) => {
+        insight.suggestedActions.forEach((action: string, _actionIndex: number) => {
           this.doc.setFontSize(8);
           this.doc.setTextColor('#4b5563');
-          this.doc.setFont(undefined, 'normal');
+          this.doc.setFont('helvetica', 'normal');
           const actionText = `• ${action}`;
           const actionLines = this.doc.splitTextToSize(actionText, this.pageWidth - (this.margin * 2) - 10);
           this.doc.text(actionLines, this.margin + 5, this.currentY);
@@ -560,7 +560,7 @@ export class PDFGenerationService {
 
     this.doc.setFontSize(14);
     this.doc.setTextColor(this.primaryColor);
-    this.doc.setFont(undefined, 'bold');
+    this.doc.setFont('helvetica', 'bold');
     this.doc.text(title, this.margin, this.currentY);
     
     // Add underline
@@ -578,7 +578,7 @@ export class PDFGenerationService {
   private addNoDataMessage(): void {
     this.doc.setFontSize(10);
     this.doc.setTextColor(this.secondaryColor);
-    this.doc.setFont(undefined, 'italic');
+    this.doc.setFont('helvetica', 'italic');
     this.doc.text('No data available for this section', this.margin, this.currentY);
     this.currentY += 20;
   }
@@ -600,7 +600,7 @@ export class PDFGenerationService {
       // Page number
       this.doc.setFontSize(8);
       this.doc.setTextColor(this.secondaryColor);
-      this.doc.setFont(undefined, 'normal');
+      this.doc.setFont('helvetica', 'normal');
       this.doc.text(
         `Page ${i} of ${pageCount}`,
         this.pageWidth - this.margin,
@@ -768,7 +768,7 @@ export class PDFGenerationService {
   /**
    * This part of the code adds a simple report title
    */
-  private addSimpleTitle(reportData: any): void {
+  private addSimpleTitle(_reportData: any): void {
     this.currentY += 10;
     
     // Report title

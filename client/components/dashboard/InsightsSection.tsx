@@ -12,7 +12,7 @@ interface InsightsSectionProps {
   isLoading?: boolean;
   title?: string;
   subtitle?: string;
-  loadingMessage?: string;
+  _loadingMessage?: string;
 }
 
 export function InsightsSection({ 
@@ -20,11 +20,11 @@ export function InsightsSection({
   isLoading, 
   title = "Insights",
   subtitle,
-  loadingMessage = "Analyzing data..."
+  _loadingMessage = "Analyzing data..."
 }: InsightsSectionProps) {
   const [selectedInsight, setSelectedInsight] = useState<AIInsight | null>(null);
   const { createWorkflow, creating } = useWorkflowCreation();
-  const { isPageAIEnabled, formatCurrency, getAgentSettings } = useSettingsIntegration();
+  const { isPageAIEnabled, getAgentSettings } = useSettingsIntegration();
 
   // This part of the code checks if AI insights should be shown on dashboard
   if (!isPageAIEnabled('dashboard')) {

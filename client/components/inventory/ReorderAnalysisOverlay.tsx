@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react';
-import { X, Package, TrendingUp, AlertTriangle, CheckCircle, Clock, DollarSign } from 'lucide-react';
+import { useEffect } from 'react';
+import { X, Package, TrendingUp, AlertTriangle, CheckCircle, Clock } from 'lucide-react';
 import { formatCurrency, formatNumber } from '@/lib/utils';
 
 interface ReorderAnalysisData {

@@ -140,13 +140,13 @@ export class EnhancedPDFService {
     // CargoCore logo/title
     this.doc.setFontSize(24);
     this.doc.setTextColor(this.primaryColor);
-    this.doc.setFont(undefined, 'bold');
+    this.doc.setFont('helvetica', 'bold');
     this.doc.text('CargoCore', this.pageWidth - this.margin, 25, { align: 'right' });
     
     // Subtitle
     this.doc.setFontSize(10);
     this.doc.setTextColor(this.secondaryColor);
-    this.doc.setFont(undefined, 'normal');
+    this.doc.setFont('helvetica', 'normal');
     this.doc.text('3PL Operations Platform', this.pageWidth - this.margin, 32, { align: 'right' });
     
     // Blue line separator
@@ -163,7 +163,7 @@ export class EnhancedPDFService {
   private addReportTitle(reportData: any): void {
     this.doc.setFontSize(18);
     this.doc.setTextColor('#1f2937');
-    this.doc.setFont(undefined, 'bold');
+    this.doc.setFont('helvetica', 'bold');
     
     const title = reportData.template?.name || 'CargoCore Data Report';
     this.doc.text(title, this.margin, this.currentY);
@@ -172,7 +172,7 @@ export class EnhancedPDFService {
     // Add generation date and report period
     this.doc.setFontSize(10);
     this.doc.setTextColor(this.secondaryColor);
-    this.doc.setFont(undefined, 'normal');
+    this.doc.setFont('helvetica', 'normal');
     this.doc.text(`Generated: ${new Date().toLocaleDateString()}`, this.margin, this.currentY);
     this.currentY += 8;
     
@@ -217,13 +217,13 @@ export class EnhancedPDFService {
   private addDataSummary(reportData: any): void {
     this.doc.setFontSize(14);
     this.doc.setTextColor(this.primaryColor);
-    this.doc.setFont(undefined, 'bold');
+    this.doc.setFont('helvetica', 'bold');
     this.doc.text('Data Summary', this.margin, this.currentY);
     this.currentY += 15;
     
     this.doc.setFontSize(10);
     this.doc.setTextColor('#000000');
-    this.doc.setFont(undefined, 'normal');
+    this.doc.setFont('helvetica', 'normal');
     
     const data = reportData.data || reportData;
     const summary = [
@@ -404,11 +404,11 @@ export class EnhancedPDFService {
       const title = insight.title || `Insight ${index + 1}`;
       const content = insight.content || insight.message || 'No details available';
 
-      this.doc.setFont(undefined, 'bold');
+      this.doc.setFont('helvetica', 'bold');
       this.doc.text(`${index + 1}. ${title}`, this.margin, this.currentY);
       this.currentY += 8;
 
-      this.doc.setFont(undefined, 'normal');
+      this.doc.setFont('helvetica', 'normal');
       const lines = this.doc.splitTextToSize(content, this.pageWidth - 2 * this.margin);
       lines.forEach((line: string) => {
         this.doc.text(line, this.margin + 5, this.currentY);

@@ -1,5 +1,4 @@
 import { TrendingUp, Plus } from "lucide-react";
-import { useState } from "react";
 import type { AIInsight } from "@/types/api";
 import { useWorkflowCreation } from "../hooks/useWorkflows";
 import { useSettingsIntegration } from "@/hooks/useSettingsIntegration";
@@ -9,7 +8,7 @@ interface SuggestedWorkflowsProps {
   isLoading?: boolean;
   title?: string;
   subtitle?: string;
-  loadingMessage?: string;
+  _loadingMessage?: string;
   pageType?: string; // Used for AI agent filtering
 }
 
@@ -18,20 +17,20 @@ export function SuggestedWorkflows({
   isLoading, 
   title = "Suggested Workflows",
   subtitle,
-  loadingMessage = "Generating workflow suggestions...",
+  _loadingMessage = "Generating workflow suggestions...",
   pageType = "dashboard"
 }: SuggestedWorkflowsProps) {
   
   const { createWorkflow, creating } = useWorkflowCreation();
   const { isPageAIEnabled, getAgentSettings } = useSettingsIntegration();
-
-  // This part of the code checks if AI insights should be shown for this page
-  if (!isPageAIEnabled(pageType)) {
-    return null;
-  }
-
+  
   // This part of the code filters insights based on agent settings
   const agentSettings = getAgentSettings();
+
+  // This part of the code checks if AI insights should be shown for this page
+  if (!isPageAIEnabled(pageType as any)) {
+    return null;
+  }
   const filteredInsights = insights.filter(insight => {
     // Only show insights if the corresponding agent is enabled
     if (insight.source === 'dashboard_agent' && !agentSettings.dashboard.enabled) {
@@ -46,10 +45,10 @@ export function SuggestedWorkflows({
     if (insight.source === 'inventory_agent' && !agentSettings.inventory.enabled) {
       return false;
     }
-    if (insight.source === 'cost_agent' && !agentSettings.cost.enabled) {
+    if (insight.source === 'cost_agent' && !(agentSettings as any).cost?.enabled) {
       return false;
     }
-    if (insight.source === 'economic_agent' && !agentSettings.economic.enabled) {
+    if (insight.source === 'economic_agent' && !(agentSettings as any).economic?.enabled) {
       return false;
     }
     return true;
@@ -59,13 +58,16 @@ export function SuggestedWorkflows({
   const handleAddToWorkflows = async (insight: AIInsight) => {
     try {
       await createWorkflow({
-        title: insight.title,
-        description: insight.description,
-        priority: insight.severity === 'critical' ? 'high' : insight.severity === 'warning' ? 'medium' : 'low',
-        estimatedImpact: insight.dollarImpact || 0,
+        action: {
+          label: insight.title,
+          type: 'create_workflow',
+          target: getInsightCategory(insight),
+          values: insight.suggestedActions || [],
+          priority: insight.severity === 'critical' ? 'critical' : insight.severity === 'warning' ? 'high' : 'medium'
+        },
         source: insight.source || 'ai_insight',
-        suggestedActions: insight.suggestedActions || [],
-        category: getInsightCategory(insight),
+        sourceId: insight.id,
+        insightTitle: insight.title,
       });
     } catch (error) {
       console.error('Failed to create workflow from insight:', error);

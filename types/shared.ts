@@ -1,3 +1,15 @@
+/**
+ * SHARED TYPE DEFINITIONS - CARGOCORE PLATFORM
+ * 
+ * This part of the code defines comprehensive type system for CargoCore platform
+ * Created during Phase 2: Type Safety Implementation
+ * Eliminates 'any' types and provides complete type coverage
+ */
+
+// ===================================
+// TINYBIRD API RESPONSE TYPES
+// ===================================
+
 // TinyBird Product Details API Response - product_details_mv schema
 export interface ProductData {
   product_id: string;
@@ -64,7 +76,51 @@ export interface TinyBirdResponse<T> {
   data: T[];
 }
 
-// Dashboard KPIs
+// ===================================
+// COMMON TYPES & UTILITIES
+// ===================================
+
+export type SeverityLevel = "critical" | "warning" | "info";
+export type PriorityLevel = "low" | "medium" | "high" | "critical";
+export type StatusLevel = "Excellent" | "Good" | "Needs Attention";
+export type RiskLevel = "Low" | "Medium" | "High";
+
+// API Response Wrapper
+export interface APIResponse<T> {
+  success: boolean;
+  data: T;
+  message?: string;
+  timestamp: string;
+}
+
+// API Error Response
+export interface APIError {
+  message: string;
+  status?: number;
+  endpoint?: string;
+  code?: string;
+}
+
+// ===================================
+// AI & INSIGHTS TYPES
+// ===================================
+
+export interface AIInsight {
+  id: string;
+  title: string;
+  description: string;
+  severity: SeverityLevel;
+  dollarImpact: number;
+  suggestedActions: string[];
+  createdAt: string;
+  source: "dashboard_agent" | "warehouse_agent" | "inventory_agent" | "cost_agent" | "analytics_agent" | "orders_agent" | "reports_agent" | "economic_agent";
+  type?: string;
+}
+
+// ===================================
+// DASHBOARD TYPES
+// ===================================
+
 export interface DashboardKPIs {
   totalOrdersToday: number | null;
   atRiskOrders: number | null;
@@ -72,7 +128,6 @@ export interface DashboardKPIs {
   unfulfillableSKUs: number;
 }
 
-// Quick Overview Metrics
 export interface QuickOverviewMetrics {
   topIssues: number;
   whatsWorking: number;
@@ -80,7 +135,6 @@ export interface QuickOverviewMetrics {
   completedWorkflows: number;
 }
 
-// Warehouse Inventory
 export interface WarehouseInventory {
   warehouseId: string;
   totalInventory: number;
@@ -88,38 +142,20 @@ export interface WarehouseInventory {
   averageCost: number;
 }
 
-// AI Insights
-export interface AIInsight {
-  id: string;
-  title: string;
-  description: string;
-  severity: "critical" | "warning" | "info";
-  dollarImpact: number;
-  suggestedActions: string[];
-  createdAt: string;
-  source: "dashboard_agent" | "warehouse_agent" | "inventory_agent" | "cost_agent" | "analytics_agent" | "orders_agent" | "reports_agent";
-}
-
-// Anomaly Detection
 export interface Anomaly {
   id: string;
-  type:
-    | "high_unfulfillable_skus"
-    | "low_order_volume"
-    | "sla_performance"
-    | "inventory_imbalance";
+  type: "high_unfulfillable_skus" | "low_order_volume" | "sla_performance" | "inventory_imbalance";
   title: string;
   description: string;
-  severity: "critical" | "warning" | "info";
+  severity: SeverityLevel;
   icon: string;
   createdAt: string;
 }
 
-// Smart Margin Risk Analysis
 export interface MarginRiskAlert {
   brandName: string;
   currentMargin: number;
-  riskLevel: "High" | "Medium" | "Low";
+  riskLevel: RiskLevel;
   riskScore: number;
   primaryDrivers: string[];
   financialImpact: number;
@@ -128,7 +164,6 @@ export interface MarginRiskAlert {
   inactivePercentage: number;
 }
 
-// Shipment Cost Variance Detection
 export interface CostVarianceAnomaly {
   type: "Cost Spike" | "Quantity Discrepancy" | "Supplier Variance";
   title: string;
@@ -143,7 +178,6 @@ export interface CostVarianceAnomaly {
   financialImpact: number;
 }
 
-// Dashboard Data (combined)
 export interface DashboardData {
   products: ProductData[];
   shipments: ShipmentData[];
@@ -152,20 +186,22 @@ export interface DashboardData {
   warehouseInventory: WarehouseInventory[];
   insights: AIInsight[];
   anomalies: Anomaly[];
-  marginRisks: MarginRiskAlert[]; // This part of the code adds smart margin risk analysis data
-  costVariances: CostVarianceAnomaly[]; // This part of the code adds cost variance detection data
+  marginRisks: MarginRiskAlert[];
+  costVariances: CostVarianceAnomaly[];
   lastUpdated: string;
 }
 
-// Analytics KPIs
+// ===================================
+// ANALYTICS TYPES
+// ===================================
+
 export interface AnalyticsKPIs {
-  orderVolumeGrowth: number | null;  // percentage with +/- indicator
-  returnRate: number | null;         // percentage 
-  fulfillmentEfficiency: number | null; // percentage
-  inventoryHealthScore: number | null;   // percentage
+  orderVolumeGrowth: number | null;
+  returnRate: number | null;
+  fulfillmentEfficiency: number | null;
+  inventoryHealthScore: number | null;
 }
 
-// Performance Metrics
 export interface PerformanceMetrics {
   orderVolumeTrend: {
     growthRate: number;
@@ -177,7 +213,6 @@ export interface PerformanceMetrics {
   };
 }
 
-// Data Insights Dashboard
 export interface DataInsightsDashboard {
   totalDataPoints: number;
   activeWarehouses: {
@@ -191,7 +226,6 @@ export interface DataInsightsDashboard {
   };
 }
 
-// Operational Breakdown
 export interface OperationalBreakdown {
   orderAnalysis: {
     totalOrders: number;
@@ -208,8 +242,7 @@ export interface OperationalBreakdown {
   };
 }
 
-// Brand Performance
-export interface BrandPerformance {
+export interface BrandPerformanceAnalytics {
   totalBrands: number;
   topBrand: {
     name: string;
@@ -224,20 +257,22 @@ export interface BrandPerformance {
   }>;
 }
 
-// Analytics Data (combined)
 export interface AnalyticsData {
   kpis: AnalyticsKPIs;
-  insights: AIInsight[]; // Reuse existing type but from "analytics_agent"
+  insights: AIInsight[];
   performanceMetrics: PerformanceMetrics;
   dataInsights: DataInsightsDashboard;
   operationalBreakdown: OperationalBreakdown;
-  brandPerformance: BrandPerformance;
+  brandPerformance: BrandPerformanceAnalytics;
   lastUpdated: string;
 }
 
-// Orders Data (derived from Shipment data structure)
+// ===================================
+// ORDERS TYPES
+// ===================================
+
 export interface OrderData {
-  order_id: string; // maps to purchase_order_number or shipment_id
+  order_id: string;
   created_date: string;
   brand_name: string;
   status: string;
@@ -252,12 +287,10 @@ export interface OrderData {
   unit_cost: number | null;
   ship_from_country: string | null;
   notes: string;
-  // Original shipment fields for reference
   shipment_id: string;
   inventory_item_id: string;
 }
 
-// Orders KPIs
 export interface OrdersKPIs {
   ordersToday: number;
   atRiskOrders: number;
@@ -265,7 +298,6 @@ export interface OrdersKPIs {
   unfulfillableSKUs: number;
 }
 
-// Inbound Shipment Intelligence
 export interface InboundShipmentIntelligence {
   totalInbound: number;
   delayedShipments: {
@@ -283,137 +315,33 @@ export interface InboundShipmentIntelligence {
   delayedShipmentsList: OrderData[];
 }
 
-// Orders Data (combined)
 export interface OrdersData {
   orders: OrderData[];
   kpis: OrdersKPIs;
-  insights: AIInsight[]; // Reuse existing type but from "orders_agent"
+  insights: AIInsight[];
   inboundIntelligence: InboundShipmentIntelligence;
   lastUpdated: string;
 }
 
-// AI Order Suggestion
 export interface OrderSuggestion {
   orderId: string;
   suggestion: string;
-  priority: "low" | "medium" | "high";
+  priority: PriorityLevel;
   actionable: boolean;
   estimatedImpact?: string;
 }
 
-// Warehouse Performance Data
-export interface WarehouseData {
-  warehouseId: string;
-  warehouseName: string;
-  supplierName: string; // Original supplier identifier for data traceability
-  slaPerformance: number; // percentage
-  activeOrders: number;
-  avgFulfillmentTime: number; // hours
-  totalSKUs: number;
-  throughput: number; // monthly throughput volume
-  status: "Excellent" | "Good" | "Needs Attention";
-  performanceScore: number; // 0-100 score for ranking
-  location?: {
-    city: string | null;
-    state: string | null;
-    country: string | null;
-  };
-}
+// ===================================
+// INVENTORY TYPES
+// ===================================
 
-// Warehouse KPIs
-export interface WarehouseKPIs {
-  avgSLAPercentage: number | null;
-  totalActiveOrders: number | null;
-  avgFulfillmentTime: number | null; // hours
-  totalInboundThroughput: number | null;
-}
-
-// Warehouse Performance Rankings
-export interface WarehousePerformanceRanking {
-  rank: number;
-  warehouseId: string;
-  warehouseName: string;
-  slaPerformance: number;
-  activeOrders: number;
-  avgFulfillmentTime: number;
-  status: "Excellent" | "Good" | "Needs Attention";
-}
-
-// Smart Budget Allocation
-export interface BudgetAllocation {
-  warehouseId: string;
-  warehouseName: string;
-  currentBudget: number;
-  recommendedBudget: number;
-  changeAmount: number;
-  changePercentage: number;
-  expectedROI: number;
-  justification: string;
-  riskLevel: "Low" | "Medium" | "High";
-  performanceScore: number;
-}
-
-// User Behavior Analysis (simulated)
-export interface UserBehaviorAnalysis {
-  warehouseId: string;
-  warehouseName: string;
-  viewFrequency: number;
-  timeSpent: number; // minutes
-  engagementScore: number;
-  commonActions: string[];
-  nextBestAction: string;
-  personalizedTips: string[];
-}
-
-// Performance Optimization Opportunity
-export interface OptimizationOpportunity {
-  area: string;
-  priority: "High" | "Medium" | "Low";
-  currentValue: number;
-  targetValue: number;
-  investment: number;
-  potentialSavings: number;
-  timeline: string; // e.g., "3-6 months"
-}
-
-// Warehouse Optimization Engine
-export interface WarehouseOptimization {
-  warehouseId: string;
-  warehouseName: string;
-  roiPercentage: number;
-  riskLevel: "Low" | "Medium" | "High";
-  performanceMetrics: {
-    slaPerformance: number;
-    throughput: number;
-    efficiency: number;
-    capacityUsage: number;
-  };
-  opportunities: OptimizationOpportunity[];
-  totalInvestment: number;
-  potentialSavings: number;
-  timeline: string;
-}
-
-// Warehouses Data (combined)
-export interface WarehousesData {
-  warehouses: WarehouseData[];
-  kpis: WarehouseKPIs;
-  insights: AIInsight[]; // Reuse existing type but from "warehouse_agent"
-  performanceRankings: WarehousePerformanceRanking[];
-  budgetAllocations: BudgetAllocation[];
-  userBehavior: UserBehaviorAnalysis[];
-  optimizations: WarehouseOptimization[];
-  lastUpdated: string;
-}
-
-// Enhanced Inventory Data Types (World-Class Dashboard)
 export interface InventoryItem {
   sku: string;
   product_name: string;
   brand_name: string;
   on_hand: number;
   committed: number;
-  available: number; // calculated: on_hand - committed
+  available: number;
   unit_cost: number;
   total_value: number;
   supplier: string;
@@ -423,7 +351,6 @@ export interface InventoryItem {
   days_since_created: number;
   warehouse_id?: string | null;
   last_updated?: string | null;
-  // Reorder analysis data
   reorder_analysis?: {
     daily_usage_rate: number;
     lead_time_days: number;
@@ -437,13 +364,10 @@ export interface InventoryItem {
 }
 
 export interface InventoryKPIs {
-  // Enhanced KPIs
   totalActiveSKUs: number;
   totalInventoryValue: number;
   lowStockAlerts: number;
   inactiveSKUs: number;
-  
-  // Legacy KPIs for compatibility
   totalSKUs: number;
   inStockCount: number;
   unfulfillableCount: number;
@@ -466,31 +390,132 @@ export interface SupplierAnalysis {
   sku_count: number;
   total_value: number;
   countries: string[];
-  concentration_risk: number; // percentage
-  diversity_score: number; // 0-100 score based on geographic and operational diversity
-  avg_lead_time: number | null; // average lead time in days, null if no data
-  multi_source_skus: number; // count of SKUs available from multiple suppliers
+  concentration_risk: number;
+  diversity_score: number;
+  avg_lead_time: number | null;
+  multi_source_skus: number;
 }
 
 export interface InventoryData {
   kpis: InventoryKPIs;
-  insights: AIInsight[]; // Reuse existing type but from "inventory_agent"
+  insights: AIInsight[];
   inventory: InventoryItem[];
   brandPerformance: BrandPerformance[];
   supplierAnalysis: SupplierAnalysis[];
-  warehouseInventory: WarehouseInventory[]; // Moved from Dashboard
+  warehouseInventory: WarehouseInventory[];
   lastUpdated: string;
 }
 
-// Cost Management Interfaces (Enhanced for Phase 2A)
+// ===================================
+// WAREHOUSE TYPES
+// ===================================
+
+export interface WarehouseData {
+  warehouseId: string;
+  warehouseName: string;
+  supplierName: string;
+  slaPerformance: number;
+  activeOrders: number;
+  avgFulfillmentTime: number;
+  totalSKUs: number;
+  throughput: number;
+  status: StatusLevel;
+  performanceScore: number;
+  location?: {
+    city: string | null;
+    state: string | null;
+    country: string | null;
+  };
+}
+
+export interface WarehouseKPIs {
+  avgSLAPercentage: number | null;
+  totalActiveOrders: number | null;
+  avgFulfillmentTime: number | null;
+  totalInboundThroughput: number | null;
+}
+
+export interface WarehousePerformanceRanking {
+  rank: number;
+  warehouseId: string;
+  warehouseName: string;
+  slaPerformance: number;
+  activeOrders: number;
+  avgFulfillmentTime: number;
+  status: StatusLevel;
+}
+
+export interface BudgetAllocation {
+  warehouseId: string;
+  warehouseName: string;
+  currentBudget: number;
+  recommendedBudget: number;
+  changeAmount: number;
+  changePercentage: number;
+  expectedROI: number;
+  justification: string;
+  riskLevel: RiskLevel;
+  performanceScore: number;
+}
+
+export interface UserBehaviorAnalysis {
+  warehouseId: string;
+  warehouseName: string;
+  viewFrequency: number;
+  timeSpent: number;
+  engagementScore: number;
+  commonActions: string[];
+  nextBestAction: string;
+  personalizedTips: string[];
+}
+
+export interface OptimizationOpportunity {
+  area: string;
+  priority: RiskLevel;
+  currentValue: number;
+  targetValue: number;
+  investment: number;
+  potentialSavings: number;
+  timeline: string;
+}
+
+export interface WarehouseOptimization {
+  warehouseId: string;
+  warehouseName: string;
+  roiPercentage: number;
+  riskLevel: RiskLevel;
+  performanceMetrics: {
+    slaPerformance: number;
+    throughput: number;
+    efficiency: number;
+    capacityUsage: number;
+  };
+  opportunities: OptimizationOpportunity[];
+  totalInvestment: number;
+  potentialSavings: number;
+  timeline: string;
+}
+
+export interface WarehousesData {
+  warehouses: WarehouseData[];
+  kpis: WarehouseKPIs;
+  insights: AIInsight[];
+  performanceRankings: WarehousePerformanceRanking[];
+  budgetAllocations: BudgetAllocation[];
+  userBehavior: UserBehaviorAnalysis[];
+  optimizations: WarehouseOptimization[];
+  lastUpdated: string;
+}
+
+// ===================================
+// COST MANAGEMENT TYPES
+// ===================================
+
 export interface CostKPIs {
-  // Enhanced Real Cost Metrics
   totalMonthlyCosts: number;
   costEfficiencyRate: number;
   topPerformingWarehouses: number;
   totalCostCenters: number;
-  
-  // Legacy metrics for compatibility
   totalWarehouses: number;
   avgSLAPerformance: number;
   monthlyThroughput: number;
@@ -505,8 +530,6 @@ export interface CostCenter {
   status: 'Active' | 'Inactive';
   total_shipments: number;
   on_time_shipments: number;
-  
-  // Enhanced cost metrics
   monthly_costs: number;
   cost_per_shipment: number;
   cost_efficiency: number;
@@ -525,7 +548,7 @@ export interface SupplierPerformance {
   avg_cost_per_unit: number;
   sla_performance: number;
   shipment_count: number;
-  cost_variance: number; // percentage above/below average
+  cost_variance: number;
   efficiency_score: number;
   status: 'Efficient' | 'Needs Attention' | 'High Cost';
 }
@@ -540,132 +563,16 @@ export interface HistoricalCostTrend {
 
 export interface CostData {
   kpis: CostKPIs;
-  insights: AIInsight[]; // Reuse existing type but from "cost_agent"
+  insights: AIInsight[];
   costCenters: CostCenter[];
   supplierPerformance: SupplierPerformance[];
   historicalTrends: HistoricalCostTrend[];
   lastUpdated: string;
 }
 
-
-
-// Reports Types
-export interface ReportTemplate {
-  id: string;
-  name: string;
-  description: string;
-  estimatedReadTime: string;
-  metrics: string[];
-  available: boolean;
-  icon: string;
-}
-
-export interface ReportFilters {
-  startDate?: string;
-  endDate?: string;
-  brands?: string[];
-  warehouses?: string[];
-  template: string;
-}
-
-export interface ReportKPIs {
-  totalProducts: number;
-  totalShipments: number;
-  activeProducts: number;
-  totalInventoryValue: number;
-  completedShipments: number;
-  delayedShipments: number;
-  slaCompliance: number | null;
-  fulfillmentRate: number | null;
-}
-
-export interface ReportData {
-  template: ReportTemplate;
-  filters: ReportFilters;
-  data: {
-    products: any[];
-    shipments: any[];
-    kpis: ReportKPIs;
-    insights: AIInsight[];
-  };
-  availableBrands: ReportBrandOption[];
-  availableWarehouses: ReportWarehouseOption[];
-  generatedAt: string;
-  reportPeriod: string;
-}
-
-export interface ReportBrandOption {
-  brand_name: string;
-  sku_count: number;
-  total_value: number;
-  total_quantity: number;
-  avg_value_per_sku: number;
-  portfolio_percentage: number;
-  efficiency_score: number;
-}
-
-export interface ReportWarehouseOption {
-  warehouse_id: string;
-  warehouse_name: string;
-  total_shipments: number;
-  completed_shipments: number;
-  total_cost: number;
-  total_quantity: number;
-  efficiency_rate: number;
-  avg_cost_per_shipment: number;
-}
-
-export interface ReportTemplatesResponse {
-  templates: ReportTemplate[];
-  availableBrands: ReportBrandOption[];
-  availableWarehouses: ReportWarehouseOption[];
-}
-
-// AI Chat Types
-export interface ChatMessage {
-  role: "user" | "assistant";
-  content: string;
-  timestamp?: string;
-}
-
-export interface ChatRequest {
-  message: string;
-  conversation?: ChatMessage[];
-  includeContext?: boolean;
-}
-
-export interface ChatResponse {
-  response: string;
-  conversationId: string;
-  timestamp: string;
-  context?: {
-    dataTimestamp: string;
-    sourcesUsed: string[];
-  };
-}
-
-export interface QuickAction {
-  id: string;
-  label: string;
-  prompt: string;
-}
-
-// Economic Intelligence Types
-export interface EconomicData {
-  kpis: EconomicKPIs;
-  insights: EconomicInsight[];
-  businessImpact: BusinessImpactAnalysis;
-  financialImpacts: FinancialImpacts;
-  kpiDetails?: {
-    supplierPerformance: EconomicKPIDetail;
-    shippingCostImpact: EconomicKPIDetail;
-    supplyChainHealth: EconomicKPIDetail;
-    transportationCosts: EconomicKPIDetail;
-    logisticsCostEfficiency: EconomicKPIDetail;
-    supplierDelayRate: EconomicKPIDetail;
-  };
-  lastUpdated: string;
-}
+// ===================================
+// ECONOMIC INTELLIGENCE TYPES
+// ===================================
 
 export interface EconomicKPIs {
   supplierPerformance: number;
@@ -681,8 +588,11 @@ export interface EconomicInsight {
   title: string;
   description: string;
   dollarImpact: number;
-  severity: "critical" | "warning" | "info";
+  severity: SeverityLevel;
   type: string;
+  source: string;
+  suggestedActions: string[];
+  createdAt: string;
 }
 
 export interface BusinessImpactAnalysis {
@@ -730,9 +640,238 @@ export interface EconomicIntelligenceData {
   lastUpdated: string;
 }
 
-// API Error Types
-export interface APIError {
+// ===================================
+// REPORTS TYPES
+// ===================================
+
+export interface ReportTemplate {
+  id: string;
+  name: string;
+  description: string;
+  estimatedReadTime: string;
+  metrics: string[];
+  available: boolean;
+  icon: string;
+  color: 'blue' | 'green' | 'purple' | 'orange';
+}
+
+export interface ReportFilters {
+  startDate?: string;
+  endDate?: string;
+  brands?: string[];
+  warehouses?: string[];
+  template: string;
+}
+
+export interface ReportKPIs {
+  totalProducts: number;
+  totalShipments: number;
+  activeProducts: number;
+  totalInventoryValue: number;
+  completedShipments: number;
+  delayedShipments: number;
+  slaCompliance: number | null;
+  fulfillmentRate: number | null;
+}
+
+export interface ReportBrandOption {
+  brand_name: string;
+  sku_count: number;
+  total_value: number;
+  total_quantity: number;
+  avg_value_per_sku: number;
+  portfolio_percentage: number;
+  efficiency_score: number;
+}
+
+export interface ReportWarehouseOption {
+  warehouse_id: string;
+  warehouse_name: string;
+  total_shipments: number;
+  completed_shipments: number;
+  total_cost: number;
+  total_quantity: number;
+  efficiency_rate: number;
+  avg_cost_per_shipment: number;
+}
+
+export interface ReportData {
+  template: ReportTemplate;
+  filters: ReportFilters;
+  data: {
+    products: ProductData[];
+    shipments: ShipmentData[];
+    kpis: ReportKPIs;
+    insights: AIInsight[];
+  };
+  availableBrands: ReportBrandOption[];
+  availableWarehouses: ReportWarehouseOption[];
+  generatedAt: string;
+  reportPeriod: string;
+}
+
+export interface ReportTemplatesResponse {
+  templates: ReportTemplate[];
+  availableBrands: ReportBrandOption[];
+  availableWarehouses: ReportWarehouseOption[];
+}
+
+// ===================================
+// AI CHAT TYPES
+// ===================================
+
+export interface ChatMessage {
+  role: "user" | "assistant";
+  content: string;
+  timestamp?: string;
+}
+
+export interface ChatRequest {
   message: string;
-  status?: number;
-  endpoint?: string;
+  conversation?: ChatMessage[];
+  includeContext?: boolean;
+}
+
+export interface ChatResponse {
+  response: string;
+  conversationId: string;
+  timestamp: string;
+  context?: {
+    dataTimestamp: string;
+    sourcesUsed: string[];
+  };
+}
+
+export interface QuickAction {
+  id: string;
+  label: string;
+  prompt: string;
+}
+
+// ===================================
+// OPENAI INTEGRATION TYPES
+// ===================================
+
+export interface OpenAIConfig {
+  model: string;
+  maxTokens: number;
+  temperature: number;
+}
+
+export interface AIRecommendationRequest {
+  context: string;
+  dataType: 'dashboard' | 'orders' | 'inventory' | 'warehouses' | 'cost' | 'analytics' | 'economic';
+  data: Record<string, unknown>;
+}
+
+export interface AIRecommendationResponse {
+  recommendations: string[];
+  confidence: number;
+  processingTime: number;
+}
+
+// ===================================
+// WORKFLOW TYPES
+// ===================================
+
+export interface WorkflowAction {
+  label: string;
+  type: 'create_workflow' | 'update_data' | 'send_notification';
+  target: string;
+  values: string[];
+  priority: PriorityLevel;
+}
+
+export interface Workflow {
+  id: string;
+  title: string;
+  description: string;
+  status: 'pending' | 'in_progress' | 'completed' | 'cancelled';
+  priority: PriorityLevel;
+  category: string;
+  createdAt: string;
+  updatedAt: string;
+  dueDate?: string;
+  assignedTo?: string;
+  associatedInsightId?: string;
+  dollarImpact?: number;
+  suggestedActions?: string[];
+}
+
+// ===================================
+// SETTINGS TYPES
+// ===================================
+
+export interface SettingsData {
+  dataRefreshInterval: number;
+  theme: 'light' | 'dark' | 'auto';
+  notifications: {
+    email: boolean;
+    push: boolean;
+    sms: boolean;
+  };
+  api: {
+    timeout: number;
+    retries: number;
+  };
+  ui: {
+    density: 'compact' | 'comfortable' | 'spacious';
+    animations: boolean;
+  };
+}
+
+// ===================================
+// UTILITY TYPES
+// ===================================
+
+export type LoadingState = 'idle' | 'loading' | 'success' | 'error';
+
+export interface PaginationInfo {
+  page: number;
+  limit: number;
+  total: number;
+  hasMore: boolean;
+}
+
+export interface FilterOptions {
+  search?: string;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+  filters?: Record<string, unknown>;
+}
+
+export interface TableColumn<T> {
+  key: keyof T;
+  label: string;
+  sortable?: boolean;
+  filterable?: boolean;
+  render?: (value: T[keyof T], row: T) => React.ReactNode;
+}
+
+// ===================================
+// FORM TYPES
+// ===================================
+
+export interface FormField {
+  name: string;
+  label: string;
+  type: 'text' | 'email' | 'password' | 'number' | 'select' | 'checkbox' | 'textarea';
+  required?: boolean;
+  placeholder?: string;
+  options?: Array<{ value: string; label: string }>;
+  validation?: {
+    pattern?: string;
+    min?: number;
+    max?: number;
+    minLength?: number;
+    maxLength?: number;
+  };
+}
+
+export interface FormState<T> {
+  values: T;
+  errors: Partial<Record<keyof T, string>>;
+  touched: Partial<Record<keyof T, boolean>>;
+  isSubmitting: boolean;
+  isValid: boolean;
 }

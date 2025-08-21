@@ -2,6 +2,7 @@ import { Layout } from "@/components/layout/Layout";
 import { useWarehousesData } from "@/hooks/useWarehousesData";
 import { LoadingState } from "@/components/ui/loading-spinner";
 import { ErrorDisplay } from "@/components/ui/error-display";
+import type { WarehousesData } from "@/types/api";
 
 // Warehouse Components  
 import { WarehouseKPISection } from "@/components/warehouses/WarehouseKPISection";
@@ -18,6 +19,9 @@ import { PerformanceOptimizationSection } from "@/components/warehouses/Performa
  */
 export default function Warehouses() {
   const { data, isLoading, error, refetch } = useWarehousesData();
+  
+  // This part of the code ensures proper type safety for the data
+  const warehousesData = data as WarehousesData | undefined;
 
   return (
     <Layout>
@@ -39,13 +43,13 @@ export default function Warehouses() {
         )}
 
         {/* This part of the code renders warehouse sections organized in logical groups for better visual hierarchy */}
-        {data && (
+        {warehousesData && (
           <div className="space-y-8">
             {/* KPI Cards - Essential performance metrics */}
-            <WarehouseKPISection kpis={data.kpis} isLoading={isLoading} />
+            <WarehouseKPISection kpis={warehousesData.kpis} isLoading={isLoading} />
 
             {/* AI Insights - Warehouse Agent insights */}
-            <InsightsSection insights={data.insights} isLoading={isLoading} />
+            <InsightsSection insights={warehousesData.insights} isLoading={isLoading} />
 
             {/* Group 2: Warehouse Operations */}
             <div className="bg-gradient-to-r from-gray-50 to-slate-50 rounded-xl p-6 border border-gray-200">
@@ -59,13 +63,13 @@ export default function Warehouses() {
 
               {/* Warehouse Cards - Individual warehouse performance */}
               <WarehouseCardsSection 
-                warehouses={data.warehouses} 
+                warehouses={warehousesData.warehouses} 
                 isLoading={isLoading} 
               />
 
               {/* Performance Rankings - Performance-based sorting */}
               <WarehousePerformanceSection 
-                rankings={data.performanceRankings} 
+                rankings={warehousesData.performanceRankings} 
                 isLoading={isLoading} 
               />
             </div>
@@ -82,19 +86,19 @@ export default function Warehouses() {
 
               {/* Budget Allocation - AI-powered budget optimization */}
               <SmartBudgetAllocationSection 
-                budgetAllocations={data.budgetAllocations} 
+                budgetAllocations={warehousesData.budgetAllocations} 
                 isLoading={isLoading} 
               />
 
               {/* AI Learning System - User behavior analysis */}
               <AILearningSystemSection 
-                userBehavior={data.userBehavior} 
+                userBehavior={warehousesData.userBehavior} 
                 isLoading={isLoading} 
               />
 
               {/* Performance Optimization - AI-driven optimization recommendations */}
               <PerformanceOptimizationSection 
-                optimizations={data.optimizations} 
+                optimizations={warehousesData.optimizations} 
                 isLoading={isLoading} 
               />
             </div>

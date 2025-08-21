@@ -17,9 +17,7 @@ import {
   Monitor,
   Sliders,
   Trash2,
-  Clock,
-  Globe,
-  DollarSign,
+
   FileText,
   Package,
   Building2
@@ -38,8 +36,7 @@ export default function Settings() {
     updatePageSetting,
     updateDisplaySetting,
     updateOperationalSetting,
-    updateUISetting,
-    updateQuickAction,
+
     clearCache,
     resetToDefaults
   } = useSettings();
