@@ -62,7 +62,10 @@ export function SupplierCountriesOverlay({ isOpen, onClose, supplier }: Supplier
   const analysis = getSupplyChainAnalysis(supplier.countries.length, risk.level);
 
   return (
-    <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4">
+    <div 
+      className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4"
+      onClick={onClose}
+    >
       <div 
         className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
