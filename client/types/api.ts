@@ -478,6 +478,7 @@ export interface InventoryData {
   inventory: InventoryItem[];
   brandPerformance: BrandPerformance[];
   supplierAnalysis: SupplierAnalysis[];
+  warehouseInventory: WarehouseInventoryData[]; // Moved from Dashboard
   lastUpdated: string;
 }
 

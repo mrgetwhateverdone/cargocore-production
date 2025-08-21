@@ -778,12 +778,51 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
     }
 
+    // This part of the code calculates warehouse inventory data (moved from Dashboard)
+    // Note: Since shipments in inventory API have different structure, we'll calculate from products
+    const warehouseInventory = (() => {
+      // Group products by supplier to simulate warehouse data
+      const supplierMap = new Map();
+      products.forEach((p) => {
+        if (p.supplier_name && !supplierMap.has(p.supplier_name)) {
+          supplierMap.set(p.supplier_name, {
+            id: p.supplier_name,
+            name: p.supplier_name,
+          });
+        }
+      });
+      
+      return Array.from(supplierMap.values());
+    })().map((warehouse) => {
+      // This part of the code calculates warehouse inventory from product data (since shipments have different structure)
+      const warehouseProducts = products.filter(p => p.supplier_name === warehouse.id);
+      
+      const totalInventory = warehouseProducts.reduce((sum, product) => 
+        sum + product.unit_quantity, 0
+      );
+      
+      const averageCost = warehouseProducts.length > 0 
+        ? warehouseProducts
+            .filter(p => p.unit_cost !== null)
+            .reduce((sum, product, _, arr) => sum + (product.unit_cost || 0), 0) / 
+          warehouseProducts.filter(p => p.unit_cost !== null).length
+        : 0;
+      
+      return {
+        warehouseId: warehouse.id,
+        totalInventory,
+        productCount: warehouseProducts.length,
+        averageCost: Math.round(averageCost || 0),
+      };
+    }).filter(w => w.totalInventory > 0); // Only include warehouses with inventory
+
     const inventoryData = {
       kpis,
       insights,
       inventory: inventory.slice(0, 500), // Limit for performance
       brandPerformance,
       supplierAnalysis,
+      warehouseInventory,
       lastUpdated: new Date().toISOString(),
     };
 

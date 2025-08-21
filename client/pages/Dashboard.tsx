@@ -6,9 +6,8 @@ import { ErrorDisplay } from "@/components/ui/error-display";
 
 // Dashboard Components
 import { KPISection } from "@/components/dashboard/KPISection";
-import { InsightsSection } from "@/components/dashboard/InsightsSection";
+import { SuggestedWorkflows } from "@/components/SuggestedWorkflows";
 import { QuickOverviewSection } from "@/components/dashboard/QuickOverviewSection";
-import { WarehouseInventorySection } from "@/components/dashboard/WarehouseInventorySection";
 import { AnomalyDetectorSection } from "@/components/dashboard/AnomalyDetectorSection";
 import { SmartMarginRiskSection } from "@/components/dashboard/SmartMarginRiskSection";
 import { ShipmentCostVarianceSection } from "@/components/dashboard/ShipmentCostVarianceSection";
@@ -41,18 +40,19 @@ export default function Dashboard() {
             {/* KPI Section */}
             <KPISection kpis={data.kpis} isLoading={isLoading} />
 
-            {/* AI Insights Section */}
-            <InsightsSection insights={data.insights} isLoading={isLoading} />
+            {/* Suggested Workflows Section - New unified UI */}
+            <SuggestedWorkflows 
+              insights={data.insights} 
+              isLoading={isLoading}
+              title="Suggested Workflows"
+              subtitle={`${data.insights?.length || 0} workflow suggestions from Dashboard Agent`}
+              loadingMessage="Generating workflow suggestions..."
+              pageType="dashboard"
+            />
 
             {/* Quick Overview Section */}
             <QuickOverviewSection
               metrics={data.quickOverview}
-              isLoading={isLoading}
-            />
-
-            {/* Warehouse Inventory Section */}
-            <WarehouseInventorySection
-              warehouses={data.warehouseInventory}
               isLoading={isLoading}
             />
 

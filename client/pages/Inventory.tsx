@@ -8,6 +8,7 @@ import { useSettingsIntegration } from "@/hooks/useSettingsIntegration";
 // Inventory Components
 import { InventoryKPISection } from "@/components/inventory/InventoryKPISection";
 import { InsightsSection } from "@/components/dashboard/InsightsSection";
+import { WarehouseInventorySection } from "@/components/dashboard/WarehouseInventorySection";
 import { InventoryTableSection } from "@/components/inventory/InventoryTableSection";
 import { BrandPerformanceSection } from "@/components/inventory/BrandPerformanceSection";
 import { SupplierAnalysisSection } from "@/components/inventory/SupplierAnalysisSection";
@@ -96,6 +97,12 @@ export default function Inventory() {
             loadingMessage="Inventory Agent is analyzing stock levels and identifying critical issues..."
           />
         )}
+
+        {/* This part of the code displays warehouse inventory (moved from Dashboard) */}
+        <WarehouseInventorySection
+          warehouses={data.warehouseInventory || []}
+          isLoading={isLoading}
+        />
 
         {/* This part of the code displays the main inventory table */}
         <InventoryTableSection
