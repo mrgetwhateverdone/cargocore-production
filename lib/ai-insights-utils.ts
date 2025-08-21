@@ -1,18 +1,12 @@
-import { VercelRequest, VercelResponse } from "@vercel/node";
-
 /**
- * CENTRALIZED AI INSIGHTS ENGINE
+ * CENTRALIZED AI INSIGHTS UTILITIES
  * 
- * This part of the code creates a single, powerful AI service that generates
- * real insights for all contexts without any mock/fallback data.
- * 
- * - NO FALLBACKS: Returns null if AI fails
- * - CONTEXT-AWARE: Specialized prompts for each business area
- * - WORLD-CLASS: Optimized for 3PL operational excellence
+ * This part of the code creates shared utilities for generating real AI insights
+ * without creating additional serverless functions (stays within 12 function limit)
  */
 
 // Type definitions for different insight contexts
-type InsightContext = 'dashboard' | 'orders' | 'analytics' | 'warehouses' | 'cost' | 'inventory';
+export type InsightContext = 'dashboard' | 'orders' | 'analytics' | 'warehouses' | 'cost' | 'inventory';
 
 interface AIInsightRequest {
   context: InsightContext;
@@ -21,7 +15,7 @@ interface AIInsightRequest {
   contextData?: any;
 }
 
-interface AIInsight {
+export interface AIInsight {
   id: string;
   title: string;
   description: string;
@@ -35,7 +29,7 @@ interface AIInsight {
 /**
  * This part of the code cleans markdown formatting from AI responses
  */
-function cleanMarkdownFormatting(text: string): string {
+export function cleanMarkdownFormatting(text: string): string {
   return text
     .replace(/\*\*(.*?)\*\*/g, '$1')
     .replace(/\*(.*?)\*/g, '$1')
@@ -47,7 +41,7 @@ function cleanMarkdownFormatting(text: string): string {
 /**
  * This part of the code fixes dollar impact formatting in AI responses
  */
-function fixDollarImpactFormatting(text: string): string {
+export function fixDollarImpactFormatting(text: string): string {
   return text
     .replace(/\$([0-9,]+)\.00impact/g, '$$1 impact')
     .replace(/\$([0-9,]+\.[0-9]{1,2})impact/g, '$$1 impact')
@@ -57,7 +51,7 @@ function fixDollarImpactFormatting(text: string): string {
 /**
  * This part of the code creates context-specific AI prompts for maximum 3PL value
  */
-function createContextPrompt(context: InsightContext, data: any, kpis: any, contextData?: any): string {
+export function createContextPrompt(context: InsightContext, data: any, kpis: any, contextData?: any): string {
   const baseContext = `
 You are an expert 3PL operations analyst providing strategic insights for operational excellence.
 Analyze the provided data and generate actionable insights that drive real business value.
@@ -265,65 +259,5 @@ export async function generateRealAIInsights(
   } catch (error) {
     console.error(`❌ AI insight generation failed for ${request.context}:`, error);
     return null; // NO FALLBACK - let frontend handle gracefully
-  }
-}
-
-/**
- * This part of the code provides the main API endpoint for AI insights
- */
-export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // CORS headers
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
-
-  if (req.method === "OPTIONS") {
-    res.status(200).end();
-    return;
-  }
-
-  if (req.method !== "POST") {
-    return res.status(405).json({ 
-      success: false, 
-      error: "Method not allowed" 
-    });
-  }
-
-  try {
-    const { context, data, kpis, contextData } = req.body;
-
-    if (!context || !data || !kpis) {
-      return res.status(400).json({
-        success: false,
-        error: "Missing required parameters: context, data, kpis"
-      });
-    }
-
-    const insights = await generateRealAIInsights({
-      context,
-      data,
-      kpis,
-      contextData
-    });
-
-    // Return null insights if AI failed - frontend will handle gracefully
-    res.status(200).json({
-      success: true,
-      data: {
-        insights,
-        timestamp: new Date().toISOString(),
-        context,
-        aiGenerated: insights !== null
-      }
-    });
-
-  } catch (error) {
-    console.error("❌ AI Insights Engine Error:", error);
-    
-    res.status(500).json({
-      success: false,
-      error: "AI insights generation failed",
-      timestamp: new Date().toISOString()
-    });
   }
 }

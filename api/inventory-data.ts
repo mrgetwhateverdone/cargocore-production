@@ -239,7 +239,7 @@ function calculateReorderAnalysis(
 } {
   // Calculate daily usage rate from shipment data
   const productShipments = shipments.filter(s => 
-    s.sku === product.product_sku || s.inventory_item_id === product.inventory_item_id
+    s.sku === product.product_sku
   );
   
   const dailyUsageRate = productShipments.length > 0 ? 
