@@ -5,8 +5,34 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
  * Uses real TinyBird data to calculate supplier performance, cost trends, and business impacts
  */
 
-// Import safe formatters to prevent null reference crashes
-import { safeCleanMarkdown, safeDollarFormat, safeFormatAIText } from '../lib/safe-formatters';
+// Safe formatters to prevent null reference crashes - inline to avoid import issues
+function safeCleanMarkdown(text: string | null | undefined): string {
+  if (!text || typeof text !== 'string') {
+    return '';
+  }
+  return text
+    .replace(/\*\*(.*?)\*\*/g, '$1')
+    .replace(/\*(.*?)\*/g, '$1')
+    .replace(/\*/g, '')
+    .replace(/^Executive Summary:\s*/i, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function safeDollarFormat(text: string | null | undefined): string {
+  if (!text || typeof text !== 'string') {
+    return '';
+  }
+  return text
+    .replace(/\$([0-9,]+)\.00impact/g, '$$$1 impact')
+    .replace(/\$([0-9,]+\.[0-9]{1,2})impact/g, '$$$1 impact')
+    .replace(/\$([0-9,]+)impact/g, '$$$1 impact')
+    .replace(/\$([0-9,]+)\.00\s+impact/g, '$$$1 impact');
+}
+
+function safeFormatAIText(text: string | null | undefined): string {
+  return safeDollarFormat(safeCleanMarkdown(text));
+}
 
 // TinyBird Product API Response - standardized interface
 interface ProductData {
