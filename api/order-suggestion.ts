@@ -14,15 +14,16 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
  * This part of the code cleans up markdown formatting from AI responses
  * Removes bold markers and other formatting that shouldn't be displayed literally
  */
-function cleanMarkdownFormatting(text: string): string {
+// Safe formatters to prevent null reference crashes - inline to avoid import issues
+function safeCleanMarkdown(text: string | null | undefined): string {
+  if (!text || typeof text !== 'string') {
+    return '';
+  }
   return text
-    // Remove bold markers
     .replace(/\*\*(.*?)\*\*/g, '$1')
-    // Remove italic markers  
     .replace(/\*(.*?)\*/g, '$1')
-    // Remove any remaining asterisks
     .replace(/\*/g, '')
-    // Clean up extra spaces
+    .replace(/^Executive Summary:\s*/i, '')
     .replace(/\s+/g, ' ')
     .trim();
 }
@@ -31,16 +32,19 @@ function cleanMarkdownFormatting(text: string): string {
  * This part of the code fixes dollar impact formatting in AI responses
  * Removes unnecessary .00 decimals and ensures proper spacing before "impact"
  */
-function fixDollarImpactFormatting(text: string): string {
+function safeDollarFormat(text: string | null | undefined): string {
+  if (!text || typeof text !== 'string') {
+    return '';
+  }
   return text
-    // Fix dollar amounts followed by "impact" (e.g., "$3,149,821.00impact" → "$3,149,821 impact")
     .replace(/\$([0-9,]+)\.00impact/g, '$$$1 impact')
-    // Fix dollar amounts with cents followed by "impact" (preserve cents)
     .replace(/\$([0-9,]+\.[0-9]{1,2})impact/g, '$$$1 impact')
-    // Fix dollar amounts with no decimal followed by "impact" (e.g., "$1,028,350impact" → "$1,028,350 impact")
     .replace(/\$([0-9,]+)impact/g, '$$$1 impact')
-    // Fix cases where there's already a space but .00 needs removal
     .replace(/\$([0-9,]+)\.00\s+impact/g, '$$$1 impact');
+}
+
+function safeFormatAIText(text: string | null | undefined): string {
+  return safeDollarFormat(safeCleanMarkdown(text));
 }
 
 // Type definitions
@@ -210,7 +214,7 @@ async function generateAIOrderSuggestion(
     }
 
     const data = await response.json();
-    const aiSuggestion = fixDollarImpactFormatting(cleanMarkdownFormatting(data.choices[0]?.message?.content || 'Unable to generate specific recommendation.'));
+    const aiSuggestion = safeFormatAIText(data.choices[0]?.message?.content) || 'Unable to generate specific recommendation.';
 
     // Create structured suggestion response
     const suggestion: OrderSuggestion = {

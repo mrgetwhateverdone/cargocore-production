@@ -4,15 +4,16 @@ import { VercelRequest, VercelResponse } from '@vercel/node';
  * This part of the code cleans up markdown formatting from AI responses
  * Removes bold markers and other formatting that shouldn't be displayed literally
  */
-function cleanMarkdownFormatting(text: string): string {
+// Safe formatters to prevent null reference crashes - inline to avoid import issues
+function safeCleanMarkdown(text: string | null | undefined): string {
+  if (!text || typeof text !== 'string') {
+    return '';
+  }
   return text
-    // Remove bold markers
     .replace(/\*\*(.*?)\*\*/g, '$1')
-    // Remove italic markers  
     .replace(/\*(.*?)\*/g, '$1')
-    // Remove any remaining asterisks
     .replace(/\*/g, '')
-    // Clean up extra spaces
+    .replace(/^Executive Summary:\s*/i, '')
     .replace(/\s+/g, ' ')
     .trim();
 }
@@ -21,16 +22,19 @@ function cleanMarkdownFormatting(text: string): string {
  * This part of the code fixes dollar impact formatting in AI responses
  * Removes unnecessary .00 decimals and ensures proper spacing before "impact"
  */
-function fixDollarImpactFormatting(text: string): string {
+function safeDollarFormat(text: string | null | undefined): string {
+  if (!text || typeof text !== 'string') {
+    return '';
+  }
   return text
-    // Fix dollar amounts followed by "impact" (e.g., "$3,149,821.00impact" → "$3,149,821 impact")
     .replace(/\$([0-9,]+)\.00impact/g, '$$$1 impact')
-    // Fix dollar amounts with cents followed by "impact" (preserve cents)
     .replace(/\$([0-9,]+\.[0-9]{1,2})impact/g, '$$$1 impact')
-    // Fix dollar amounts with no decimal followed by "impact" (e.g., "$1,028,350impact" → "$1,028,350 impact")
     .replace(/\$([0-9,]+)impact/g, '$$$1 impact')
-    // Fix cases where there's already a space but .00 needs removal
     .replace(/\$([0-9,]+)\.00\s+impact/g, '$$$1 impact');
+}
+
+function safeFormatAIText(text: string | null | undefined): string {
+  return safeDollarFormat(safeCleanMarkdown(text));
 }
 
 interface ProductData {
@@ -214,8 +218,8 @@ ${operationalContext}`
       if (Array.isArray(insights) && insights.length > 0) {
         return insights.slice(0, 3).map((insight: any) => ({
           ...insight,
-          title: fixDollarImpactFormatting(cleanMarkdownFormatting(insight.title || '')),
-          content: fixDollarImpactFormatting(cleanMarkdownFormatting(insight.content || ''))
+          title: safeFormatAIText(insight.title) || '',
+          content: safeFormatAIText(insight.content) || ''
         })); // Ensure max 3 insights with cleaned markdown
       }
     } catch (parseError) {
@@ -354,8 +358,8 @@ function parseTextResponseToInsights(content: string, template: any): ReportInsi
   const sections = content.split('\n\n').filter(section => section.trim().length > 0);
   
   return sections.slice(0, 3).map((section, index) => ({
-    title: fixDollarImpactFormatting(cleanMarkdownFormatting(`${template.name} Insight ${index + 1}`)),
-    content: fixDollarImpactFormatting(cleanMarkdownFormatting(section.trim())),
+    title: safeFormatAIText(`${template.name} Insight ${index + 1}`) || `${template.name} Insight ${index + 1}`,
+    content: safeFormatAIText(section.trim()) || section.trim(),
     priority: index === 0 ? 'high' as const : 'medium' as const,
     category: 'operational' as const
   }));
