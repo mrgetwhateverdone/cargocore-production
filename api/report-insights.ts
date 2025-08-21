@@ -151,13 +151,6 @@ ${operationalContext}`
   try {
     const openaiUrl = process.env.OPENAI_API_URL || "https://api.openai.com/v1/chat/completions";
     
-    console.log('🚀 Making OpenAI API call...', {
-      url: openaiUrl,
-      model: 'gpt-4',
-      messageCount: messages.length,
-      operationalContextLength: operationalContext.length
-    });
-    
     const requestBody = {
       model: "gpt-4",
       messages,
@@ -166,12 +159,6 @@ ${operationalContext}`
       presence_penalty: 0.1,
       frequency_penalty: 0.1
     };
-    
-    console.log('📦 Request body prepared:', {
-      model: requestBody.model,
-      messagesLength: requestBody.messages.length,
-      maxTokens: requestBody.max_tokens
-    });
     
     const response = await fetch(openaiUrl, {
       method: "POST",
@@ -182,29 +169,18 @@ ${operationalContext}`
       body: JSON.stringify(requestBody)
     });
 
-    console.log('📊 OpenAI Response status:', response.status);
-
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('❌ OpenAI API error response:', errorText);
       throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
     }
 
     const aiResponse = await response.json();
-    console.log('✅ OpenAI Response received:', {
-      hasChoices: !!aiResponse.choices,
-      choicesLength: aiResponse.choices?.length || 0,
-      hasContent: !!aiResponse.choices?.[0]?.message?.content
-    });
     
     const content = aiResponse.choices?.[0]?.message?.content;
     
     if (!content) {
-      console.error('❌ No content in OpenAI response:', aiResponse);
       throw new Error("No response from OpenAI");
     }
-
-    console.log('📝 Raw AI content received:', content);
 
     // This part of the code parses the AI response and ensures valid JSON
     try {

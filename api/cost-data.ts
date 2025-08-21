@@ -74,30 +74,23 @@ async function fetchShipments(): Promise<ShipmentData[]> {
   const token = process.env.WAREHOUSE_TOKEN;
 
   if (!baseUrl || !token) {
-    console.error("❌ Vercel API: WAREHOUSE_BASE_URL and WAREHOUSE_TOKEN environment variables are required");
     return [];
   }
 
   try {
-    console.log("🔒 Phase 1: Fetching cost management data from TinyBird...");
-    
     // This part of the code uses the exact same URL pattern as working dashboard API
     const url = `${baseUrl}?token=${token}&limit=1000&company_url=COMP002_3PL`;
-    console.log("🔒 Cost API: Fetching from:", url.replace(token, 'TOKEN_HIDDEN'));
 
     const response = await fetch(url);
     
     if (!response.ok) {
-      console.error(`❌ Cost API: TinyBird request failed with status ${response.status}`);
       return [];
     }
 
     const result = await response.json();
-    console.log(`✅ Cost API: Received ${result.data?.length || 0} shipment records`);
     
     return result.data || [];
   } catch (error) {
-    console.error("❌ Cost API: Error fetching shipments:", error);
     return [];
   }
 }

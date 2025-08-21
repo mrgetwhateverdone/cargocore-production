@@ -21,7 +21,6 @@ async function fetchProducts(): Promise<ProductData[]> {
   const token = process.env.TINYBIRD_TOKEN;
 
   if (!baseUrl || !token) {
-    console.log("⚠️ TinyBird config missing, using fallback");
     return [];
   }
 
@@ -29,17 +28,13 @@ async function fetchProducts(): Promise<ProductData[]> {
   const url = `${baseUrl}?token=${token}&limit=1000&company_url=COMP002_packiyo`;
   
   try {
-    console.log("🔒 Fetching from TinyBird:", url.replace(token, "[TOKEN]"));
     const response = await fetch(url);
     if (!response.ok) {
-      console.log("⚠️ TinyBird API failed:", response.status, response.statusText);
       return [];
     }
     const result = await response.json();
-    console.log("✅ TinyBird response:", result.data?.length || 0, "products");
     return result.data || [];
   } catch (error) {
-    console.log("⚠️ TinyBird fetch failed:", error);
     return [];
   }
 }

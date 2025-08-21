@@ -167,8 +167,6 @@ async function fetchProducts(): Promise<ProductData[]> {
   }
 
   try {
-    console.log("🔒 Vercel API: Fetching products data from TinyBird...");
-    
     const url = `${baseUrl}?token=${token}&limit=1000&company_url=COMP002_packiyo`;
     
     const response = await fetch(url);
@@ -179,10 +177,8 @@ async function fetchProducts(): Promise<ProductData[]> {
     const result = await response.json();
     const products = result.data || [];
     
-    console.log(`✅ Vercel API: Fetched ${products.length} products from TinyBird`);
     return products;
   } catch (error) {
-    console.error("❌ Vercel API: Failed to fetch products data:", error);
     return [];
   }
 }

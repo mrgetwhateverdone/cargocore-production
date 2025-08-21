@@ -545,10 +545,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    console.log(
-      "📊 Vercel API: Fetching analytics data with environment variables...",
-    );
-
     const [products, shipments] = await Promise.all([
       fetchProducts(),
       fetchShipments(),
@@ -591,7 +587,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       lastUpdated: new Date().toISOString(),
     };
 
-    console.log("✅ Vercel API: Analytics data compiled successfully");
     res.status(200).json({
       success: true,
       data: analyticsData,
