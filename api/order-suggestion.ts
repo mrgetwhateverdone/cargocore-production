@@ -37,6 +37,8 @@ function fixDollarImpactFormatting(text: string): string {
     .replace(/\$([0-9,]+)\.00impact/g, '$$$1 impact')
     // Fix dollar amounts with cents followed by "impact" (preserve cents)
     .replace(/\$([0-9,]+\.[0-9]{1,2})impact/g, '$$$1 impact')
+    // Fix dollar amounts with no decimal followed by "impact" (e.g., "$1,028,350impact" → "$1,028,350 impact")
+    .replace(/\$([0-9,]+)impact/g, '$$$1 impact')
     // Fix cases where there's already a space but .00 needs removal
     .replace(/\$([0-9,]+)\.00\s+impact/g, '$$$1 impact');
 }
