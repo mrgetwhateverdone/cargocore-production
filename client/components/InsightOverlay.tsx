@@ -1,7 +1,7 @@
 // This part of the code creates a comprehensive overlay system for displaying AI insights with workflow integration
 // It provides detailed analysis views and allows users to convert insights into actionable workflows
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { X, AlertTriangle, TrendingUp, DollarSign, Loader2, CheckCircle } from 'lucide-react';
 import { useWorkflowCreation } from '../hooks/useWorkflows';
 import { useDashboardData } from '../hooks/useDashboardData';
@@ -32,15 +32,8 @@ export function InsightOverlay({ isOpen, onClose, insight, agentName = "Dashboar
   const [aiRecommendations, setAiRecommendations] = useState<string[]>([]);
   const [isLoadingRecommendations, setIsLoadingRecommendations] = useState(false);
 
-  // This part of the code fetches AI recommendations when overlay opens
-  useEffect(() => {
-    if (isOpen && insight && dashboardData) {
-      fetchAIRecommendations();
-    }
-  }, [isOpen, insight, dashboardData]);
-
   // This part of the code fetches dynamic AI recommendations for the insight
-  const fetchAIRecommendations = async () => {
+  const fetchAIRecommendations = useCallback(async () => {
     setIsLoadingRecommendations(true);
     setAiRecommendations([]);
 
@@ -96,7 +89,14 @@ export function InsightOverlay({ isOpen, onClose, insight, agentName = "Dashboar
     } finally {
       setIsLoadingRecommendations(false);
     }
-  };
+  }, [insight, dashboardData]);
+
+  // This part of the code fetches AI recommendations when overlay opens
+  useEffect(() => {
+    if (isOpen && insight && dashboardData) {
+      fetchAIRecommendations();
+    }
+  }, [isOpen, insight, dashboardData, fetchAIRecommendations]);
 
   // This part of the code handles click outside to close functionality
   useEffect(() => {

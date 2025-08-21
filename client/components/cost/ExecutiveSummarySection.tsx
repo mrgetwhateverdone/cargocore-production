@@ -1,5 +1,5 @@
 import type { CostKPIs, CostCenter } from "@/types/api";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Loader2 } from "lucide-react";
 
 interface ExecutiveSummarySectionProps {
@@ -12,14 +12,7 @@ export function ExecutiveSummarySection({ kpis, costCenters, isLoading }: Execut
   const [aiSummary, setAiSummary] = useState<string>("");
   const [isLoadingAI, setIsLoadingAI] = useState(false);
 
-  // This part of the code fetches AI-generated executive summary
-  useEffect(() => {
-    if (!isLoading && kpis && costCenters.length > 0) {
-      generateAIExecutiveSummary();
-    }
-  }, [isLoading, kpis, costCenters]);
-
-  const generateAIExecutiveSummary = async () => {
+  const generateAIExecutiveSummary = useCallback(async () => {
     setIsLoadingAI(true);
     
     try {
@@ -53,7 +46,14 @@ export function ExecutiveSummarySection({ kpis, costCenters, isLoading }: Execut
     } finally {
       setIsLoadingAI(false);
     }
-  };
+  }, [kpis, costCenters]);
+
+  // This part of the code fetches AI-generated executive summary
+  useEffect(() => {
+    if (!isLoading && kpis && costCenters.length > 0) {
+      generateAIExecutiveSummary();
+    }
+  }, [isLoading, kpis, costCenters, generateAIExecutiveSummary]);
 
   if (isLoading) {
     return (
