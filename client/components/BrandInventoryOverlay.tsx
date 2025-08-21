@@ -242,14 +242,14 @@ export function BrandInventoryOverlay({
                   {brand.efficiency_score}%
                 </span>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
+              <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
                 <div 
                   className={`h-2 rounded-full ${
                     brand.efficiency_score >= 85 ? 'bg-green-500' :
                     brand.efficiency_score >= 70 ? 'bg-blue-500' :
                     brand.efficiency_score >= 50 ? 'bg-yellow-500' : 'bg-red-500'
                   }`}
-                  style={{ width: `${brand.efficiency_score}%` }}
+                  style={{ width: `${Math.min(brand.efficiency_score, 100)}%` }}
                 ></div>
               </div>
               <p className="text-sm text-gray-600 mt-2">

@@ -18,6 +18,20 @@ function cleanMarkdownFormatting(text: string): string {
 }
 
 /**
+ * This part of the code fixes dollar impact formatting in AI responses
+ * Removes unnecessary .00 decimals and ensures proper spacing before "impact"
+ */
+function fixDollarImpactFormatting(text: string): string {
+  return text
+    // Fix dollar amounts followed by "impact" (e.g., "$3,149,821.00impact" → "$3,149,821 impact")
+    .replace(/\$([0-9,]+)\.00impact/g, '$$$1 impact')
+    // Fix dollar amounts with cents followed by "impact" (preserve cents)
+    .replace(/\$([0-9,]+\.[0-9]{1,2})impact/g, '$$$1 impact')
+    // Fix cases where there's already a space but .00 needs removal
+    .replace(/\$([0-9,]+)\.00\s+impact/g, '$$$1 impact');
+}
+
+/**
  * This part of the code provides reports data endpoint for Vercel serverless deployment
  * Uses proven patterns from working pages and avoids past implementation issues
  */
@@ -407,12 +421,12 @@ async function generateReportInsights(
       return parsed.map((insight: any, index: number) => ({
         id: `report-insight-${index + 1}`,
         type: "report_analysis",
-        title: cleanMarkdownFormatting(insight.title || "Report Analysis"),
-        description: cleanMarkdownFormatting(insight.description || ""),
+        title: fixDollarImpactFormatting(cleanMarkdownFormatting(insight.title || "Report Analysis")),
+        description: fixDollarImpactFormatting(cleanMarkdownFormatting(insight.description || "")),
         severity: insight.severity || "medium",
         dollarImpact: insight.dollarImpact || 0,
         source: "reports_agent" as const,
-        suggestedActions: (insight.suggestedActions || []).map((action: string) => cleanMarkdownFormatting(action)),
+        suggestedActions: (insight.suggestedActions || []).map((action: string) => fixDollarImpactFormatting(cleanMarkdownFormatting(action))),
         timestamp: new Date().toISOString(),
       }));
     } catch (parseError) {

@@ -17,6 +17,20 @@ function cleanMarkdownFormatting(text: string): string {
     .trim();
 }
 
+/**
+ * This part of the code fixes dollar impact formatting in AI responses
+ * Removes unnecessary .00 decimals and ensures proper spacing before "impact"
+ */
+function fixDollarImpactFormatting(text: string): string {
+  return text
+    // Fix dollar amounts followed by "impact" (e.g., "$3,149,821.00impact" → "$3,149,821 impact")
+    .replace(/\$([0-9,]+)\.00impact/g, '$$$1 impact')
+    // Fix dollar amounts with cents followed by "impact" (preserve cents)
+    .replace(/\$([0-9,]+\.[0-9]{1,2})impact/g, '$$$1 impact')
+    // Fix cases where there's already a space but .00 needs removal
+    .replace(/\$([0-9,]+)\.00\s+impact/g, '$$$1 impact');
+}
+
 interface ProductData {
   product_id: string;
   product_name: string;
@@ -198,8 +212,8 @@ ${operationalContext}`
       if (Array.isArray(insights) && insights.length > 0) {
         return insights.slice(0, 3).map((insight: any) => ({
           ...insight,
-          title: cleanMarkdownFormatting(insight.title || ''),
-          content: cleanMarkdownFormatting(insight.content || '')
+          title: fixDollarImpactFormatting(cleanMarkdownFormatting(insight.title || '')),
+          content: fixDollarImpactFormatting(cleanMarkdownFormatting(insight.content || ''))
         })); // Ensure max 3 insights with cleaned markdown
       }
     } catch (parseError) {
@@ -338,8 +352,8 @@ function parseTextResponseToInsights(content: string, template: any): ReportInsi
   const sections = content.split('\n\n').filter(section => section.trim().length > 0);
   
   return sections.slice(0, 3).map((section, index) => ({
-    title: cleanMarkdownFormatting(`${template.name} Insight ${index + 1}`),
-    content: cleanMarkdownFormatting(section.trim()),
+    title: fixDollarImpactFormatting(cleanMarkdownFormatting(`${template.name} Insight ${index + 1}`)),
+    content: fixDollarImpactFormatting(cleanMarkdownFormatting(section.trim())),
     priority: index === 0 ? 'high' as const : 'medium' as const,
     category: 'operational' as const
   }));

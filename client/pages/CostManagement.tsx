@@ -64,13 +64,6 @@ export default function CostManagement() {
         {/* This part of the code displays enhanced cost management KPI cards */}
         <CostKPISection kpis={data.kpis} isLoading={isLoading} />
 
-        {/* This part of the code displays executive summary with real data narrative */}
-        <ExecutiveSummarySection 
-          kpis={data.kpis}
-          costCenters={data.costCenters || []}
-          isLoading={isLoading}
-        />
-
         {/* This part of the code displays AI insights for cost management */}
         <InsightsSection
           insights={data.insights}
@@ -78,6 +71,13 @@ export default function CostManagement() {
           title="Cost Management Agent Insights"
           subtitle={`${data.insights.length} insights from Cost Management Agent`}
           loadingMessage="Cost Management Agent is analyzing warehouse performance and identifying cost optimization opportunities..."
+        />
+
+        {/* This part of the code displays executive summary with real data narrative */}
+        <ExecutiveSummarySection 
+          kpis={data.kpis}
+          costCenters={data.costCenters || []}
+          isLoading={isLoading}
         />
 
         {/* This part of the code displays historical cost trends */}

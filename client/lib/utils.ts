@@ -23,6 +23,31 @@ export function formatNumber(value: number | null | undefined): string {
   });
 }
 
+// This part of the code formats currency for impact statements with proper spacing
+// Examples: $3,149,821.00 → $3,149,821 impact, $1,234.56 → $1,234.56 impact
+export function formatCurrencyForImpact(value: number | null | undefined): string {
+  if (value === null || value === undefined || value === 0) return "$0 impact";
+  
+  // This part of the code checks if the number is effectively a whole number
+  let formattedValue: string;
+  if (Number.isInteger(value) || value % 1 === 0) {
+    formattedValue = value.toLocaleString('en-US', { 
+      style: 'currency', 
+      currency: 'USD',
+      maximumFractionDigits: 0 
+    });
+  } else {
+    formattedValue = value.toLocaleString('en-US', { 
+      style: 'currency', 
+      currency: 'USD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2 
+    });
+  }
+  
+  return `${formattedValue} impact`;
+}
+
 // This part of the code formats percentages by removing unnecessary decimals
 // Examples: 0.0% → 0%, 100.0% → 100%, 45.67% → 45.67%
 export function formatPercentage(value: number | null | undefined, showSign: boolean = false): string {

@@ -523,6 +523,8 @@ function cleanMarkdownFormatting(text: string): string {
     .replace(/\*(.*?)\*/g, '$1')
     // Remove any remaining asterisks
     .replace(/\*/g, '')
+    // Remove "Executive Summary:" prefix (case insensitive)
+    .replace(/^Executive Summary:\s*/i, '')
     // Clean up extra spaces
     .replace(/\s+/g, ' ')
     .trim();

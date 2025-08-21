@@ -346,6 +346,20 @@ function calculateBrandPerformance(products: ProductData[], shipments: ShipmentD
 }
 
 /**
+ * This part of the code fixes dollar impact formatting in AI responses
+ * Removes unnecessary .00 decimals and ensures proper spacing before "impact"
+ */
+function fixDollarImpactFormatting(text: string): string {
+  return text
+    // Fix dollar amounts followed by "impact" (e.g., "$3,149,821.00impact" → "$3,149,821 impact")
+    .replace(/\$([0-9,]+)\.00impact/g, '$$$1 impact')
+    // Fix dollar amounts with cents followed by "impact" (preserve cents)
+    .replace(/\$([0-9,]+\.[0-9]{1,2})impact/g, '$$$1 impact')
+    // Fix cases where there's already a space but .00 needs removal
+    .replace(/\$([0-9,]+)\.00\s+impact/g, '$$$1 impact');
+}
+
+/**
  * This part of the code generates analytics-specific AI insights
  */
 async function generateAnalyticsInsights(
@@ -491,9 +505,9 @@ CRITICAL: suggestedActions must be:
         const parsed = JSON.parse(content);
         return parsed.map((insight: any) => ({
           ...insight,
-          title: cleanMarkdownFormatting(insight.title || ''),
-          description: cleanMarkdownFormatting(insight.description || ''),
-          suggestedActions: (insight.suggestedActions || []).map((action: string) => cleanMarkdownFormatting(action))
+          title: fixDollarImpactFormatting(cleanMarkdownFormatting(insight.title || '')),
+          description: fixDollarImpactFormatting(cleanMarkdownFormatting(insight.description || '')),
+          suggestedActions: (insight.suggestedActions || []).map((action: string) => fixDollarImpactFormatting(cleanMarkdownFormatting(action)))
         }));
       }
     }

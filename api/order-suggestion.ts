@@ -27,6 +27,20 @@ function cleanMarkdownFormatting(text: string): string {
     .trim();
 }
 
+/**
+ * This part of the code fixes dollar impact formatting in AI responses
+ * Removes unnecessary .00 decimals and ensures proper spacing before "impact"
+ */
+function fixDollarImpactFormatting(text: string): string {
+  return text
+    // Fix dollar amounts followed by "impact" (e.g., "$3,149,821.00impact" → "$3,149,821 impact")
+    .replace(/\$([0-9,]+)\.00impact/g, '$$$1 impact')
+    // Fix dollar amounts with cents followed by "impact" (preserve cents)
+    .replace(/\$([0-9,]+\.[0-9]{1,2})impact/g, '$$$1 impact')
+    // Fix cases where there's already a space but .00 needs removal
+    .replace(/\$([0-9,]+)\.00\s+impact/g, '$$$1 impact');
+}
+
 // Type definitions
 interface OrderData {
   order_id: string;
@@ -194,12 +208,12 @@ async function generateAIOrderSuggestion(
     }
 
     const data = await response.json();
-    const aiSuggestion = data.choices[0]?.message?.content || 'Unable to generate specific recommendation.';
+    const aiSuggestion = fixDollarImpactFormatting(cleanMarkdownFormatting(data.choices[0]?.message?.content || 'Unable to generate specific recommendation.'));
 
     // Create structured suggestion response
     const suggestion: OrderSuggestion = {
       orderId: orderData.order_id,
-      suggestion: cleanMarkdownFormatting(aiSuggestion),
+      suggestion: aiSuggestion,
       priority: context.priority,
       actionable: true,
       estimatedImpact: context.estimatedImpact,
@@ -355,7 +369,7 @@ function generateFallbackSuggestion(
 
   return {
     orderId: orderData.order_id,
-    suggestion: cleanMarkdownFormatting(suggestion),
+    suggestion: fixDollarImpactFormatting(cleanMarkdownFormatting(suggestion)),
     priority: context.priority,
     actionable: true,
     estimatedImpact: context.estimatedImpact,
