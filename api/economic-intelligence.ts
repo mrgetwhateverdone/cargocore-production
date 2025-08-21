@@ -284,7 +284,15 @@ function generateEconomicInsights(
       description: "Rising operational costs and delivery discrepancies are impacting current inventory shortfalls and performance metrics",
       dollarImpact: financialImpacts.quantityDiscrepancyImpact,
       severity: "critical" as const,
-      type: "cost_escalation"
+      type: "cost_escalation",
+      source: "economic_intelligence",
+      suggestedActions: [
+        "Review supplier contracts for cost escalation clauses",
+        "Implement bulk purchasing agreements to reduce unit costs",
+        "Optimize inventory turnover to minimize holding costs",
+        "Establish cost monitoring alerts for early intervention"
+      ],
+      createdAt: new Date().toISOString()
     });
   }
 
@@ -296,7 +304,15 @@ function generateEconomicInsights(
       description: `Economic volatility increases risk exposure from brand concentration, particularly with supply chain disruptions`,
       dollarImpact: financialImpacts.brandConcentrationRisk,
       severity: "warning" as const,
-      type: "concentration_risk"
+      type: "concentration_risk",
+      source: "economic_intelligence",
+      suggestedActions: [
+        "Diversify supplier base across multiple regions",
+        "Develop contingency plans for primary brand disruptions",
+        "Negotiate flexible contract terms with secondary suppliers",
+        "Monitor market trends for emerging brand opportunities"
+      ],
+      createdAt: new Date().toISOString()
     });
   }
 
