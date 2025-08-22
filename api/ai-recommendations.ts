@@ -208,7 +208,7 @@ Inventory Context: ${request.contextData?.totalSKUs || 0} SKUs, ${request.contex
 }
 
 // This part of the code handles the unified AI recommendations endpoint
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+export default async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }

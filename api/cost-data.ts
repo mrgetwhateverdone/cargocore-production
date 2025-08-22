@@ -694,7 +694,7 @@ TONE: Professional, strategic, data-driven, and focused on financial performance
   }
 }
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+export default async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
   if (req.method === "POST" && req.query.aiSummary === 'true') {
     try {
       console.log("🤖 Cost Management API: Generating AI executive summary...");

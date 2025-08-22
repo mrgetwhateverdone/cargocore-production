@@ -318,9 +318,9 @@ function generateFallbackInsights(type: string): AIInsight[] {
     ]
   };
 
-  const typeInsights = fallbacks[type] || fallbacks['orders'];
+  const typeInsights = fallbacks[type as keyof typeof fallbacks] || fallbacks['orders'];
   
-  return typeInsights.map((insight, index) => ({
+  return typeInsights.map((insight: any, index: number) => ({
     id: `fallback-${type}-${Date.now()}-${index}`,
     title: insight.title,
     description: insight.description,
@@ -336,7 +336,7 @@ function generateFallbackInsights(type: string): AIInsight[] {
 }
 
 // This part of the code handles the unified AI insights endpoint
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+export default async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }

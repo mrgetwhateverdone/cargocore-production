@@ -382,11 +382,11 @@ function safeFormatAIText(text: string | null | undefined): string {
  * This part of the code generates analytics-specific AI insights
  */
 async function generateAnalyticsInsights(
-  products: ProductData[],
-  shipments: ShipmentData[],
-  kpis: any,
-  performanceMetrics: any,
-  brandPerformance: any
+  _products: ProductData[],
+  _shipments: ShipmentData[],
+  _kpis: any,
+  _performanceMetrics: any,
+  _brandPerformance: any
 ): Promise<AnalyticsInsight[]> {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
@@ -539,7 +539,7 @@ CRITICAL: suggestedActions must be:
   return [];
 }
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+export default async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
   if (req.method !== "GET") {
     return res.status(405).json({ error: "Method not allowed" });
   }
