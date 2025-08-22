@@ -212,10 +212,13 @@ STRATEGIC CONTEXT:
     return insights;
 
   } catch (error) {
-    console.error('AI Insights Error:', error);
+    // Production-optimized error logging
+    if (process.env.NODE_ENV === 'development') {
+      console.error('AI Insights Error:', error);
+    }
     
     // This part of the code provides fallback insights based on type
-    return generateFallbackInsights(request.type);
+    return handleAIServiceError(request.type, error);
   }
 }
 
@@ -244,7 +247,7 @@ function parseInsightsFromResponse(aiResponse: string, type: string): AIInsight[
     }
   }
 
-  return insights.length > 0 ? insights : generateFallbackInsights(type);
+  return insights;
 }
 
 // This part of the code extracts actionable items from AI text
@@ -264,75 +267,16 @@ function extractActionsFromText(text: string): string[] {
   ];
 }
 
-// This part of the code provides fallback insights when AI is unavailable
-function generateFallbackInsights(type: string): AIInsight[] {
-  const fallbacks = {
-    'orders': [
-      {
-        title: 'Order Processing Optimization Needed',
-        description: 'Current order processing workflows show opportunities for efficiency improvements and risk reduction.',
-        severity: 'warning' as const
-      }
-    ],
-    'analytics': [
-      {
-        title: 'Performance Analytics Review Required',
-        description: 'Performance metrics indicate areas for operational enhancement and efficiency gains.',
-        severity: 'info' as const
-      }
-    ],
-    'cost-management': [
-      {
-        title: 'Cost Optimization Opportunities Identified',
-        description: 'Cost structure analysis reveals potential for strategic cost reduction and efficiency improvements.',
-        severity: 'warning' as const
-      }
-    ],
-    'reports': [
-      {
-        title: 'Executive Report Generation Ready',
-        description: 'Comprehensive operational data available for strategic reporting and decision making.',
-        severity: 'info' as const
-      }
-    ],
-    'inventory': [
-      {
-        title: 'Inventory Optimization Strategy Needed',
-        description: 'Inventory analysis shows opportunities for improved turnover rates and investment efficiency.',
-        severity: 'warning' as const
-      }
-    ],
-    'warehouses': [
-      {
-        title: 'Warehouse Performance Enhancement Available',
-        description: 'Warehouse operations show potential for throughput optimization and efficiency improvements.',
-        severity: 'info' as const
-      }
-    ],
-    'economic-intelligence': [
-      {
-        title: 'Economic Intelligence Monitoring Active',
-        description: 'Economic indicators are being tracked for strategic positioning and risk management.',
-        severity: 'info' as const
-      }
-    ]
-  };
-
-  const typeInsights = fallbacks[type as keyof typeof fallbacks] || fallbacks['orders'];
+// This part of the code handles AI service errors gracefully without fallback data
+function handleAIServiceError(type: string, error: any): AIInsight[] {
+  // Production-optimized error logging
+  if (process.env.NODE_ENV === 'development') {
+    console.error(`AI Insights Service Error (${type}):`, error);
+  }
   
-  return typeInsights.map((insight: any, index: number) => ({
-    id: `fallback-${type}-${Date.now()}-${index}`,
-    title: insight.title,
-    description: insight.description,
-    severity: insight.severity,
-    source: `${type}_agent`,
-    suggestedActions: [
-      'Review operational data for optimization opportunities',
-      'Implement performance monitoring systems',
-      'Establish continuous improvement processes'
-    ],
-    createdAt: new Date().toISOString()
-  }));
+  // Return empty array - no fallback insights
+  // UI will handle empty state gracefully
+  return [];
 }
 
 // This part of the code handles the unified AI insights endpoint
@@ -361,11 +305,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     });
 
   } catch (error) {
-    console.error('AI Insights Handler Error:', error);
+    // Production-optimized error logging
+    if (process.env.NODE_ENV === 'development') {
+      console.error('AI Insights Handler Error:', error);
+    }
     res.status(500).json({
       success: false,
       error: error instanceof Error ? error.message : 'Internal server error',
-      insights: generateFallbackInsights('orders')
+      insights: []
     });
   }
 }

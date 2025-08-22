@@ -349,23 +349,29 @@ class WorkflowCreationService implements IWorkflowCreationService {
   }
 }
 
-// This part of the code creates a safe fallback service for error cases
-class FallbackWorkflowService implements IWorkflowCreationService {
-  createWorkflowFromAction(): CreatedWorkflow {
-    throw new Error('WorkflowCreationService failed to initialize');
-  }
-  getWorkflows(): CreatedWorkflow[] {
-    return [];
-  }
-  updateWorkflow(): boolean {
-    return false;
-  }
-  deleteWorkflow(): boolean {
-    return false;
-  }
-  getWorkflowStats() {
-    return { active: 0, completedThisWeek: 0, overdue: 0, totalSaved: 0 };
-  }
+// This part of the code provides proper error handling for workflow service initialization
+function handleWorkflowServiceError(): IWorkflowCreationService {
+  console.error('WorkflowCreationService failed to initialize - using error handling service');
+  
+  return {
+    createWorkflowFromAction(): CreatedWorkflow {
+      throw new Error('Workflow service is unavailable. Please try again later.');
+    },
+    getWorkflows(): CreatedWorkflow[] {
+      return [];
+    },
+    updateWorkflow(): boolean {
+      console.warn('Workflow service unavailable - update failed');
+      return false;
+    },
+    deleteWorkflow(): boolean {
+      console.warn('Workflow service unavailable - delete failed');
+      return false;
+    },
+    getWorkflowStats() {
+      return { active: 0, completedThisWeek: 0, overdue: 0, totalSaved: 0 };
+    }
+  };
 }
 
 // This part of the code exports the singleton instance for consistent state across the application
@@ -376,7 +382,7 @@ try {
   workflowCreationService = new WorkflowCreationService();
 } catch (error) {
   console.error('Failed to initialize WorkflowCreationService:', error);
-  workflowCreationService = new FallbackWorkflowService();
+  workflowCreationService = handleWorkflowServiceError();
 }
 
 export { workflowCreationService };

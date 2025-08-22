@@ -1,33 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import type { CostKPIs, CostCenter, CostData, AIInsight, SupplierPerformance, HistoricalCostTrend } from "../client/types/api";
-// Safe formatters to prevent null reference crashes - inline to avoid import issues
-function safeCleanMarkdown(text: string | null | undefined): string {
-  if (!text || typeof text !== 'string') {
-    return '';
-  }
-  return text
-    .replace(/\*\*(.*?)\*\*/g, '$1')
-    .replace(/\*(.*?)\*/g, '$1')
-    .replace(/\*/g, '')
-    .replace(/^Executive Summary:\s*/i, '')
-    .replace(/\s+/g, ' ')
-    .trim();
-}
-
-function safeDollarFormat(text: string | null | undefined): string {
-  if (!text || typeof text !== 'string') {
-    return '';
-  }
-  return text
-    .replace(/\$([0-9,]+)\.00impact/g, '$$$1 impact')
-    .replace(/\$([0-9,]+\.[0-9]{1,2})impact/g, '$$$1 impact')
-    .replace(/\$([0-9,]+)impact/g, '$$$1 impact')
-    .replace(/\$([0-9,]+)\.00\s+impact/g, '$$$1 impact');
-}
-
-function safeFormatAIText(text: string | null | undefined): string {
-  return safeDollarFormat(safeCleanMarkdown(text));
-}
+import { safeCleanMarkdown, safeDollarFormat, safeFormatAIText } from "../lib/safe-formatters";
 
 /**
  * This part of the code provides cost management data endpoint for Vercel serverless deployment
@@ -591,24 +564,7 @@ function generateCostInsights(
   return [];
 }
 
-/**
- * This part of the code cleans up markdown formatting from AI responses
- * Removes bold markers and other formatting that shouldn't be displayed literally
- */
-function cleanMarkdownFormatting(text: string): string {
-  return text
-    // Remove bold markers
-    .replace(/\*\*(.*?)\*\*/g, '$1')
-    // Remove italic markers  
-    .replace(/\*(.*?)\*/g, '$1')
-    // Remove any remaining asterisks
-    .replace(/\*/g, '')
-    // Remove "Executive Summary:" prefix (case insensitive)
-    .replace(/^Executive Summary:\s*/i, '')
-    // Clean up extra spaces
-    .replace(/\s+/g, ' ')
-    .trim();
-}
+
 
 /**
  * This part of the code generates AI-powered executive summary for cost management
@@ -618,7 +574,9 @@ async function generateAIExecutiveSummary(contextData: any): Promise<string> {
   const openaiApiKey = process.env.OPENAI_API_KEY;
   
   if (!openaiApiKey) {
-    console.warn('🤖 OpenAI API key not available, using fallback summary');
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('🤖 OpenAI API key not available, using fallback summary');
+    }
     return '';
   }
 

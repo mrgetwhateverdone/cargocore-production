@@ -155,55 +155,19 @@ Inventory Context: ${request.contextData?.totalSKUs || 0} SKUs, ${request.contex
     ];
 
   } catch (error) {
-    console.error('AI Recommendations Error:', error);
+    // Production-optimized error logging
+    if (process.env.NODE_ENV === 'development') {
+      console.error('AI Recommendations Error:', error);
+    }
     
-    // This part of the code provides fallback recommendations based on type
-    const fallbacks = {
-      'cost-variance': [
-        'Implement immediate cost containment measures and budget controls',
-        'Negotiate supplier contracts for better pricing terms',
-        'Optimize resource allocation to reduce operational waste',
-        'Deploy cost monitoring systems for early variance detection'
-      ],
-      'margin-risk': [
-        'Implement margin protection strategies and risk monitoring',
-        'Optimize pricing models for improved profitability',
-        'Diversify supplier base to reduce margin pressure',
-        'Deploy dynamic pricing tools for competitive advantage'
-      ],
-      'brand-optimization': [
-        'Focus investment on high-performing brand categories',
-        'Optimize portfolio mix for maximum return on investment',
-        'Implement brand performance tracking and analytics',
-        'Develop strategic partnerships for brand growth'
-      ],
-      'warehouse-optimization': [
-        'Implement workflow optimization for increased throughput',
-        'Deploy automation solutions for operational efficiency',
-        'Optimize layout design for improved material flow',
-        'Establish performance monitoring and KPI tracking'
-      ],
-      'economic-intelligence': [
-        'Monitor economic indicators for strategic planning',
-        'Implement scenario planning for market volatility',
-        'Develop contingency strategies for economic shifts',
-        'Optimize supply chain for economic resilience'
-      ],
-      'dashboard-insights': [
-        'Implement performance monitoring and alert systems',
-        'Optimize operational workflows for efficiency gains',
-        'Deploy data analytics for decision support',
-        'Establish continuous improvement processes'
-      ],
-      'inventory-management': [
-        'Optimize stock levels for improved inventory turnover',
-        'Implement demand forecasting for better planning',
-        'Deploy inventory optimization algorithms',
-        'Establish reorder point optimization strategies'
-      ]
-    };
-
-    return fallbacks[request.type] || fallbacks['dashboard-insights'];
+    // This part of the code handles AI service errors gracefully
+    if (process.env.NODE_ENV === 'development') {
+      console.error(`AI Recommendations Error (${request.type}):`, error);
+    }
+    
+    // Return empty array - no fallback recommendations
+    // UI will handle empty state gracefully
+    return [];
   }
 }
 
@@ -233,7 +197,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     });
 
   } catch (error) {
-    console.error('AI Recommendations Handler Error:', error);
+    // Production-optimized error logging
+    if (process.env.NODE_ENV === 'development') {
+      console.error('AI Recommendations Handler Error:', error);
+    }
     res.status(500).json({
       success: false,
       error: error instanceof Error ? error.message : 'Internal server error',
