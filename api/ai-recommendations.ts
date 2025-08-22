@@ -25,6 +25,7 @@ async function generateUnifiedRecommendations(request: RecommendationRequest): P
     'warehouse-optimization': "You are a warehouse efficiency expert with extensive 3PL experience. Provide specific actions to improve warehouse operations and throughput. Each recommendation should be a single, clear action (15-20 words max). No explanations or bullet points.",
     'economic-intelligence': "You are an economic intelligence specialist for supply chain operations. Provide specific strategies to navigate economic conditions and trends. Each recommendation should be a single, clear action (15-20 words max). No explanations or bullet points.",
     'dashboard-insights': "You are a world-class operations consultant with 20+ years of experience in 3PL and supply chain management. Provide specific, actionable recommendations that drive measurable operational improvements. Each recommendation should be a single, clear action (15-20 words max). No explanations or bullet points.",
+    'order-analysis': "You are an expert order fulfillment specialist. Analyze this specific order and provide 3-4 targeted recommendations for optimization. Focus on processing efficiency, risk mitigation, and customer satisfaction. Each recommendation should be actionable and specific to this order's details.",
     'inventory-management': "You are an inventory optimization expert specializing in 3PL operations. Provide specific strategies to optimize stock levels and inventory efficiency. Each recommendation should be a single, clear action (15-20 words max). No explanations or bullet points."
   };
 
@@ -88,7 +89,21 @@ Value: $${request.data.total_value?.toLocaleString() || 0}
 Turnover: ${request.data.turnover_rate || 0}x
 Performance: ${request.data.efficiency_score || 0}%
 
-Inventory Context: ${request.contextData?.totalSKUs || 0} SKUs, ${request.contextData?.portfolioValue?.toLocaleString() || 0} portfolio value`
+Inventory Context: ${request.contextData?.totalSKUs || 0} SKUs, ${request.contextData?.portfolioValue?.toLocaleString() || 0} portfolio value`,
+
+    'order-analysis': `Analyze this specific order and provide targeted optimization recommendations:
+Order ID: ${request.data.order_id || request.data.id}
+Status: ${request.data.status}
+SLA Status: ${request.data.sla_status}
+Expected Date: ${request.data.expected_date}
+Brand: ${request.data.brand_name}
+Supplier: ${request.data.supplier_name}
+Expected Quantity: ${request.data.expected_quantity}
+Received Quantity: ${request.data.received_quantity || 'Pending'}
+
+Analysis Context: ${request.contextData?.orderType || 'Standard'} order analysis requested
+
+Provide specific recommendations for this order's processing, risk mitigation, and optimization.`
   };
 
   try {

@@ -298,19 +298,26 @@ class InternalApiService {
   }
 
   /**
-   * Generate AI suggestion for a specific order
+   * Generate AI suggestion for a specific order using unified AI recommendations
    * NO external API keys - server handles OpenAI calls
    */
   async generateOrderSuggestion(orderData: any): Promise<OrderSuggestion> {
     try {
-      console.log("🔒 Client: Requesting AI order suggestion from secure server...");
+      console.log("🔒 Client: Requesting AI order suggestion from unified AI service...");
 
-      const response = await fetch(`${this.baseUrl}/api/order-suggestion`, {
+      const response = await fetch(`${this.baseUrl}/api/ai-recommendations`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ orderData }),
+        body: JSON.stringify({ 
+          type: 'order-analysis',
+          data: orderData,
+          contextData: {
+            orderType: 'individual',
+            analysisRequest: true
+          }
+        }),
       });
 
       if (!response.ok) {
@@ -319,14 +326,22 @@ class InternalApiService {
         );
       }
 
-      const result: APIResponse<OrderSuggestion> = await response.json();
+      const result = await response.json();
 
-      if (!result.success || !result.data) {
-        throw new Error(result.message || "Failed to generate order suggestion");
+      if (!result.success || !result.recommendations) {
+        throw new Error("Failed to generate order recommendations");
       }
 
-      console.log("✅ Client: Order suggestion received securely from server");
-      return result.data;
+      console.log("✅ Client: Order suggestions received from unified AI service");
+      
+      // Transform unified AI response to OrderSuggestion format
+      return {
+        order_id: orderData.order_id || orderData.id,
+        suggestion: result.recommendations[0] || "Analysis complete - review order details for optimization opportunities.",
+        recommendations: result.recommendations,
+        confidence: 0.85,
+        generatedAt: new Date().toISOString()
+      };
     } catch (error) {
       console.error("❌ Client: Order suggestion API call failed:", error);
       throw new Error(

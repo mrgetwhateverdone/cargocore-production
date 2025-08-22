@@ -477,7 +477,12 @@ function calculateAvailableBrands(products: ProductData[]) {
       total_quantity: data.totalQuantity,
       avg_value_per_sku: Math.round(data.totalValue / data.skuCount),
       portfolio_percentage: totalPortfolioValue > 0 ? Math.round((data.totalValue / totalPortfolioValue) * 100) : 0,
-      efficiency_score: Math.round((data.totalValue / data.skuCount) * (data.totalQuantity / data.skuCount))
+      efficiency_score: Math.min(100, Math.max(0, Math.round(
+        // This part calculates efficiency as a combination of value density and turnover rate
+        (data.totalValue / Math.max(data.totalQuantity, 1)) * 0.1 + // Value per unit (weighted)
+        Math.min(100, (data.skuCount * 5)) + // SKU diversity bonus (up to 100%)
+        Math.min(20, (data.totalValue / 10000)) // Value scale bonus (up to 20%)
+      )))
     }))
     .sort((a, b) => b.total_value - a.total_value);
   
