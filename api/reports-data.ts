@@ -1,103 +1,19 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
+import type { ProductData, ShipmentData } from "../types/shared";
+import { safeCleanMarkdown, safeDollarFormat, safeFormatAIText } from "../lib/safe-formatters";
 
 /**
  * This part of the code cleans up markdown formatting from AI responses
  * Removes bold markers and other formatting that shouldn't be displayed literally
  */
-// Safe formatters to prevent null reference crashes - inline to avoid import issues
-function safeCleanMarkdown(text: string | null | undefined): string {
-  if (!text || typeof text !== 'string') {
-    return '';
-  }
-  return text
-    .replace(/\*\*(.*?)\*\*/g, '$1')
-    .replace(/\*(.*?)\*/g, '$1')
-    .replace(/\*/g, '')
-    .replace(/^Executive Summary:\s*/i, '')
-    .replace(/\s+/g, ' ')
-    .trim();
-}
 
-/**
- * This part of the code fixes dollar impact formatting in AI responses
- * Removes unnecessary .00 decimals and ensures proper spacing before "impact"
- */
-function safeDollarFormat(text: string | null | undefined): string {
-  if (!text || typeof text !== 'string') {
-    return '';
-  }
-  return text
-    .replace(/\$([0-9,]+)\.00impact/g, '$$$1 impact')
-    .replace(/\$([0-9,]+\.[0-9]{1,2})impact/g, '$$$1 impact')
-    .replace(/\$([0-9,]+)impact/g, '$$$1 impact')
-    .replace(/\$([0-9,]+)\.00\s+impact/g, '$$$1 impact');
-}
-
-function safeFormatAIText(text: string | null | undefined): string {
-  return safeDollarFormat(safeCleanMarkdown(text));
-}
 
 /**
  * This part of the code provides reports data endpoint for Vercel serverless deployment
  * Uses proven patterns from working pages and avoids past implementation issues
  */
 
-// TinyBird Product Details API Response - standardized interface matching working pages
-interface ProductData {
-  product_id: string;
-  company_url: string;
-  brand_id: string | null;
-  brand_name: string;
-  brand_domain: string | null;
-  created_date: string;
-  product_name: string;
-  product_sku: string | null;
-  gtin: string | null;
-  is_kit: boolean;
-  active: boolean;
-  product_supplier: string | null;
-  country_of_origin: string | null;
-  harmonized_code: string | null;
-  product_external_url: string | null;
-  inventory_item_id: string;
-  unit_quantity: number;
-  supplier_name: string;
-  unit_cost: number | null;
-  supplier_external_id: string | null;
-  updated_date: string | null;
-}
 
-// TinyBird Shipments API Response - standardized interface matching working pages
-interface ShipmentData {
-  company_url: string;
-  shipment_id: string;
-  brand_id: string | null;
-  brand_name: string;
-  brand_domain: string | null;
-  created_date: string;
-  purchase_order_number: string | null;
-  status: string;
-  supplier: string | null;
-  expected_arrival_date: string | null;
-  warehouse_id: string | null;
-  ship_from_city: string | null;
-  ship_from_state: string | null;
-  ship_from_postal_code: string | null;
-  ship_from_country: string | null;
-  external_system_url: string | null;
-  inventory_item_id: string;
-  sku: string | null;
-  expected_quantity: number;
-  received_quantity: number;
-  unit_cost: number | null;
-  external_id: string | null;
-  receipt_id: string;
-  arrival_date: string;
-  receipt_inventory_item_id: string;
-  receipt_quantity: number;
-  tracking_number: string[];
-  notes: string;
-}
 
 // Report template interfaces
 interface ReportTemplate {
