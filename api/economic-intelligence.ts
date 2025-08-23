@@ -5,10 +5,87 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
  * Uses real TinyBird data to calculate supplier performance, cost trends, and business impacts
  */
 
-// Safe formatters to prevent null reference crashes - inline to avoid import issues
-import { safeCleanMarkdown, safeDollarFormat, safeFormatAIText } from "../lib/safe-formatters";
-import type { ProductData, ShipmentData } from "../types/shared";
-import { buildProductsUrl, buildShipmentsUrl, COMPANY_CONFIG } from "../lib/api-config";
+// Safe formatters inlined to prevent Vercel import issues
+function safeCleanMarkdown(text: string | null | undefined): string {
+  if (!text) return "";
+  return text.replace(/\*\*/g, "").replace(/\*/g, "").replace(/\n+/g, " ").trim();
+}
+
+function safeDollarFormat(text: string | null | undefined): string {
+  if (!text) return "";
+  return text.replace(/\$([0-9,]+)impact/g, "$$$1 impact").replace(/\$([0-9,]+)(\s*)impact/g, "$$$1 impact");
+}
+
+function safeFormatAIText(text: string | null | undefined): string {
+  if (!text) return "";
+  let formatted = safeCleanMarkdown(text);
+  formatted = safeDollarFormat(formatted);
+  return formatted;
+}
+
+// Type definitions inlined
+interface ProductData {
+  company_url: string;
+  product_id: string;
+  product_sku: string;
+  brand_id: string | null;
+  brand_name: string;
+  brand_domain: string | null;
+  created_date: string;
+  active: boolean;
+  product_name: string;
+  category: string | null;
+  subcategory: string | null;
+  product_type: string | null;
+  dimensions_length: number | null;
+  dimensions_width: number | null;
+  dimensions_height: number | null;
+  weight: number | null;
+}
+
+interface ShipmentData {
+  company_url: string;
+  shipment_id: string;
+  brand_id: string | null;
+  brand_name: string;
+  brand_domain: string | null;
+  created_date: string;
+  purchase_order_number: string | null;
+  status: string;
+  supplier: string | null;
+  supplier_name: string;
+  warehouse_id: string;
+  inventory_item_id: string;
+  expected_quantity: number;
+  received_quantity: number;
+  expected_date: string;
+  received_date: string | null;
+  unit_cost: number | null;
+  sla_status: string;
+}
+
+// API Config inlined
+const API_LIMITS = {
+  products: { development: 100, production: 500 },
+  shipments: { development: 150, production: 500 }
+};
+
+const COMPANY_CONFIG = {
+  PRODUCTS_COMPANY: process.env.COMPANY_PRODUCTS_URL || "COMP002_packiyo",
+  WAREHOUSE_COMPANY: process.env.COMPANY_WAREHOUSE_URL || "COMP002_3PL"
+};
+
+const isDevelopment = process.env.NODE_ENV === 'development';
+
+function buildProductsUrl(baseUrl: string, token: string, companyUrl: string): string {
+  const limit = isDevelopment ? API_LIMITS.products.development : API_LIMITS.products.production;
+  return `${baseUrl}?token=${token}&limit=${limit}&company_url=${companyUrl}`;
+}
+
+function buildShipmentsUrl(baseUrl: string, token: string, companyUrl: string): string {
+  const limit = isDevelopment ? API_LIMITS.shipments.development : API_LIMITS.shipments.production;
+  return `${baseUrl}?token=${token}&limit=${limit}&company_url=${companyUrl}`;
+}
 
 interface TinyBirdResponse<T> {
   meta: Array<{ name: string; type: string }>;

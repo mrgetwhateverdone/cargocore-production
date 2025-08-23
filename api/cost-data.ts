@@ -1,6 +1,70 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import type { CostKPIs, CostCenter, CostData, AIInsight, SupplierPerformance, HistoricalCostTrend } from "../client/types/api";
-import { safeCleanMarkdown, safeDollarFormat, safeFormatAIText } from "../lib/safe-formatters";
+
+// Type definitions inlined to prevent Vercel import issues
+interface CostKPIs {
+  totalCost: number;
+  avgCostPerShipment: number;
+  monthlyGrowth: number;
+  costEfficiencyScore: number;
+}
+
+interface CostCenter {
+  name: string;
+  cost: number;
+  percentage: number;
+  trend: 'up' | 'down' | 'stable';
+}
+
+interface CostData {
+  kpis: CostKPIs;
+  costCenters: CostCenter[];
+  supplierPerformance: SupplierPerformance[];
+  historicalTrends: HistoricalCostTrend[];
+  insights: AIInsight[];
+  executiveSummary: string;
+}
+
+interface AIInsight {
+  type: string;
+  title: string;
+  description: string;
+  severity: "critical" | "warning" | "info";
+  dollarImpact?: number;
+}
+
+interface SupplierPerformance {
+  supplier: string;
+  totalCost: number;
+  shipmentCount: number;
+  avgCostPerShipment: number;
+  reliability: number;
+  trend: 'up' | 'down' | 'stable';
+}
+
+interface HistoricalCostTrend {
+  month: string;
+  cost: number;
+  shipments: number;
+  avgCostPerShipment: number;
+}
+
+// Safe formatters inlined to prevent Vercel import issues
+function safeCleanMarkdown(text: string | null | undefined): string {
+  if (!text) return "";
+  return text.replace(/\*\*/g, "").replace(/\*/g, "").replace(/\n+/g, " ").trim();
+}
+
+function safeDollarFormat(text: string | null | undefined): string {
+  if (!text) return "";
+  return text.replace(/\$([0-9,]+)impact/g, "$$$1 impact").replace(/\$([0-9,]+)(\s*)impact/g, "$$$1 impact");
+}
+
+function safeFormatAIText(text: string | null | undefined): string {
+  if (!text) return "";
+  let formatted = safeCleanMarkdown(text);
+  formatted = safeDollarFormat(formatted);
+  return formatted;
+}
 
 /**
  * This part of the code provides cost management data endpoint for Vercel serverless deployment
