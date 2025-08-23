@@ -8,7 +8,7 @@ import { buildProductsUrl, buildShipmentsUrl, COMPANY_CONFIG } from "../lib/api-
  */
 
 // TinyBird Product Details API Response - standardized interface
-interface ProductData {
+interface LocalProductData {
   product_id: string;
   company_url: string;
   brand_id: string | null;
@@ -33,7 +33,7 @@ interface ProductData {
 }
 
 // TinyBird Shipments API Response - standardized interface
-interface ShipmentData {
+interface LocalShipmentData {
   company_url: string;
   shipment_id: string;
   brand_id: string | null;
@@ -113,7 +113,7 @@ interface WarehouseInsight {
  * This part of the code fetches products data from TinyBird API using COMP002_packiyo filtering
  * Matches the existing dashboard implementation for consistency
  */
-async function fetchProducts(): Promise<ProductData[]> {
+async function fetchProducts(): Promise<LocalProductData[]> {
   const baseUrl = process.env.TINYBIRD_BASE_URL;
   const token = process.env.TINYBIRD_TOKEN;
 
@@ -138,7 +138,7 @@ async function fetchProducts(): Promise<ProductData[]> {
  * This part of the code fetches shipments data from TinyBird API using COMP002_3PL filtering
  * Focuses on warehouse operations data for warehouse performance analysis
  */
-async function fetchShipments(): Promise<ShipmentData[]> {
+async function fetchShipments(): Promise<LocalShipmentData[]> {
   const baseUrl = process.env.WAREHOUSE_BASE_URL;
   const token = process.env.WAREHOUSE_TOKEN;
 
@@ -184,12 +184,12 @@ function getWarehouseName(supplierName: string | null): string {
  * This part of the code calculates comprehensive warehouse performance metrics
  * Uses the same calculation patterns as existing supplier and inventory analysis
  */
-function calculateWarehouseData(products: ProductData[], shipments: ShipmentData[]): WarehouseData[] {
+function calculateWarehouseData(products: LocalProductData[], shipments: LocalShipmentData[]): WarehouseData[] {
   // This part of the code groups shipments by warehouse_id to aggregate performance data
   const warehouseGroups = new Map<string, {
     supplierName: string;
-    shipments: ShipmentData[];
-    products: ProductData[];
+    shipments: LocalShipmentData[];
+    products: LocalProductData[];
     location: { city: string | null; state: string | null; country: string | null };
   }>();
 
@@ -519,7 +519,15 @@ function generateUserBehaviorAnalysis(warehouses: WarehouseData[]) {
  */
 function generateOptimizationRecommendations(warehouses: WarehouseData[]) {
   return warehouses.map(warehouse => {
-    const opportunities = [];
+    const opportunities: Array<{
+      area: string;
+      priority: "High" | "Medium" | "Low";
+      currentValue: number;
+      targetValue: number;
+      investment: number;
+      potentialSavings: number;
+      timeline: string;
+    }> = [];
     
     // SLA Performance optimization
     if (warehouse.slaPerformance < 95) {

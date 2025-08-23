@@ -332,18 +332,19 @@ function transformToEnhancedInventoryItems(products: ProductData[], shipments: S
       }
       
       // Calculate reorder analysis for active products
-      let reorderAnalysis = undefined;
+      let reorderAnalysis: {
+        daily_usage_rate: number;
+        lead_time_days: number;
+        reorder_date: string;
+        recommended_quantity: number;
+      } | undefined = undefined;
       if (p.active && (status === 'Low Stock' || status === 'Out of Stock' || status === 'In Stock')) {
         const analysis = calculateReorderAnalysis(p, shipments);
         reorderAnalysis = {
           daily_usage_rate: analysis.daily_usage_rate,
           lead_time_days: analysis.lead_time_days,
           reorder_date: analysis.reorder_date,
-          recommended_quantity: analysis.recommended_quantity,
-          reorder_cost: analysis.reorder_cost,
-          days_until_stockout: analysis.days_until_stockout,
-          safety_stock: analysis.safety_stock,
-          reorder_status: analysis.status
+          recommended_quantity: analysis.recommended_quantity
         };
       }
       
@@ -691,7 +692,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const inventory = transformToEnhancedInventoryItems(products, shipments);
 
     // Generate enhanced insights
-    const insights = [];
+    const insights: Array<{
+      id: string;
+      title: string;
+      description: string;
+      severity: "warning" | "critical" | "info";
+      dollarImpact: number;
+      suggestedActions: string[];
+      createdAt: string;
+      source: string;
+    }> = [];
     
     // Stock health insights
     if (kpis.inactiveSKUs > 0) {
