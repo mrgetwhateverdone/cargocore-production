@@ -8,62 +8,7 @@ import { logger, logApiCall } from "../lib/logger";
  * Ensuring consistency between local development and Vercel production environments
  */
 
-// TinyBird Product Details API Response - standardized interface
-interface ProductData {
-  product_id: string;
-  company_url: string;
-  brand_id: string | null;
-  brand_name: string;
-  brand_domain: string | null;
-  created_date: string;
-  product_name: string;
-  product_sku: string | null;
-  gtin: string | null;
-  is_kit: boolean;
-  active: boolean;
-  product_supplier: string | null;
-  country_of_origin: string | null;
-  harmonized_code: string | null;
-  product_external_url: string | null;
-  inventory_item_id: string;
-  unit_quantity: number;
-  supplier_name: string;
-  unit_cost: number | null;
-  supplier_external_id: string | null;
-  updated_date: string | null;
-}
 
-// TinyBird Shipments API Response - standardized interface
-interface ShipmentData {
-  company_url: string;
-  shipment_id: string;
-  brand_id: string | null;
-  brand_name: string;
-  brand_domain: string | null;
-  created_date: string;
-  purchase_order_number: string | null;
-  status: string;
-  supplier: string | null;
-  expected_arrival_date: string | null;
-  warehouse_id: string | null;
-  ship_from_city: string | null;
-  ship_from_state: string | null;
-  ship_from_postal_code: string | null;
-  ship_from_country: string | null;
-  external_system_url: string | null;
-  inventory_item_id: string;
-  sku: string | null;
-  expected_quantity: number;
-  received_quantity: number;
-  unit_cost: number | null;
-  external_id: string | null;
-  receipt_id: string;
-  arrival_date: string;
-  receipt_inventory_item_id: string;
-  receipt_quantity: number;
-  tracking_number: string[];
-  notes: string;
-}
 
 /**
  * This part of the code fetches products data from TinyBird API using standardized parameters

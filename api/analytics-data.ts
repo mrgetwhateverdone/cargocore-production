@@ -1,4 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
+import type { ProductData, ShipmentData } from "../types/shared";
+import { buildProductsUrl, buildShipmentsUrl, COMPANY_CONFIG } from "../lib/api-config";
 
 /**
  * This part of the code cleans up markdown formatting from AI responses
@@ -104,7 +106,7 @@ async function fetchProducts(): Promise<ProductData[]> {
   }
 
   // This part of the code fetches from product_details_mv API with COMP002_packiyo company filter
-  const url = `${baseUrl}?token=${token}&limit=100&company_url=COMP002_packiyo`;
+  const url = buildProductsUrl(baseUrl, token, COMPANY_CONFIG.PRODUCTS_COMPANY);
   const response = await fetch(url);
   if (!response.ok) {
     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -129,7 +131,7 @@ async function fetchShipments(): Promise<ShipmentData[]> {
   }
 
   // This part of the code fetches from inbound_shipments_details_mv API with COMP002_3PL company filter
-  const url = `${baseUrl}?token=${token}&limit=150&company_url=COMP002_3PL`;
+  const url = buildShipmentsUrl(baseUrl, token, COMPANY_CONFIG.WAREHOUSE_COMPANY);
   const response = await fetch(url);
   if (!response.ok) {
     throw new Error(`HTTP ${response.status}: ${response.statusText}`);

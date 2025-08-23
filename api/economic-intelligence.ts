@@ -7,58 +7,8 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 
 // Safe formatters to prevent null reference crashes - inline to avoid import issues
 import { safeCleanMarkdown, safeDollarFormat, safeFormatAIText } from "../lib/safe-formatters";
-
-// TinyBird Product API Response - standardized interface
-interface ProductData {
-  company_id: string;
-  company_url: string;
-  brand_id: string | null;
-  brand_name: string;
-  brand_domain: string | null;
-  created_date: string;
-  sku: string;
-  title: string;
-  description: string | null;
-  unit_quantity: number;
-  unit_cost: number | null;
-  active: boolean;
-  supplier_name: string | null;
-  supplier_id: string | null;
-  supplier_external_id: string | null;
-  updated_date: string | null;
-}
-
-// TinyBird Shipments API Response - standardized interface
-interface ShipmentData {
-  company_url: string;
-  shipment_id: string;
-  brand_id: string | null;
-  brand_name: string;
-  brand_domain: string | null;
-  created_date: string;
-  purchase_order_number: string | null;
-  status: string;
-  supplier: string | null;
-  expected_arrival_date: string | null;
-  warehouse_id: string | null;
-  ship_from_city: string | null;
-  ship_from_state: string | null;
-  ship_from_postal_code: string | null;
-  ship_from_country: string | null;
-  external_system_url: string | null;
-  inventory_item_id: string;
-  sku: string | null;
-  expected_quantity: number;
-  received_quantity: number;
-  unit_cost: number | null;
-  external_id: string | null;
-  receipt_id: string;
-  arrival_date: string;
-  receipt_inventory_item_id: string;
-  receipt_quantity: number;
-  tracking_number: string[];
-  notes: string;
-}
+import type { ProductData, ShipmentData } from "../types/shared";
+import { buildProductsUrl, buildShipmentsUrl, COMPANY_CONFIG } from "../lib/api-config";
 
 interface TinyBirdResponse<T> {
   meta: Array<{ name: string; type: string }>;
@@ -84,7 +34,7 @@ async function fetchProducts(): Promise<ProductData[]> {
   }
 
   try {
-    const response = await fetch(`${baseUrl}?token=${token}&limit=500&company_url=COMP002_packiyo`);
+    const response = await fetch(buildProductsUrl(baseUrl, token, COMPANY_CONFIG.PRODUCTS_COMPANY));
     
     if (!response.ok) {
       throw new Error(`TinyBird API error: ${response.status}`);
@@ -111,7 +61,7 @@ async function fetchShipments(): Promise<ShipmentData[]> {
   }
 
   try {
-    const response = await fetch(`${baseUrl}?token=${token}&limit=500&company_url=COMP002_3PL`);
+    const response = await fetch(buildShipmentsUrl(baseUrl, token, COMPANY_CONFIG.WAREHOUSE_COMPANY));
     
     if (!response.ok) {
       throw new Error(`TinyBird API error: ${response.status}`);

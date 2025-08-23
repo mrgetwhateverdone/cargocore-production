@@ -1,20 +1,8 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
+import type { ProductData, ShipmentData } from "../types/shared";
+import { buildProductsUrl, buildShipmentsUrl, COMPANY_CONFIG } from "../lib/api-config";
 
 // Phase 2: World-Class Inventory Dashboard with Rich Data
-interface ProductData {
-  product_id: string;
-  company_url: string;
-  brand_name: string;
-  product_name: string;
-  product_sku: string | null;
-  unit_quantity: number;
-  unit_cost: number | null;
-  active: boolean;
-  supplier_name: string;
-  country_of_origin: string | null;
-  created_date: string;
-  updated_date: string | null;
-}
 
 async function fetchProducts(): Promise<ProductData[]> {
   const baseUrl = process.env.TINYBIRD_BASE_URL;
@@ -24,8 +12,8 @@ async function fetchProducts(): Promise<ProductData[]> {
     return [];
   }
 
-  // This part of the code matches the working dashboard API URL pattern
-  const url = `${baseUrl}?token=${token}&limit=1000&company_url=COMP002_packiyo`;
+  // This part of the code uses centralized API configuration
+  const url = buildProductsUrl(baseUrl, token, COMPANY_CONFIG.PRODUCTS_COMPANY);
   
   try {
     const response = await fetch(url);
@@ -39,17 +27,7 @@ async function fetchProducts(): Promise<ProductData[]> {
   }
 }
 
-// TinyBird Shipments API Response interface
-interface ShipmentData {
-  company_url: string;
-  shipment_id: string;
-  supplier: string | null;
-  created_date: string;
-  expected_arrival_date: string | null;
-  arrival_date: string;
-  inventory_item_id: string;
-  sku: string | null;
-}
+
 
 async function fetchShipments(): Promise<ShipmentData[]> {
   const baseUrl = process.env.WAREHOUSE_BASE_URL;
@@ -60,8 +38,8 @@ async function fetchShipments(): Promise<ShipmentData[]> {
     return [];
   }
 
-  // This part of the code matches the working pattern from other APIs
-  const url = `${baseUrl}?token=${token}&limit=1000&company_url=COMP002_3PL`;
+  // This part of the code uses centralized API configuration  
+  const url = buildShipmentsUrl(baseUrl, token, COMPANY_CONFIG.WAREHOUSE_COMPANY);
   
   try {
     console.log("🔒 Fetching shipments from TinyBird:", url.replace(token, "[TOKEN]"));
