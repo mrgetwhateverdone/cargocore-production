@@ -81,6 +81,171 @@ function safeFormatAIText(text: string | null | undefined): string {
   return safeDollarFormat(safeCleanMarkdown(text));
 }
 
+interface OrdersInsight {
+  type: string;
+  title: string;
+  description: string;
+  severity: "critical" | "warning" | "info";
+  dollarImpact: number;
+}
+
+async function generateOrdersInsights(
+  orders: OrderData[],
+  kpis: any,
+  inboundIntelligence: any
+): Promise<OrdersInsight[]> {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) {
+    // This part of the code generates order insights without AI when API key is not available
+    const insights: OrdersInsight[] = [];
+    
+    if (kpis.atRiskOrders > 0) {
+      insights.push({
+        type: "warning",
+        title: "At-Risk Orders Detected",
+        description: `${kpis.atRiskOrders} orders are at risk due to quantity mismatches or cancellations. Immediate review recommended to prevent fulfillment delays.`,
+        severity: "warning",
+        dollarImpact: 0,
+      });
+    }
+    
+    if (inboundIntelligence.delayedShipments.percentage > 20) {
+      insights.push({
+        type: "critical",
+        title: "High Shipment Delay Rate",
+        description: `${inboundIntelligence.delayedShipments.percentage}% of shipments are delayed with average delay of ${inboundIntelligence.avgDelayDays} days. Value at risk: $${inboundIntelligence.valueAtRisk.toLocaleString()}.`,
+        severity: "critical",
+        dollarImpact: inboundIntelligence.valueAtRisk,
+      });
+    }
+    
+    if (kpis.unfulfillableSKUs > 0) {
+      insights.push({
+        type: "info",
+        title: "SKU Data Quality Issue",
+        description: `${kpis.unfulfillableSKUs} orders have missing SKU information. Consider data quality improvements to enhance inventory tracking.`,
+        severity: "info",
+        dollarImpact: 0,
+      });
+    }
+    
+    return insights;
+  }
+
+  try {
+    // This part of the code calculates advanced order metrics for AI analysis
+    const orderStatuses = orders.reduce((acc, order) => {
+      acc[order.status] = (acc[order.status] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+    
+    const supplierPerformance = orders.reduce((acc, order) => {
+      if (order.supplier) {
+        if (!acc[order.supplier]) {
+          acc[order.supplier] = { total: 0, delayed: 0, avgQuantity: 0 };
+        }
+        acc[order.supplier].total++;
+        if (order.expected_date && order.arrival_date && 
+            new Date(order.arrival_date) > new Date(order.expected_date)) {
+          acc[order.supplier].delayed++;
+        }
+        acc[order.supplier].avgQuantity += order.expected_quantity;
+      }
+      return acc;
+    }, {} as Record<string, { total: number; delayed: number; avgQuantity: number }>);
+
+    const openaiUrl = process.env.OPENAI_API_URL || "https://api.openai.com/v1/chat/completions";
+    const response = await fetch(openaiUrl, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "gpt-4",
+        messages: [
+          {
+            role: "user",
+            content: `You are a 3PL operations expert specializing in order management and fulfillment optimization. Analyze this order data to identify critical operational insights.
+
+ORDER PERFORMANCE ANALYSIS:
+==========================
+
+CURRENT ORDER STATUS:
+- Orders Today: ${kpis.ordersToday}
+- At-Risk Orders: ${kpis.atRiskOrders}
+- Open Purchase Orders: ${kpis.openPOs}
+- Unfulfillable SKUs: ${kpis.unfulfillableSKUs}
+
+INBOUND SHIPMENT INTELLIGENCE:
+- Total Inbound Shipments: ${inboundIntelligence.totalInbound}
+- Delayed Shipments: ${inboundIntelligence.delayedShipments.count} (${inboundIntelligence.delayedShipments.percentage}%)
+- Average Delay: ${inboundIntelligence.avgDelayDays} days
+- Value at Risk: $${inboundIntelligence.valueAtRisk.toLocaleString()}
+
+ORDER STATUS BREAKDOWN:
+${Object.entries(orderStatuses).map(([status, count]) => `- ${status}: ${count} orders`).join('\n')}
+
+SUPPLIER PERFORMANCE:
+${Object.entries(supplierPerformance).slice(0, 5).map(([supplier, data]) => 
+  `- ${supplier}: ${data.total} orders, ${data.delayed} delayed (${((data.delayed/data.total)*100).toFixed(1)}%)`
+).join('\n')}
+
+Focus on actionable insights for:
+1. Order fulfillment optimization
+2. Supplier performance management  
+3. Risk mitigation strategies
+4. Operational efficiency improvements
+
+Provide 2-4 strategic insights as JSON array with fields: type, title, description, severity ("critical", "warning", "info"), dollarImpact (number).`,
+          },
+        ],
+        max_tokens: 1200,
+        temperature: 0.2,
+      }),
+    });
+
+    if (!response.ok) {
+      console.error(`❌ OpenAI API error: ${response.status}`);
+      return []; // Return empty array instead of null
+    }
+
+    const data = await response.json();
+    const content = data.choices?.[0]?.message?.content;
+
+    if (!content) {
+      console.error('❌ No content in OpenAI response');
+      return [];
+    }
+
+    // Parse and clean the AI response
+    const parsed = JSON.parse(content);
+    
+    if (!Array.isArray(parsed)) {
+      console.error('❌ AI response is not an array');
+      return [];
+    }
+
+    // Process and clean the insights
+    const insights: OrdersInsight[] = parsed.map((insight: any, index: number) => ({
+      type: insight.type || 'info',
+      title: safeFormatAIText(insight.title || `Order Insight ${index + 1}`),
+      description: safeFormatAIText(insight.description || 'No description available'),
+      severity: (insight.severity === 'critical' || insight.severity === 'warning' || insight.severity === 'info') 
+        ? insight.severity 
+        : 'info',
+      dollarImpact: typeof insight.dollarImpact === 'number' ? insight.dollarImpact : 0,
+    }));
+
+    console.log(`✅ Generated ${insights.length} AI order insights`);
+    return insights;
+
+  } catch (error) {
+    console.error('❌ Error generating order insights:', error);
+    return []; // Return empty array on error
+  }
+}
+
 async function fetchShipments(): Promise<ShipmentData[]> {
   const baseUrl = process.env.WAREHOUSE_BASE_URL;
   const token = process.env.WAREHOUSE_TOKEN;
@@ -193,10 +358,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     const kpis = calculateOrdersKPIs(orders);
     const inboundIntelligence = calculateInboundIntelligence(orders);
 
+    // This part of the code generates order-specific AI insights
+    const insightsData = await generateOrdersInsights(orders, kpis, inboundIntelligence);
+
     const ordersData = {
       orders: orders.slice(0, 500),
       kpis,
-      insights: [], // Simplified - no AI insights to avoid complexity
+      insights: insightsData.map((insight, index) => ({
+        id: `orders-insight-${index}`,
+        title: insight.title,
+        description: insight.description,
+        severity: insight.severity,
+        dollarImpact: insight.dollarImpact,
+        suggestedActions: [],
+        createdAt: new Date().toISOString(),
+        source: "orders-analysis",
+      })),
       inboundIntelligence,
       lastUpdated: new Date().toISOString(),
     };
