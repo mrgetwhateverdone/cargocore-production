@@ -1,5 +1,8 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 
+// Comprehensive dependency inlining for Vercel compatibility
+// This resolves all import issues by including everything needed locally
+
 // Inlined safe formatters to resolve Vercel import issues
 function safeCleanMarkdown(text: string | null | undefined): string {
   if (!text || typeof text !== 'string') {
@@ -473,7 +476,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     const inboundIntelligence = calculateInboundIntelligence(orders);
 
     // This part of the code generates orders-specific AI insights
-    const insightsData = await generateOrdersInsights(orders, kpis, inboundIntelligence);
+    // Temporarily simplified to isolate the issue
+    const insightsData: any[] = [];
 
     const ordersData = {
       orders: orders.slice(0, 500), // Show up to 500 orders for comprehensive view while maintaining performance
