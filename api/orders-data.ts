@@ -463,48 +463,30 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
   }
 
   try {
-    console.log(
-      "📦 Vercel API: Fetching orders data (using shipments as orders)...",
-    );
+    console.log("📦 Vercel API: Testing minimal orders endpoint...");
 
-    // This part of the code fetches shipments and transforms them into orders
-    const shipments = await fetchShipments();
-    const orders = transformShipmentsToOrders(shipments);
-
-    // This part of the code calculates all orders metrics from transformed data
-    const kpis = calculateOrdersKPIs(orders);
-    const inboundIntelligence = calculateInboundIntelligence(orders);
-
-    // This part of the code generates orders-specific AI insights
-    // Temporarily simplified to isolate the issue
-    const insightsData: any[] = [];
-
+    // Minimal test data to isolate the issue
     const ordersData = {
-      orders: orders.slice(0, 500), // Show up to 500 orders for comprehensive view while maintaining performance
-      kpis,
-      insights: insightsData.map((insight, index) => ({
-        id: `orders-insight-${index}`,
-        title: insight.title,
-        description: insight.description,
-        severity:
-          insight.severity === "critical"
-            ? ("critical" as const)
-            : insight.severity === "warning"
-              ? ("warning" as const)
-              : ("info" as const),
-        dollarImpact: insight.dollarImpact || 0,
-        suggestedActions: [
-          `Address ${insight.title.toLowerCase()}`,
-          "Implement corrective measures",
-        ],
-        createdAt: new Date().toISOString(),
-        source: "orders_agent" as const,
-      })),
-      inboundIntelligence,
+      orders: [],
+      kpis: {
+        ordersToday: 0,
+        atRiskOrders: 0,
+        openPOs: 0,
+        unfulfillableSKUs: 0
+      },
+      insights: [],
+      inboundIntelligence: {
+        totalInbound: 0,
+        delayedShipments: { count: 0, percentage: 0 },
+        avgDelayDays: 0,
+        valueAtRisk: 0,
+        recentShipments: [],
+        delayedShipmentsList: []
+      },
       lastUpdated: new Date().toISOString(),
     };
 
-    console.log("✅ Vercel API: Orders data compiled successfully");
+    console.log("✅ Vercel API: Minimal orders data compiled successfully");
     res.status(200).json({
       success: true,
       data: ordersData,
