@@ -87,6 +87,7 @@ interface OrdersInsight {
   description: string;
   severity: "critical" | "warning" | "info";
   dollarImpact: number;
+  suggestedActions: string[];
 }
 
 async function generateOrdersInsights(
@@ -106,6 +107,11 @@ async function generateOrdersInsights(
         description: `${kpis.atRiskOrders} orders are at risk due to quantity mismatches or cancellations. Immediate review recommended to prevent fulfillment delays.`,
         severity: "warning",
         dollarImpact: 0,
+        suggestedActions: [
+          "Review at-risk orders and contact suppliers for status updates",
+          "Implement automated alerting for quantity mismatches",
+          "Establish backup suppliers for critical SKUs"
+        ],
       });
     }
     
@@ -116,6 +122,11 @@ async function generateOrdersInsights(
         description: `${inboundIntelligence.delayedShipments.percentage}% of shipments are delayed with average delay of ${inboundIntelligence.avgDelayDays} days. Value at risk: $${inboundIntelligence.valueAtRisk.toLocaleString()}.`,
         severity: "critical",
         dollarImpact: inboundIntelligence.valueAtRisk,
+        suggestedActions: [
+          "Analyze root causes of shipment delays by supplier",
+          "Implement supplier performance scorecards and penalties",
+          "Establish expedited shipping agreements for critical orders"
+        ],
       });
     }
     
@@ -126,6 +137,11 @@ async function generateOrdersInsights(
         description: `${kpis.unfulfillableSKUs} orders have missing SKU information. Consider data quality improvements to enhance inventory tracking.`,
         severity: "info",
         dollarImpact: 0,
+        suggestedActions: [
+          "Audit product data entry processes for completeness",
+          "Implement mandatory SKU validation in order system",
+          "Train staff on proper inventory data management"
+        ],
       });
     }
     
@@ -191,13 +207,29 @@ ${Object.entries(supplierPerformance).slice(0, 5).map(([supplier, data]) =>
   `- ${supplier}: ${data.total} orders, ${data.delayed} delayed (${((data.delayed/data.total)*100).toFixed(1)}%)`
 ).join('\n')}
 
-Focus on actionable insights for:
-1. Order fulfillment optimization
-2. Supplier performance management  
+Generate 2-3 insights in JSON format with:
+- title: Clear, specific problem or opportunity (8-12 words)
+- description: Detailed analysis with metrics (40-60 words)
+- severity: "critical" | "warning" | "info"
+- dollarImpact: Estimated financial impact (number)
+- suggestedActions: Array of 2-3 specific actions (10-15 words each)
+
+Focus on:
+1. Order fulfillment optimization opportunities
+2. Supplier performance management
 3. Risk mitigation strategies
 4. Operational efficiency improvements
 
-Provide 2-4 strategic insights as JSON array with fields: type, title, description, severity ("critical", "warning", "info"), dollarImpact (number).`,
+FORMAT: Return valid JSON array only, no additional text.
+
+Example:
+[{
+  "title": "High At-Risk Order Volume Threatening Customer Satisfaction",
+  "description": "Analysis reveals ${kpis.atRiskOrders} orders are at risk due to quantity mismatches and supplier delays, representing significant fulfillment challenges.",
+  "severity": "critical",
+  "dollarImpact": ${inboundIntelligence.valueAtRisk},
+  "suggestedActions": ["Implement real-time order tracking and alerts system", "Establish supplier performance scorecards and penalties", "Deploy automated quantity verification workflows"]
+}]`,
           },
         ],
         max_tokens: 1200,
@@ -235,6 +267,9 @@ Provide 2-4 strategic insights as JSON array with fields: type, title, descripti
         ? insight.severity 
         : 'info',
       dollarImpact: typeof insight.dollarImpact === 'number' ? insight.dollarImpact : 0,
+      suggestedActions: Array.isArray(insight.suggestedActions) 
+        ? insight.suggestedActions.map((action: string) => safeFormatAIText(action))
+        : [],
     }));
 
     console.log(`✅ Generated ${insights.length} AI order insights`);
@@ -370,7 +405,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
         description: insight.description,
         severity: insight.severity,
         dollarImpact: insight.dollarImpact,
-        suggestedActions: [],
+        suggestedActions: insight.suggestedActions,
         createdAt: new Date().toISOString(),
         source: "orders-analysis",
       })),
