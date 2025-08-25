@@ -101,8 +101,12 @@ async function fetchShipments(): Promise<ShipmentData[]> {
     );
   }
 
-  // This part of the code fetches from inbound_shipments_details_mv API with COMP002_3PL company filter
-  const url = `${baseUrl}?token=${token}&limit=1000&company_url=COMP002_3PL`;
+  // This part of the code fetches from inbound_shipments_details_mv API with standardized config
+  const limits = {
+    shipments: process.env.NODE_ENV === 'development' ? 150 : 500
+  };
+  const companyUrl = process.env.COMPANY_WAREHOUSE_URL || 'COMP002_3PL';
+  const url = `${baseUrl}?token=${token}&limit=${limits.shipments}&company_url=${companyUrl}`;
   const response = await fetch(url);
   if (!response.ok) {
     throw new Error(`HTTP ${response.status}: ${response.statusText}`);

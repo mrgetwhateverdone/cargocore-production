@@ -186,26 +186,31 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   if (req.method === 'OPTIONS') {
-    return res.status(200).end();
+    res.status(200).end();
+    return;
   }
 
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
+    res.status(405).json({ error: 'Method not allowed' });
+    return;
   }
 
   try {
     const { message, conversationHistory, operationalContext, settings } = req.body as ChatRequest;
 
     if (!message || typeof message !== 'string') {
-      return res.status(400).json({ error: 'Missing or invalid message field' });
+      res.status(400).json({ error: 'Missing or invalid message field' });
+      return;
     }
 
     if (message.trim().length === 0) {
-      return res.status(400).json({ error: 'Message cannot be empty' });
+      res.status(400).json({ error: 'Message cannot be empty' });
+      return;
     }
 
     if (message.length > 2000) {
-      return res.status(400).json({ error: 'Message too long (max 2000 characters)' });
+      res.status(400).json({ error: 'Message too long (max 2000 characters)' });
+      return;
     }
 
     const aiResponse = await generateUnifiedChatResponse({
@@ -215,31 +220,40 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
       settings
     });
 
-    const responseMessage: ChatMessage = {
-      role: 'assistant',
-      content: aiResponse,
-      timestamp: new Date().toISOString()
+    // Generate a conversation ID for tracking
+    const conversationId = `chat_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
+    const chatResponse = {
+      response: aiResponse,
+      conversationId: conversationId,
+      timestamp: new Date().toISOString(),
+      context: {
+        dataTimestamp: new Date().toISOString(),
+        sourcesUsed: ['operational-data', 'cargocore-platform']
+      }
     };
 
     res.status(200).json({
       success: true,
-      message: responseMessage,
+      data: chatResponse,
       timestamp: new Date().toISOString()
     });
+    return;
 
   } catch (error) {
     console.error('AI Chat Handler Error:', error);
     
-    const fallbackMessage: ChatMessage = {
-      role: 'assistant',
-      content: 'I apologize, but I encountered an error processing your request. Please try again, and if the issue persists, please contact support.',
+    const fallbackResponse = {
+      response: 'I apologize, but I encountered an error processing your request. Please try again, and if the issue persists, please contact support.',
+      conversationId: `error_${Date.now()}`,
       timestamp: new Date().toISOString()
     };
 
     res.status(500).json({
       success: false,
       error: error instanceof Error ? error.message : 'Internal server error',
-      message: fallbackMessage
+      data: fallbackResponse
     });
+    return;
   }
 }
