@@ -478,7 +478,7 @@ class InternalApiService {
         console.log(`🎯 Client: Sending AI settings - Model: ${aiSettings.model}, Tokens: ${aiSettings.maxTokens}`);
       }
 
-      const response = await fetch(`${this.baseUrl}/api/ai-chat`, {
+      const response = await fetch(`${this.baseUrl}/api/ai-chat-unified`, {
         method: "POST",
         headers,
         body: JSON.stringify(request),

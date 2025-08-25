@@ -1,6 +1,98 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import type { ProductData, ShipmentData } from "../types/shared";
-import { buildProductsUrl, buildShipmentsUrl, COMPANY_CONFIG } from "../lib/api-config";
+
+// Inlined types and utilities to resolve Vercel import issues
+interface ProductData {
+  product_id: string;
+  company_url: string;
+  brand_id: string | null;
+  brand_name: string;
+  brand_domain: string | null;
+  created_date: string;
+  product_name: string;
+  product_sku: string | null;
+  gtin: string | null;
+  is_kit: boolean;
+  active: boolean;
+  product_supplier: string | null;
+  country_of_origin: string | null;
+  harmonized_code: string | null;
+  product_external_url: string | null;
+  inventory_item_id: string;
+  unit_quantity: number;
+  supplier_name: string;
+  unit_cost: number | null;
+  supplier_external_id: string | null;
+  updated_date: string | null;
+}
+
+interface ShipmentData {
+  company_url: string;
+  shipment_id: string;
+  brand_id: string | null;
+  brand_name: string;
+  brand_domain: string | null;
+  created_date: string;
+  purchase_order_number: string | null;
+  status: string;
+  supplier: string | null;
+  expected_arrival_date: string | null;
+  warehouse_id: string | null;
+  ship_from_city: string | null;
+  ship_from_state: string | null;
+  ship_from_postal_code: string | null;
+  ship_from_country: string | null;
+  external_system_url: string | null;
+  inventory_item_id: string;
+  sku: string | null;
+  expected_quantity: number;
+  received_quantity: number;
+  unit_cost: number | null;
+  external_id: string | null;
+  receipt_id: string;
+  arrival_date: string;
+  receipt_inventory_item_id: string;
+  receipt_quantity: number;
+  tracking_number: string[];
+  notes: string;
+}
+
+// Inlined API config
+const API_LIMITS = {
+  PRODUCTS: 500,
+  SHIPMENTS: 500,
+  REPORTS: 1000,
+  DEV_PRODUCTS: 100,
+  DEV_SHIPMENTS: 150,
+} as const;
+
+function getApiLimits() {
+  const isDevelopment = process.env.NODE_ENV === 'development';
+  return {
+    products: isDevelopment ? API_LIMITS.DEV_PRODUCTS : API_LIMITS.PRODUCTS,
+    shipments: isDevelopment ? API_LIMITS.DEV_SHIPMENTS : API_LIMITS.SHIPMENTS,
+    reports: API_LIMITS.REPORTS,
+  };
+}
+
+function buildProductsUrl(baseUrl: string, token: string, companyUrl: string, brandId?: string): string {
+  const limits = getApiLimits();
+  let url = `${baseUrl}?token=${token}&limit=${limits.products}&company_url=${companyUrl}`;
+  if (brandId) {
+    url += `&brand_id=${brandId}`;
+  }
+  return url;
+}
+
+function buildShipmentsUrl(baseUrl: string, token: string, companyUrl: string): string {
+  const limits = getApiLimits();
+  return `${baseUrl}?token=${token}&limit=${limits.shipments}&company_url=${companyUrl}`;
+}
+
+const COMPANY_CONFIG = {
+  PRODUCTS_COMPANY: process.env.COMPANY_PRODUCTS_URL || 'COMP002_packiyo',
+  WAREHOUSE_COMPANY: process.env.COMPANY_WAREHOUSE_URL || 'COMP002_3PL',
+  DEFAULT_BRAND_ID: process.env.DEFAULT_BRAND_ID || '561bdd14-630a-4a0c-9493-50a513bbb946',
+} as const;
 
 /**
  * This part of the code cleans up markdown formatting from AI responses
@@ -386,9 +478,9 @@ function safeFormatAIText(text: string | null | undefined): string {
 async function generateAnalyticsInsights(
   _products: ProductData[],
   _shipments: ShipmentData[],
-  _kpis: any,
-  _performanceMetrics: any,
-  _brandPerformance: any
+  kpis: any,
+  performanceMetrics: any,
+  brandPerformance: any
 ): Promise<AnalyticsInsight[]> {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
@@ -543,7 +635,8 @@ CRITICAL: suggestedActions must be:
 
 export default async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
   if (req.method !== "GET") {
-    return res.status(405).json({ error: "Method not allowed" });
+    res.status(405).json({ error: "Method not allowed" });
+    return;
   }
 
   try {
@@ -595,11 +688,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
       message: "Analytics data retrieved successfully",
       timestamp: new Date().toISOString(),
     });
+    return;
   } catch (error) {
     console.error("❌ Vercel API Error:", error);
     res.status(500).json({
       error: "Failed to fetch analytics data",
       details: error instanceof Error ? error.message : "Unknown error",
     });
+    return;
   }
 }

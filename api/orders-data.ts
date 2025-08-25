@@ -1,10 +1,33 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 
-/**
- * This part of the code cleans up markdown formatting from AI responses
- * Removes bold markers and other formatting that shouldn't be displayed literally
- */
-import { safeCleanMarkdown, safeDollarFormat, safeFormatAIText } from "../lib/safe-formatters";
+// Inlined safe formatters to resolve Vercel import issues
+function safeCleanMarkdown(text: string | null | undefined): string {
+  if (!text || typeof text !== 'string') {
+    return '';
+  }
+  return text
+    .replace(/\*\*(.*?)\*\*/g, '$1')
+    .replace(/\*(.*?)\*/g, '$1')
+    .replace(/\*/g, '')
+    .replace(/^Executive Summary:\s*/i, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function safeDollarFormat(text: string | null | undefined): string {
+  if (!text || typeof text !== 'string') {
+    return '';
+  }
+  return text
+    .replace(/\$([0-9,]+)\.00impact/g, '$$1 impact')
+    .replace(/\$([0-9,]+\.[0-9]{1,2})impact/g, '$$1 impact')
+    .replace(/\$([0-9,]+)impact/g, '$$1 impact')
+    .replace(/\$([0-9,]+)\.00\s+impact/g, '$$1 impact');
+}
+
+function safeFormatAIText(text: string | null | undefined): string {
+  return safeDollarFormat(safeCleanMarkdown(text));
+}
 
 /**
  * This part of the code provides orders data endpoint for Vercel serverless deployment
