@@ -97,55 +97,8 @@ async function generateOrdersInsights(
 ): Promise<OrdersInsight[]> {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
-    // This part of the code generates order insights without AI when API key is not available
-    const insights: OrdersInsight[] = [];
-    
-    if (kpis.atRiskOrders > 0) {
-      insights.push({
-        type: "warning",
-        title: "At-Risk Orders Detected",
-        description: `${kpis.atRiskOrders} orders are at risk due to quantity mismatches or cancellations. Immediate review recommended to prevent fulfillment delays.`,
-        severity: "warning",
-        dollarImpact: 0,
-        suggestedActions: [
-          "Review at-risk orders and contact suppliers for status updates",
-          "Implement automated alerting for quantity mismatches",
-          "Establish backup suppliers for critical SKUs"
-        ],
-      });
-    }
-    
-    if (inboundIntelligence.delayedShipments.percentage > 20) {
-      insights.push({
-        type: "critical",
-        title: "High Shipment Delay Rate",
-        description: `${inboundIntelligence.delayedShipments.percentage}% of shipments are delayed with average delay of ${inboundIntelligence.avgDelayDays} days. Value at risk: $${inboundIntelligence.valueAtRisk.toLocaleString()}.`,
-        severity: "critical",
-        dollarImpact: inboundIntelligence.valueAtRisk,
-        suggestedActions: [
-          "Analyze root causes of shipment delays by supplier",
-          "Implement supplier performance scorecards and penalties",
-          "Establish expedited shipping agreements for critical orders"
-        ],
-      });
-    }
-    
-    if (kpis.unfulfillableSKUs > 0) {
-      insights.push({
-        type: "info",
-        title: "SKU Data Quality Issue",
-        description: `${kpis.unfulfillableSKUs} orders have missing SKU information. Consider data quality improvements to enhance inventory tracking.`,
-        severity: "info",
-        dollarImpact: 0,
-        suggestedActions: [
-          "Audit product data entry processes for completeness",
-          "Implement mandatory SKU validation in order system",
-          "Train staff on proper inventory data management"
-        ],
-      });
-    }
-    
-    return insights;
+    console.error('❌ OpenAI API key not available - no order insights generated');
+    return []; // Return empty array - UI will show "Check OpenAI Connection"
   }
 
   try {
@@ -207,12 +160,12 @@ ${Object.entries(supplierPerformance).slice(0, 5).map(([supplier, data]) =>
   `- ${supplier}: ${data.total} orders, ${data.delayed} delayed (${((data.delayed/data.total)*100).toFixed(1)}%)`
 ).join('\n')}
 
-Generate 2-3 insights in JSON format with:
+Generate 2-4 insights in JSON format with:
 - title: Clear, specific problem or opportunity (8-12 words)
 - description: Detailed analysis with metrics (40-60 words)
 - severity: "critical" | "warning" | "info"
 - dollarImpact: Estimated financial impact (number)
-- suggestedActions: Array of 2-3 specific actions (10-15 words each)
+- suggestedActions: Array of actionable steps (2-4 typically, more if issue severity requires)
 
 Focus on:
 1. Order fulfillment optimization opportunities

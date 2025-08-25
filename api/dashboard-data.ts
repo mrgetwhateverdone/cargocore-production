@@ -275,52 +275,8 @@ async function generateInsights(
 ): Promise<InsightData[]> {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
-    // This part of the code generates data-driven insights with real financial impact when AI is not available
-    const insights: InsightData[] = [];
-    const financialImpacts = calculateFinancialImpacts(products, shipments);
-    
-    const atRiskCount = shipments.filter(
-      (shipment) =>
-        shipment.expected_quantity !== shipment.received_quantity ||
-        shipment.status === "cancelled",
-    ).length;
-    
-    const atRiskPercentage = shipments.length > 0 ? (atRiskCount / shipments.length * 100).toFixed(1) : 0;
-    
-    // Only include insights if they represent actual issues or notable conditions
-    if (atRiskCount > 0 && financialImpacts.quantityDiscrepancyImpact > 0) {
-      insights.push({
-        type: "warning",
-        title: "Quantity Discrepancy Impact",
-        description: `${atRiskCount} shipments (${atRiskPercentage}%) have quantity discrepancies with financial impact of $${financialImpacts.quantityDiscrepancyImpact.toLocaleString()}.`,
-        severity: financialImpacts.quantityDiscrepancyImpact > 10000 ? "critical" : "warning",
-        dollarImpact: financialImpacts.quantityDiscrepancyImpact,
-      });
-    }
-    
-    if (financialImpacts.cancelledShipmentsImpact > 0) {
-      const cancelledCount = shipments.filter(s => s.status === "cancelled").length;
-      insights.push({
-        type: "warning", 
-        title: "Cancelled Shipments Impact",
-        description: `${cancelledCount} cancelled shipments represent $${financialImpacts.cancelledShipmentsImpact.toLocaleString()} in lost inventory value.`,
-        severity: financialImpacts.cancelledShipmentsImpact > 5000 ? "critical" : "warning",
-        dollarImpact: financialImpacts.cancelledShipmentsImpact,
-      });
-    }
-    
-    const inactiveProducts = products.filter((p) => !p.active).length;
-    if (inactiveProducts > 0 && financialImpacts.inactiveProductsValue > 0) {
-      insights.push({
-        type: "info",
-        title: "Inactive Product Revenue Loss",
-        description: `${inactiveProducts} inactive products represent potential monthly revenue loss of $${financialImpacts.inactiveProductsValue.toLocaleString()}.`,
-        severity: "info",
-        dollarImpact: financialImpacts.inactiveProductsValue,
-      });
-    }
-    
-    return insights;
+    console.error('❌ OpenAI API key not available - no dashboard insights generated');
+    return []; // Return empty array - UI will show "Check OpenAI Connection"
   }
 
   try {

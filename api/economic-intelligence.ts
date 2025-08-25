@@ -332,13 +332,8 @@ async function generateAIRecommendations(
   const openaiApiKey = process.env.OPENAI_API_KEY;
   
   if (!openaiApiKey) {
-    console.warn('🤖 OpenAI API key not available, using fallback recommendations');
-    return [
-      'Implement performance monitoring dashboard',
-      'Review supplier contracts and SLAs',
-      'Optimize delivery routes and schedules',
-      'Establish backup supplier relationships'
-    ];
+    console.error('❌ OpenAI API key not available - no economic recommendations generated');
+    return []; // Return empty array - UI will show "Check OpenAI Connection"
   }
 
   // This part of the code creates specific prompts for each KPI type
@@ -465,36 +460,7 @@ Establish contingency plans for critical supplier disruptions`
 
   } catch (error) {
     console.error('❌ AI recommendation generation failed:', error);
-    
-    // This part of the code provides fallback recommendations
-    const fallbackRecs = {
-      'supplier-performance': [
-        'Implement supplier scorecards for performance tracking',
-        'Negotiate delivery time buffers in contracts',
-        'Establish backup suppliers for critical SKUs',
-        'Review and optimize supplier communication processes'
-      ],
-      'shipping-cost-impact': [
-        'Consolidate shipments to reduce per-unit costs',
-        'Negotiate volume discounts with carriers',
-        'Implement route optimization software',
-        'Review shipping zone strategies'
-      ],
-      'transportation-costs': [
-        'Optimize load planning and consolidation',
-        'Negotiate better carrier rates',
-        'Implement transportation management system',
-        'Review delivery scheduling efficiency'
-      ],
-      'supply-chain-health': [
-        'Implement end-to-end supply chain visibility',
-        'Diversify supplier base to reduce risk',
-        'Establish performance monitoring KPIs',
-        'Create contingency plans for disruptions'
-      ]
-    };
-
-    return fallbackRecs[kpiId as keyof typeof fallbackRecs] || fallbackRecs['supplier-performance'];
+    return []; // Return empty array - UI will show "Check OpenAI Connection"
   }
 }
 

@@ -701,13 +701,8 @@ async function generateWarehouseOptimizationRecommendations(
   const openaiApiKey = process.env.OPENAI_API_KEY;
   
   if (!openaiApiKey) {
-    console.warn('🤖 OpenAI API key not available, using fallback warehouse optimization recommendations');
-    return [
-      'Implement real-time performance monitoring dashboard for key metrics',
-      'Optimize warehouse layout and picking routes for efficiency gains',
-      'Establish SLA improvement targets with supplier performance reviews',
-      'Deploy automated inventory management systems for accuracy'
-    ];
+    console.error('❌ OpenAI API key not available - no warehouse recommendations generated');
+    return []; // Return empty array - UI will show "Check OpenAI Connection"
   }
 
   // This part of the code creates world-class prompts specific to warehouse performance levels
@@ -870,30 +865,7 @@ Requirements:
 
   } catch (error) {
     console.error('❌ Warehouse optimization AI recommendation generation failed:', error);
-    
-    // This part of the code provides high-quality fallback recommendations based on status
-    const fallbackRecs = {
-      'Excellent': [
-        'Implement advanced automation and robotics for next-level efficiency',
-        'Develop innovation labs for testing cutting-edge warehouse technologies',
-        'Create best practice sharing programs across warehouse network',
-        'Establish strategic partnerships for market expansion capabilities'
-      ],
-      'Good': [
-        'Optimize warehouse layout and implement lean management principles',
-        'Deploy advanced WMS features for improved tracking and efficiency',
-        'Establish performance benchmarking and continuous improvement programs',
-        'Implement cross-training programs for operational flexibility'
-      ],
-      'Needs Attention': [
-        'Conduct immediate process audit and implement quick-win improvements',
-        'Establish daily performance monitoring and escalation procedures',
-        'Implement focused training programs for key operational staff',
-        'Create supplier collaboration plan for SLA recovery initiatives'
-      ]
-    };
-
-    return fallbackRecs[warehouse.status as keyof typeof fallbackRecs] || fallbackRecs['Good'];
+    return []; // Return empty array - UI will show "Check OpenAI Connection"
   }
 }
 

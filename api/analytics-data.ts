@@ -484,40 +484,8 @@ async function generateAnalyticsInsights(
 ): Promise<AnalyticsInsight[]> {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
-    // This part of the code generates analytics insights without AI when API key is not available
-    const insights: AnalyticsInsight[] = [];
-    
-    if (kpis.orderVolumeGrowth < -10) {
-      insights.push({
-        type: "warning",
-        title: "Declining Order Volume",
-        description: `Order volume has decreased by ${Math.abs(kpis.orderVolumeGrowth).toFixed(1)}% compared to previous period. This trend requires immediate attention to maintain business growth.`,
-        severity: "warning",
-        dollarImpact: 0, // No mock values - real impact calculation not available
-      });
-    }
-    
-    if (kpis.fulfillmentEfficiency < 80) {
-      insights.push({
-        type: "critical",
-        title: "Low Fulfillment Efficiency",
-        description: `Fulfillment efficiency at ${kpis.fulfillmentEfficiency.toFixed(1)}% is below optimal levels. Focus on process improvements to reach 90%+ efficiency.`,
-        severity: "critical",
-        dollarImpact: 0, // No mock values - real impact calculation not available
-      });
-    }
-    
-    if (brandPerformance.totalBrands > 5) {
-      insights.push({
-        type: "info",
-        title: "Brand Portfolio Diversification",
-        description: `Portfolio includes ${brandPerformance.totalBrands} brands with ${brandPerformance.topBrand.name} leading with ${brandPerformance.topBrand.skuCount} SKUs. Consider brand consolidation strategies.`,
-        severity: "info",
-        dollarImpact: 0, // No mock values - real impact calculation not available
-      });
-    }
-    
-    return insights;
+    console.error('❌ OpenAI API key not available - no analytics insights generated');
+    return []; // Return empty array - UI will show "Check OpenAI Connection"
   }
 
   try {

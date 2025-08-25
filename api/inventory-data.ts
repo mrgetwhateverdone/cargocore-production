@@ -479,13 +479,8 @@ async function generateBrandInventoryRecommendations(
   const openaiApiKey = process.env.OPENAI_API_KEY;
   
   if (!openaiApiKey) {
-    console.warn('🤖 OpenAI API key not available, using fallback brand inventory recommendations');
-    return [
-      'Optimize SKU mix to focus on high-performing products',
-      'Implement inventory turnover analysis and slow-moving SKU review',
-      'Develop brand-specific pricing strategy to improve margins',
-      'Establish performance monitoring dashboards for brand KPIs'
-    ];
+    console.error('❌ OpenAI API key not available - no inventory recommendations generated');
+    return []; // Return empty array - UI will show "Check OpenAI Connection"
   }
 
   // This part of the code creates world-class prompts specific to brand performance levels
@@ -645,33 +640,7 @@ Requirements:
 
   } catch (error) {
     console.error('❌ Brand inventory AI recommendation generation failed:', error);
-    
-    // This part of the code provides high-quality fallback recommendations based on efficiency
-    const fallbackRecs = {
-      'high': [
-        'Expand premium product lines to capitalize on brand strength',
-        'Develop strategic partnerships for market expansion opportunities',
-        'Implement innovation programs to maintain competitive advantage',
-        'Optimize inventory allocation to maximize profit margins'
-      ],
-      'medium': [
-        'Optimize SKU mix to focus on highest-performing products',
-        'Implement inventory turnover analysis and improvement plan',
-        'Develop pricing strategy to enhance brand profitability',
-        'Establish performance monitoring and optimization processes'
-      ],
-      'low': [
-        'Conduct immediate SKU profitability analysis and rationalization',
-        'Implement cost reduction initiatives across entire brand portfolio',
-        'Review pricing strategy and optimize for margin improvement',
-        'Establish performance recovery plan with measurable targets'
-      ]
-    };
-
-    const performanceLevel = brand.efficiency_score >= 70 ? 'high' : 
-                             brand.efficiency_score >= 50 ? 'medium' : 'low';
-    
-    return fallbackRecs[performanceLevel];
+    return []; // Return empty array - UI will show "Check OpenAI Connection"
   }
 }
 
