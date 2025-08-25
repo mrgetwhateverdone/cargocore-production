@@ -241,7 +241,7 @@ class InternalApiService {
     try {
       console.log("🔒 Client: Fetching orders data from secure server...");
 
-      const response = await fetch(`${this.baseUrl}/api/orders-data`);
+      const response = await fetch(`${this.baseUrl}/api/orders-data-simple`);
 
       if (!response.ok) {
         throw new Error(
