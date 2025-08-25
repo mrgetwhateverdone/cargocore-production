@@ -32,6 +32,38 @@ export function HistoricalTrendsSection({ historicalTrends, isLoading }: Histori
     }
   };
 
+  // This part of the code determines smart trend direction using MA data when available
+  const getSmartTrendIndicator = (trend: HistoricalCostTrend, index: number) => {
+    // This part of the code prioritizes MA trend direction over simple percentage change
+    if (trend.cost_trend_direction) {
+      switch (trend.cost_trend_direction) {
+        case 'up':
+          return { icon: "📈", color: "text-red-600", bgColor: "bg-red-100", label: "Rising (MA)" };
+        case 'down':
+          return { icon: "📉", color: "text-green-600", bgColor: "bg-green-100", label: "Falling (MA)" };
+        case 'neutral':
+          return { icon: "➖", color: "text-blue-600", bgColor: "bg-blue-100", label: "Stable (MA)" };
+      }
+    }
+    
+    // This part of the code falls back to traditional percentage-based indicators
+    const classic = getTrendIndicator(trend.cost_change_percentage);
+    return { ...classic, label: "Basic" };
+  };
+
+  // This part of the code formats volatility score for display
+  const getVolatilityBadge = (volatilityScore?: number) => {
+    if (!volatilityScore) return null;
+    
+    if (volatilityScore <= 20) {
+      return { label: "Low Risk", color: "bg-green-100 text-green-800" };
+    } else if (volatilityScore <= 50) {
+      return { label: "Med Risk", color: "bg-yellow-100 text-yellow-800" };
+    } else {
+      return { label: "High Risk", color: "bg-red-100 text-red-800" };
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6 mb-6">
@@ -88,36 +120,67 @@ export function HistoricalTrendsSection({ historicalTrends, isLoading }: Histori
           <h4 className="font-medium text-gray-900 mb-3">Cost Trend Analysis</h4>
           <div className="space-y-3">
             {historicalTrends.map((trend, index) => {
-              const trendIndicator = getTrendIndicator(trend.cost_change_percentage);
+              const smartIndicator = getSmartTrendIndicator(trend, index);
+              const volatilityBadge = getVolatilityBadge(trend.volatility_score);
               const barWidth = maxCost > 0 ? (trend.total_cost / maxCost) * 100 : 0;
               
+              // This part of the code determines if we have enhanced MA data
+              const hasMAData = trend.cost_ma_3month || trend.cost_ema_3month;
+              
               return (
-                <div key={trend.month} className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3 min-w-0 flex-1">
-                    <div className="text-sm font-medium text-gray-900 min-w-16">
-                      {formatMonth(trend.month)}
-                    </div>
-                    <div className="flex-1 max-w-32">
-                      <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div 
-                          className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                          style={{ width: `${barWidth}%` }}
-                        ></div>
+                <div key={trend.month} className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3 min-w-0 flex-1">
+                      <div className="text-sm font-medium text-gray-900 min-w-16">
+                        {formatMonth(trend.month)}
+                      </div>
+                      <div className="flex-1 max-w-32">
+                        <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div 
+                            className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                            style={{ width: `${barWidth}%` }}
+                          ></div>
+                        </div>
+                      </div>
+                      <div className="text-sm font-medium text-gray-900 min-w-16">
+                        {formatCurrency(trend.total_cost)}
                       </div>
                     </div>
-                    <div className="text-sm font-medium text-gray-900 min-w-16">
-                      {formatCurrency(trend.total_cost)}
+                    
+                    <div className="ml-3 flex items-center space-x-2">
+                      {/* This part of the code displays smart trend indicator */}
+                      {index > 0 && (
+                        <div className={`flex items-center space-x-1 ${smartIndicator.color}`}>
+                          <span className={`text-xs px-1 py-0.5 rounded ${smartIndicator.bgColor}`} title={smartIndicator.label}>
+                            {smartIndicator.icon}
+                          </span>
+                          <span className="text-xs font-medium">
+                            {Math.abs(trend.cost_change_percentage).toFixed(1)}%
+                          </span>
+                        </div>
+                      )}
+                      
+                      {/* This part of the code displays volatility badge when available */}
+                      {volatilityBadge && (
+                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${volatilityBadge.color}`}>
+                          {volatilityBadge.label}
+                        </span>
+                      )}
                     </div>
                   </div>
                   
-                  {index > 0 && (
-                    <div className={`ml-3 flex items-center space-x-1 ${trendIndicator.color}`}>
-                      <span className={`text-xs px-1 py-0.5 rounded ${trendIndicator.bgColor}`}>
-                        {trendIndicator.icon}
-                      </span>
-                      <span className="text-xs font-medium">
-                        {Math.abs(trend.cost_change_percentage).toFixed(1)}%
-                      </span>
+                  {/* This part of the code displays enhanced MA data when available */}
+                  {hasMAData && (
+                    <div className="ml-20 text-xs text-gray-600 space-x-4">
+                      {trend.cost_ma_3month && (
+                        <span>3M MA: {formatCurrency(trend.cost_ma_3month)}</span>
+                      )}
+                      {trend.cost_ema_3month && (
+                        <span>3M EMA: {formatCurrency(trend.cost_ema_3month)}</span>
+                      )}
+                      {trend.volatility_score && (
+                        <span>Volatility: {trend.volatility_score}%</span>
+                      )}
                     </div>
                   )}
                 </div>
@@ -166,9 +229,38 @@ export function HistoricalTrendsSection({ historicalTrends, isLoading }: Histori
               ))}
             </div>
             
+            {/* This part of the code displays MA trend insights when available */}
+            {historicalTrends.some(t => t.cost_trend_direction) && (
+              <div className="pt-3 border-t border-gray-200">
+                <div className="text-sm font-medium text-gray-700 mb-2">Moving Average Insights:</div>
+                <div className="space-y-1 text-xs text-gray-600">
+                  {(() => {
+                    const latestTrend = historicalTrends[historicalTrends.length - 1];
+                    const trendCounts = historicalTrends.reduce((acc, t) => {
+                      if (t.cost_trend_direction) acc[t.cost_trend_direction]++;
+                      return acc;
+                    }, { up: 0, down: 0, neutral: 0 });
+                    
+                    return (
+                      <>
+                        <div>Current Direction: <span className="font-medium">
+                          {latestTrend?.cost_trend_direction === 'up' && '📈 Rising'}
+                          {latestTrend?.cost_trend_direction === 'down' && '📉 Falling'} 
+                          {latestTrend?.cost_trend_direction === 'neutral' && '➖ Stable'}
+                        </span></div>
+                        <div>Pattern: {trendCounts.up} rising, {trendCounts.down} falling, {trendCounts.neutral} stable periods</div>
+                        {latestTrend?.volatility_score && (
+                          <div>Cost Volatility: {latestTrend.volatility_score}% (Risk Level: {getVolatilityBadge(latestTrend.volatility_score)?.label})</div>
+                        )}
+                      </>
+                    );
+                  })()}
+                </div>
+              </div>
+            )}
+            
             <div className="pt-3 border-t border-gray-200 text-xs text-gray-500">
-              Trend analysis based on real warehouse SLA performance, throughput data, 
-              and seasonal patterns from COMP002_packiyo
+              Enhanced with moving average analysis for trend prediction and volatility assessment
             </div>
           </div>
         </div>

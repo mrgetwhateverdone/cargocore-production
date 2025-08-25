@@ -160,7 +160,7 @@ export function CostVarianceOverlay({
             <h3 className="text-lg font-semibold text-gray-900 mb-3">Cost Analysis</h3>
             <p className="text-gray-700 leading-relaxed mb-4">{anomaly.description}</p>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
               <div className="bg-gray-50 rounded-lg p-4">
                 <div className="flex justify-between items-center mb-1">
                   <span className="font-medium text-gray-900">Expected Cost</span>
@@ -168,7 +168,9 @@ export function CostVarianceOverlay({
                     ${anomaly.expectedValue.toLocaleString()}
                   </span>
                 </div>
-                <p className="text-sm text-gray-600">Baseline cost expectation</p>
+                <p className="text-sm text-gray-600">
+                  {anomaly.maBaseline ? 'EMA Baseline' : 'Baseline cost expectation'}
+                </p>
               </div>
               
               <div className="bg-gray-50 rounded-lg p-4">
@@ -191,6 +193,39 @@ export function CostVarianceOverlay({
                 <p className="text-sm text-gray-600">Additional cost incurred</p>
               </div>
             </div>
+
+            {/* This part of the code displays enhanced adaptive threshold information when available */}
+            {(anomaly.trendContext || anomaly.adaptiveThreshold || anomaly.maBaseline) && (
+              <div className="bg-blue-50 rounded-lg p-4 mb-4">
+                <h4 className="font-medium text-blue-900 mb-2 flex items-center">
+                  <TrendingUp className="h-4 w-4 mr-2" />
+                  Moving Average Analysis
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                  {anomaly.maBaseline && (
+                    <div>
+                      <span className="font-medium text-blue-800">EMA Baseline: </span>
+                      <span className="text-blue-700">${anomaly.maBaseline.toLocaleString()}</span>
+                    </div>
+                  )}
+                  {anomaly.adaptiveThreshold && (
+                    <div>
+                      <span className="font-medium text-blue-800">Adaptive Threshold: </span>
+                      <span className="text-blue-700">${anomaly.adaptiveThreshold.toLocaleString()}</span>
+                    </div>
+                  )}
+                  {anomaly.trendContext && (
+                    <div className="md:col-span-2">
+                      <span className="font-medium text-blue-800">Detection Method: </span>
+                      <span className="text-blue-700">{anomaly.trendContext}</span>
+                    </div>
+                  )}
+                </div>
+                <p className="text-xs text-blue-600 mt-2">
+                  This anomaly was detected using adaptive thresholds that adjust to historical cost patterns, providing more accurate alerts than static percentage-based detection.
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Risk Factors */}

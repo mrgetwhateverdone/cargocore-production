@@ -235,6 +235,7 @@ async function fetchShipments(): Promise<ShipmentData[]> {
 
 /**
  * This part of the code calculates analytics-specific KPIs from real data
+ * Enhanced with moving average trend analysis for better insights
  */
 function calculateAnalyticsKPIs(products: ProductData[], shipments: ShipmentData[]) {
   // This part of the code calculates order volume growth (simulated with recent data)
@@ -269,12 +270,112 @@ function calculateAnalyticsKPIs(products: ProductData[], shipments: ShipmentData
   const activeProducts = products.filter(p => p.active).length;
   const inventoryHealthScore = products.length > 0 ? (activeProducts / products.length) * 100 : 0;
 
-  return {
+  // This part of the code creates base KPI object with existing calculations
+  const baseKPIs = {
     orderVolumeGrowth: Math.round(orderVolumeGrowth * 10) / 10,
     returnRate: Math.round(returnRate * 10) / 10,
     fulfillmentEfficiency: Math.round(fulfillmentEfficiency * 10) / 10,
     inventoryHealthScore: Math.round(inventoryHealthScore * 10) / 10,
   };
+
+  // This part of the code calculates moving average enhancements for trend analysis
+  try {
+    // Import our moving averages utility safely for serverless
+    const { 
+      calculateSafeEMA, 
+      calculateTrendDirection 
+    } = require('../../lib/movingAverages');
+
+    // This part of the code prepares daily shipment counts for trend analysis
+    const dailyShipmentCounts = getDailyShipmentCounts(shipments, 14); // Last 14 days
+    const dailyFulfillmentRates = getDailyFulfillmentRates(shipments, 14); // Last 14 days
+
+    // This part of the code calculates 7-day moving averages for order volume
+    const orderVolumeMA = calculateSafeEMA(dailyShipmentCounts, 7);
+    const orderVolumeTrend = calculateTrendDirection(orderVolumeMA);
+
+    // This part of the code calculates 7-day moving averages for fulfillment efficiency  
+    const fulfillmentMA = calculateSafeEMA(dailyFulfillmentRates, 7);
+    const fulfillmentTrend = calculateTrendDirection(fulfillmentMA);
+
+    // This part of the code adds optional moving average fields safely
+    return {
+      ...baseKPIs,
+      // Optional MA trend fields (backward compatible)
+      orderVolumeTrend,
+      orderVolumeMA7: orderVolumeMA.length > 0 ? Math.round(orderVolumeMA[orderVolumeMA.length - 1]) : undefined,
+      fulfillmentTrend,
+      fulfillmentEfficiencyMA: fulfillmentMA.length > 0 ? Math.round(fulfillmentMA[fulfillmentMA.length - 1] * 10) / 10 : undefined,
+    };
+  } catch (error) {
+    console.warn('Analytics moving averages calculation failed, using base KPIs:', error);
+    // This part of the code returns base KPIs if MA calculation fails (safe fallback)
+    return baseKPIs;
+  }
+}
+
+/**
+ * This part of the code groups shipments by day for moving average calculations
+ * Helper function for trend analysis
+ */
+function getDailyShipmentCounts(shipments: ShipmentData[], days: number): number[] {
+  const now = new Date();
+  const dailyCounts: number[] = [];
+
+  for (let i = days - 1; i >= 0; i--) {
+    const targetDate = new Date(now);
+    targetDate.setDate(targetDate.getDate() - i);
+    targetDate.setHours(0, 0, 0, 0);
+
+    const nextDate = new Date(targetDate);
+    nextDate.setDate(nextDate.getDate() + 1);
+
+    const dayShipments = shipments.filter(s => {
+      const shipmentDate = new Date(s.created_date);
+      return shipmentDate >= targetDate && shipmentDate < nextDate;
+    });
+
+    dailyCounts.push(dayShipments.length);
+  }
+
+  return dailyCounts;
+}
+
+/**
+ * This part of the code calculates daily fulfillment rates for moving average trend analysis
+ * Helper function for efficiency trending
+ */
+function getDailyFulfillmentRates(shipments: ShipmentData[], days: number): number[] {
+  const now = new Date();
+  const dailyRates: number[] = [];
+
+  for (let i = days - 1; i >= 0; i--) {
+    const targetDate = new Date(now);
+    targetDate.setDate(targetDate.getDate() - i);
+    targetDate.setHours(0, 0, 0, 0);
+
+    const nextDate = new Date(targetDate);
+    nextDate.setDate(nextDate.getDate() + 1);
+
+    const dayShipments = shipments.filter(s => {
+      const shipmentDate = new Date(s.created_date);
+      return shipmentDate >= targetDate && shipmentDate < nextDate;
+    });
+
+    if (dayShipments.length === 0) {
+      dailyRates.push(0);
+      continue;
+    }
+
+    const fulfilledCount = dayShipments.filter(s => 
+      s.expected_quantity === s.received_quantity && s.status !== "cancelled"
+    ).length;
+
+    const rate = (fulfilledCount / dayShipments.length) * 100;
+    dailyRates.push(rate);
+  }
+
+  return dailyRates;
 }
 
 /**

@@ -141,6 +141,11 @@ export interface CostVarianceAnomaly {
   variance: number;
   riskFactors: string[];
   financialImpact: number;
+  
+  // This part of the code adds optional moving average context for smarter anomaly detection
+  trendContext?: string;
+  adaptiveThreshold?: number;
+  maBaseline?: number;
 }
 
 // Dashboard Data (combined)
@@ -163,6 +168,12 @@ export interface AnalyticsKPIs {
   returnRate: number | null;         // percentage 
   fulfillmentEfficiency: number | null; // percentage
   inventoryHealthScore: number | null;   // percentage
+  
+  // This part of the code adds optional moving average trend fields for enhanced analytics
+  orderVolumeTrend?: 'up' | 'down' | 'neutral';
+  orderVolumeMA7?: number;
+  fulfillmentTrend?: 'up' | 'down' | 'neutral';
+  fulfillmentEfficiencyMA?: number;
 }
 
 // Performance Metrics
@@ -536,6 +547,12 @@ export interface HistoricalCostTrend {
   shipment_count: number;
   avg_cost_per_shipment: number;
   cost_change_percentage: number;
+  
+  // This part of the code adds optional moving average fields for cost trend analysis
+  cost_ma_3month?: number;
+  cost_ema_3month?: number;
+  cost_trend_direction?: 'up' | 'down' | 'neutral';
+  volatility_score?: number;
 }
 
 export interface CostData {

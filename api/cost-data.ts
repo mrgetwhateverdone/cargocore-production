@@ -2,17 +2,36 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 
 // Type definitions inlined to prevent Vercel import issues
 interface CostKPIs {
-  totalCost: number;
-  avgCostPerShipment: number;
-  monthlyGrowth: number;
-  costEfficiencyScore: number;
+  // Enhanced Real Cost Metrics
+  totalMonthlyCosts: number;
+  costEfficiencyRate: number;
+  topPerformingWarehouses: number;
+  totalCostCenters: number;
+  // Legacy metrics for compatibility
+  totalWarehouses: number;
+  avgSLAPerformance: number;
+  monthlyThroughput: number;
+  activeCostCenters: number;
 }
 
 interface CostCenter {
-  name: string;
-  cost: number;
-  percentage: number;
-  trend: 'up' | 'down' | 'stable';
+  warehouse_id: string;
+  warehouse_name: string;
+  monthly_throughput: number;
+  sla_performance: number;
+  status: 'Active' | 'Inactive';
+  total_shipments: number;
+  on_time_shipments: number;
+  monthly_costs: number;
+  cost_per_shipment: number;
+  cost_efficiency: number;
+  utilization_rate: number;
+  cost_breakdown: {
+    receiving: number;
+    storage: number;
+    processing: number;
+    overhead: number;
+  };
 }
 
 interface CostData {
@@ -21,7 +40,7 @@ interface CostData {
   supplierPerformance: SupplierPerformance[];
   historicalTrends: HistoricalCostTrend[];
   insights: AIInsight[];
-  executiveSummary: string;
+  lastUpdated: string;
 }
 
 interface AIInsight {
@@ -33,19 +52,27 @@ interface AIInsight {
 }
 
 interface SupplierPerformance {
-  supplier: string;
-  totalCost: number;
-  shipmentCount: number;
-  avgCostPerShipment: number;
-  reliability: number;
-  trend: 'up' | 'down' | 'stable';
+  supplier_name: string;
+  total_cost: number;
+  avg_cost_per_unit: number;
+  sla_performance: number;
+  shipment_count: number;
+  cost_variance: number;
+  efficiency_score: number;
+  status: 'Efficient' | 'Needs Attention' | 'High Cost';
 }
 
 interface HistoricalCostTrend {
   month: string;
-  cost: number;
-  shipments: number;
-  avgCostPerShipment: number;
+  total_cost: number;
+  shipment_count: number;
+  avg_cost_per_shipment: number;
+  cost_change_percentage: number;
+  // Optional MA fields (backward compatible)
+  cost_ma_3month?: number;
+  cost_ema_3month?: number;
+  cost_trend_direction?: 'up' | 'down' | 'neutral';
+  volatility_score?: number;
 }
 
 // Safe formatters inlined to prevent Vercel import issues
@@ -428,6 +455,7 @@ function calculateSupplierPerformance(shipments: ShipmentData[]): SupplierPerfor
 
 /**
  * This part of the code calculates historical cost trends from real shipment data
+ * Enhanced with moving averages for trend analysis and volatility scoring
  */
 function calculateHistoricalTrends(shipments: ShipmentData[]): HistoricalCostTrend[] {
   if (shipments.length === 0) {
@@ -461,6 +489,48 @@ function calculateHistoricalTrends(shipments: ShipmentData[]): HistoricalCostTre
   const sortedEntries = Array.from(monthlyData.entries())
     .sort(([a], [b]) => a.localeCompare(b));
 
+  // This part of the code calculates moving averages for enhanced trend analysis
+  const avgCostData = sortedEntries.map(([_, data]) => 
+    data.shipmentCount > 0 ? data.totalCost / data.shipmentCount : 0
+  );
+
+  // This part of the code safely calculates moving averages using our utility functions
+  let ma3Month: number[] = [];
+  let ema3Month: number[] = [];
+  let volatilityScores: number[] = [];
+  let trendDirections: ('up' | 'down' | 'neutral')[] = [];
+
+  try {
+    // Import our moving averages utility - safe approach for serverless
+    const { 
+      calculateSafeMA, 
+      calculateSafeEMA, 
+      calculateTrendDirection, 
+      calculateVolatilityScore 
+    } = require('../../lib/movingAverages');
+
+    // This part of the code calculates 3-month moving averages
+    ma3Month = calculateSafeMA(avgCostData, 3);
+    ema3Month = calculateSafeEMA(avgCostData, 3);
+    
+    // This part of the code calculates trend direction for each period
+    for (let i = 0; i < avgCostData.length; i++) {
+      const recentData = avgCostData.slice(Math.max(0, i - 2), i + 1);
+      trendDirections.push(calculateTrendDirection(recentData));
+      
+      // This part of the code calculates volatility score for rolling window
+      const windowData = avgCostData.slice(Math.max(0, i - 5), i + 1);
+      volatilityScores.push(calculateVolatilityScore(windowData));
+    }
+  } catch (error) {
+    console.warn('Moving averages calculation failed, using fallback:', error);
+    // This part of the code provides safe fallbacks if MA calculation fails
+    ma3Month = new Array(avgCostData.length).fill(0);
+    ema3Month = new Array(avgCostData.length).fill(0);
+    volatilityScores = new Array(avgCostData.length).fill(0);
+    trendDirections = new Array(avgCostData.length).fill('neutral');
+  }
+
   return sortedEntries.map(([month, data], index) => {
     const avgCostPerShipment = data.shipmentCount > 0 
       ? Math.round(data.totalCost / data.shipmentCount) 
@@ -476,13 +546,34 @@ function calculateHistoricalTrends(shipments: ShipmentData[]): HistoricalCostTre
       }
     }
 
-    return {
+    // This part of the code creates enhanced trend data with moving averages
+    const trendData: HistoricalCostTrend = {
+      // Existing fields (100% backward compatible)
       month,
       total_cost: Math.round(data.totalCost),
       shipment_count: data.shipmentCount,
       avg_cost_per_shipment: avgCostPerShipment,
       cost_change_percentage: costChangePercentage,
     };
+
+    // This part of the code adds optional moving average fields safely
+    if (ma3Month.length > index && ma3Month[index] !== undefined) {
+      trendData.cost_ma_3month = Math.round(ma3Month[index]);
+    }
+    
+    if (ema3Month.length > index && ema3Month[index] !== undefined) {
+      trendData.cost_ema_3month = Math.round(ema3Month[index]);
+    }
+    
+    if (trendDirections.length > index) {
+      trendData.cost_trend_direction = trendDirections[index];
+    }
+    
+    if (volatilityScores.length > index) {
+      trendData.volatility_score = volatilityScores[index];
+    }
+
+    return trendData;
   }).slice(-12); // This part of the code returns last 12 months
 }
 
@@ -716,7 +807,7 @@ TONE: Professional, strategic, data-driven, and focused on financial performance
   }
 }
 
-export default async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
+export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method === "POST" && req.query.aiSummary === 'true') {
     try {
       console.log("🤖 Cost Management API: Generating AI executive summary...");

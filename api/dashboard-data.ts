@@ -550,56 +550,117 @@ interface CostVarianceAnomaly {
   variance: number;
   riskFactors: string[];
   financialImpact: number;
+  // Optional MA context fields (backward compatible)
+  trendContext?: string;
+  adaptiveThreshold?: number;
+  maBaseline?: number;
 }
 
 function detectCostVariances(products: ProductData[], shipments: ShipmentData[]): CostVarianceAnomaly[] {
   const anomalies: CostVarianceAnomaly[] = [];
 
-  // This part of the code calculates baseline costs for variance detection
-  const supplierBaselines = new Map<string, { avgCost: number; shipmentCount: number }>();
+  // This part of the code calculates enhanced baseline costs using moving averages for adaptive thresholds
+  const supplierBaselines = new Map<string, { 
+    avgCost: number; 
+    shipmentCount: number; 
+    costHistory: number[];
+    emaBaseline: number;
+    adaptiveThreshold: number;
+    confidence: number;
+  }>();
   
-  // Calculate supplier cost baselines from real data
+  // This part of the code groups shipments by supplier and calculates cost history
+  const supplierShipments = new Map<string, ShipmentData[]>();
   shipments.forEach(shipment => {
     if (!shipment.unit_cost || !shipment.supplier) return;
     
-    const supplier = shipment.supplier;
-    if (!supplierBaselines.has(supplier)) {
-      supplierBaselines.set(supplier, { avgCost: 0, shipmentCount: 0 });
+    if (!supplierShipments.has(shipment.supplier)) {
+      supplierShipments.set(shipment.supplier, []);
     }
-    
-    const baseline = supplierBaselines.get(supplier)!;
-    baseline.avgCost = (baseline.avgCost * baseline.shipmentCount + shipment.unit_cost) / (baseline.shipmentCount + 1);
-    baseline.shipmentCount += 1;
+    supplierShipments.get(shipment.supplier)!.push(shipment);
   });
 
-  // This part of the code detects cost spikes based on supplier baselines
+  // This part of the code calculates adaptive baselines using EMA for each supplier
+  supplierShipments.forEach((shipments, supplier) => {
+    // Sort by date to get chronological cost history
+    const sortedShipments = shipments.sort((a, b) => 
+      new Date(a.created_date).getTime() - new Date(b.created_date).getTime()
+    );
+    
+    const costHistory = sortedShipments.map(s => s.unit_cost!);
+    const avgCost = costHistory.reduce((sum, cost) => sum + cost, 0) / costHistory.length;
+
+    // This part of the code calculates adaptive thresholds using our moving averages utility
+    let emaBaseline = avgCost;
+    let adaptiveThreshold = avgCost * 1.4; // Default 40% threshold
+    let confidence = 50;
+
+    try {
+      // Import our moving averages utility safely for serverless
+      const { calculateAdaptiveThreshold } = require('../../lib/movingAverages');
+      
+      const thresholdData = calculateAdaptiveThreshold(costHistory, 14, 1.25);
+      if (thresholdData.baseline > 0) {
+        emaBaseline = thresholdData.baseline;
+        adaptiveThreshold = thresholdData.upperThreshold;
+        confidence = thresholdData.confidence;
+      }
+    } catch (error) {
+      console.warn('Adaptive threshold calculation failed for supplier', supplier, ':', error);
+      // Fallback to static calculation
+    }
+
+    supplierBaselines.set(supplier, {
+      avgCost,
+      shipmentCount: costHistory.length,
+      costHistory,
+      emaBaseline,
+      adaptiveThreshold,
+      confidence,
+    });
+  });
+
+  // This part of the code detects cost spikes using adaptive thresholds
   shipments.forEach(shipment => {
     if (!shipment.unit_cost || !shipment.supplier) return;
     
     const baseline = supplierBaselines.get(shipment.supplier);
     if (!baseline || baseline.shipmentCount < 3) return; // Need sufficient baseline data
     
-    const variance = Math.abs(shipment.unit_cost - baseline.avgCost) / baseline.avgCost;
+    // This part of the code uses adaptive threshold instead of static 40%
+    const isAdaptiveAnomaly = shipment.unit_cost > baseline.adaptiveThreshold;
+    const staticVariance = Math.abs(shipment.unit_cost - baseline.avgCost) / baseline.avgCost;
+    const adaptiveVariance = Math.abs(shipment.unit_cost - baseline.emaBaseline) / baseline.emaBaseline;
     
-    if (variance > 0.4) { // 40% variance threshold
-      const financialImpact = Math.abs(shipment.unit_cost - baseline.avgCost) * shipment.received_quantity;
+    // This part of the code triggers alert if either adaptive or static threshold is exceeded
+    if (isAdaptiveAnomaly || staticVariance > 0.4) {
+      const financialImpact = Math.abs(shipment.unit_cost - baseline.emaBaseline) * shipment.received_quantity;
       
       if (financialImpact > 1000) { // Only flag significant financial impact
+        const trendContext = baseline.confidence > 70 
+          ? `High confidence (${baseline.confidence}%) adaptive threshold`
+          : `Medium confidence (${baseline.confidence}%) adaptive threshold`;
+
         anomalies.push({
           type: "Cost Spike",
           title: `${shipment.supplier} Cost Anomaly`,
-          description: `Unit cost of $${shipment.unit_cost} is ${Math.round(variance * 100)}% above expected $${Math.round(baseline.avgCost)} baseline`,
-          severity: variance > 0.8 ? "High" : "Medium",
+          description: `Unit cost of $${shipment.unit_cost} exceeds ${isAdaptiveAnomaly ? 'adaptive' : 'static'} threshold of $${Math.round(baseline.adaptiveThreshold)} (EMA baseline: $${Math.round(baseline.emaBaseline)})`,
+          severity: adaptiveVariance > 0.8 ? "High" : "Medium",
           warehouseId: shipment.warehouse_id,
           supplier: shipment.supplier,
           currentValue: shipment.unit_cost,
-          expectedValue: Math.round(baseline.avgCost),
-          variance: Math.round(variance * 100),
+          expectedValue: Math.round(baseline.emaBaseline),
+          variance: Math.round(adaptiveVariance * 100),
           riskFactors: [
-            variance > 0.8 ? "Extreme cost deviation" : "Significant cost increase",
-            financialImpact > 5000 ? "High financial impact" : "Material financial impact"
+            adaptiveVariance > 0.8 ? "Extreme cost deviation" : "Significant cost increase",
+            financialImpact > 5000 ? "High financial impact" : "Material financial impact",
+            isAdaptiveAnomaly ? "Adaptive threshold exceeded" : "Static threshold exceeded"
           ],
-          financialImpact: Math.round(financialImpact)
+          financialImpact: Math.round(financialImpact),
+          // This part of the code adds optional moving average context fields
+          trendContext,
+          adaptiveThreshold: Math.round(baseline.adaptiveThreshold),
+          maBaseline: Math.round(baseline.emaBaseline),
         });
       }
     }
