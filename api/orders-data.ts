@@ -453,9 +453,10 @@ CRITICAL: suggestedActions must be:
   return [];
 }
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+export default async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
   if (req.method !== "GET") {
-    return res.status(405).json({ error: "Method not allowed" });
+    res.status(405).json({ error: "Method not allowed" });
+    return;
   }
 
   try {
@@ -506,11 +507,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       message: "Orders data retrieved successfully",
       timestamp: new Date().toISOString(),
     });
+    return;
   } catch (error) {
     console.error("❌ Vercel API Error:", error);
     res.status(500).json({
       error: "Failed to fetch orders data",
       details: error instanceof Error ? error.message : "Unknown error",
     });
+    return;
   }
 }
