@@ -95,14 +95,56 @@ export function HistoricalTrendsSection({ historicalTrends, isLoading }: Histori
     );
   }
 
-  // This part of the code calculates trend statistics
+  // This part of the code calculates trend statistics with improved error handling
   const totalCost = historicalTrends.reduce((sum, trend) => sum + trend.total_cost, 0);
   const totalShipments = historicalTrends.reduce((sum, trend) => sum + trend.shipment_count, 0);
   const avgCostPerMonth = totalCost / historicalTrends.length;
-  const lastMonth = historicalTrends[historicalTrends.length - 1];
-  const firstMonth = historicalTrends[0];
-  const overallTrend = lastMonth && firstMonth ? 
-    ((lastMonth.total_cost - firstMonth.total_cost) / firstMonth.total_cost) * 100 : 0;
+  
+  // This part of the code calculates overall trend with better validation and formatting
+  const calculateOverallTrend = () => {
+    if (historicalTrends.length < 2) return { value: 0, formatted: '0%', direction: 'neutral' };
+    
+    const lastMonth = historicalTrends[historicalTrends.length - 1];
+    const firstMonth = historicalTrends[0];
+    
+    // This part of the code validates data before calculation
+    if (!lastMonth?.total_cost || !firstMonth?.total_cost) {
+      return { value: 0, formatted: '0%', direction: 'neutral' };
+    }
+    
+    // This part of the code prevents division by zero and extreme values
+    if (firstMonth.total_cost === 0) {
+      return { value: 0, formatted: 'N/A', direction: 'neutral' };
+    }
+    
+    const rawTrend = ((lastMonth.total_cost - firstMonth.total_cost) / firstMonth.total_cost) * 100;
+    
+    // This part of the code caps extreme values and provides meaningful formatting
+    let formatted: string;
+    let direction: 'up' | 'down' | 'neutral';
+    
+    if (Math.abs(rawTrend) < 0.1) {
+      formatted = '0%';
+      direction = 'neutral';
+    } else if (rawTrend > 1000) {
+      formatted = '+1000%+';
+      direction = 'up';
+    } else if (rawTrend < -1000) {
+      formatted = '-1000%+';
+      direction = 'down';
+    } else {
+      formatted = `${rawTrend >= 0 ? '+' : ''}${Math.abs(rawTrend).toFixed(1)}%`;
+      direction = rawTrend > 0 ? 'up' : 'down';
+    }
+    
+    return { 
+      value: Math.min(Math.max(rawTrend, -1000), 1000), // Cap at ±1000%
+      formatted, 
+      direction 
+    };
+  };
+  
+  const overallTrendData = calculateOverallTrend();
 
   // This part of the code prepares data for simple visualization
   const maxCost = Math.max(...historicalTrends.map(t => t.total_cost));
@@ -202,11 +244,24 @@ export function HistoricalTrendsSection({ historicalTrends, isLoading }: Histori
                 <div className="text-sm text-blue-700">Avg Monthly Cost</div>
               </div>
               <div className="bg-green-50 rounded-lg p-3">
-                <div className={`text-lg font-semibold ${overallTrend >= 0 ? 'text-red-900' : 'text-green-900'}`}>
-                  {overallTrend >= 0 ? '+' : ''}{overallTrend.toFixed(1)}%
+                <div className={`text-lg font-semibold ${
+                  overallTrendData.direction === 'up' ? 'text-red-900' : 
+                  overallTrendData.direction === 'down' ? 'text-green-900' : 
+                  'text-gray-900'
+                }`}>
+                  {overallTrendData.formatted}
                 </div>
-                <div className={`text-sm ${overallTrend >= 0 ? 'text-red-700' : 'text-green-700'}`}>
+                <div className={`text-sm ${
+                  overallTrendData.direction === 'up' ? 'text-red-700' : 
+                  overallTrendData.direction === 'down' ? 'text-green-700' : 
+                  'text-gray-700'
+                }`}>
                   Overall Trend
+                  {overallTrendData.direction !== 'neutral' && (
+                    <span className="ml-1">
+                      {overallTrendData.direction === 'up' ? '📈' : '📉'}
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
