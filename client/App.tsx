@@ -84,6 +84,17 @@ const App = () => {
                       </SignedIn>
                     } 
                   />
+                  {/* This part of the code redirects /overview to /dashboard since Dashboard is the main overview page */}
+                  <Route 
+                    path="/overview" 
+                    element={
+                      <SignedIn>
+                        <ProtectedRoute>
+                          <Dashboard />
+                        </ProtectedRoute>
+                      </SignedIn>
+                    } 
+                  />
                   <Route 
                     path="/workflows" 
                     element={
